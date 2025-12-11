@@ -1,0 +1,249 @@
+/* Additional custom styles for Colombo Dockyard CRM */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* Animation for skeleton loading */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Custom transitions */
+.slide-enter {
+  transform: translateX(-100%);
+}
+
+.slide-enter-active {
+  transform: translateX(0);
+  transition: transform 300ms ease-in-out;
+}
+
+.slide-exit {
+  transform: translateX(0);
+}
+
+.slide-exit-active {
+  transform: translateX(-100%);
+  transition: transform 300ms ease-in-out;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* Responsive table container */
+.table-container {
+  @apply overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700;
+}
+
+/* Custom checkbox */
+.custom-checkbox {
+  @apply h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500;
+}
+
+.dark .custom-checkbox {
+  @apply border-gray-600 bg-gray-700;
+}
+
+/* Custom radio */
+.custom-radio {
+  @apply h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500;
+}
+
+.dark .custom-radio {
+  @apply border-gray-600 bg-gray-700;
+}
+
+/* Status badges */
+.status-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+/* Avatar styles */
+.avatar {
+  @apply inline-flex items-center justify-center rounded-full;
+}
+
+.avatar-sm {
+  @apply h-8 w-8 text-sm;
+}
+
+.avatar-md {
+  @apply h-10 w-10 text-base;
+}
+
+.avatar-lg {
+  @apply h-12 w-12 text-lg;
+}
+
+/* Card hover effects */
+.hover-card {
+  @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Form group spacing */
+.form-group {
+  @apply space-y-2;
+}
+
+/* Input group */
+.input-group {
+  @apply flex rounded-lg shadow-sm;
+}
+
+.input-group .input-left {
+  @apply inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400;
+}
+
+.input-group .input-right {
+  @apply inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400;
+}
+
+.input-group input {
+  @apply rounded-none;
+}
+
+.input-group input:first-child {
+  @apply rounded-l-lg;
+}
+
+.input-group input:last-child {
+  @apply rounded-r-lg;
+}
+
+/* Badge variants */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-blue {
+  @apply bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300;
+}
+
+.badge-green {
+  @apply bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300;
+}
+
+.badge-red {
+  @apply bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300;
+}
+
+.badge-yellow {
+  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300;
+}
+
+.badge-purple {
+  @apply bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300;
+}
+
+.badge-gray {
+  @apply bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300;
+}
+
+/* Loading spinner sizes */
+.spinner-sm {
+  @apply h-4 w-4 border-2;
+}
+
+.spinner-md {
+  @apply h-8 w-8 border-3;
+}
+
+.spinner-lg {
+  @apply h-12 w-12 border-4;
+}
+
+/* Page transition */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.page-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
