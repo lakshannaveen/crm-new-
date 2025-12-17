@@ -245,6 +245,8 @@ import { loadUser } from './actions/authActions';
 import { SidebarProvider } from './context/SidebarContext';
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
+import TermsPage from './pages/Legal/TermsPage';
+import PrivacyPage from './pages/Legal/PrivacyPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import OwnerDashboard from './pages/Dashboard/OwnerDashboard';
 import ShipDetailsPage from './pages/Dashboard/ShipDetailsPage';
@@ -320,6 +322,8 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
         <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         
         {/* Protected Routes with Layout */}
         <Route path="/dashboard" element={
