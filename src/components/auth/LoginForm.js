@@ -114,9 +114,13 @@ const LoginForm = () => {
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    setPhoneNumber(value);
+                  }}
                   placeholder="77 123 4567"
                   inputMode="numeric"
+                  pattern="[0-9]*"
                   className="h-11 w-full pl-10 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
                 />
               </div>

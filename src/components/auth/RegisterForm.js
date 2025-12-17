@@ -22,9 +22,11 @@ const RegisterForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    // For phone field, only allow numbers
+    const sanitizedValue = name === 'phone' ? value.replace(/[^0-9]/g, '') : value;
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: sanitizedValue,
     }));
     if (errors[name]) {
       setErrors(prev => ({
@@ -191,6 +193,7 @@ const RegisterForm = () => {
                 onChange={handleChange}
                 placeholder="77 123 4567"
                 inputMode="numeric"
+                pattern="[0-9]*"
                 className={`h-11 w-full pl-10 rounded-xl border ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-700'} bg-white dark:bg-gray-800 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800`}
               />
             </div>
