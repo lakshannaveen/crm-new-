@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import CountryCodeSelect from './CountryCodeSelect';
 import { login, verifyOTP } from '../../actions/authActions';
 import { validatePhoneNumber, validateOTP } from '../../utils/validators';
-import { FiSmartphone, FiLock, FiArrowRight } from 'react-icons/fi';
+import { FiSmartphone, FiArrowRight } from 'react-icons/fi';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { otpSent, phoneNumber: storedPhone, loading } = useSelector(state => state.auth);
   
   const [countryCode, setCountryCode] = useState('+94');
