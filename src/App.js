@@ -257,6 +257,7 @@ import SettingsPage from './pages/Settings/SettingsPage';
 import FeedbackPage from './pages/Feedback/FeedbackPage';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
+import LoadingScreen from './components/common/LoadingScreen';
 
 
 const AuthenticatedLayout = ({ children }) => {
@@ -310,11 +311,7 @@ function App() {
   }, [theme.mode]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
