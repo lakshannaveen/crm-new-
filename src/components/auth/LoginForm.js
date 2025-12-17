@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import CountryCodeSelect from './CountryCodeSelect';
 import { login, verifyOTP } from '../../actions/authActions';
 import { validatePhoneNumber, validateOTP } from '../../utils/validators';
-import { FiSmartphone, FiArrowRight } from 'react-icons/fi';
+import { FiSmartphone, FiArrowRight, FiArrowLeft } from 'react-icons/fi';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
@@ -54,6 +54,14 @@ const LoginForm = () => {
     dispatch(login(storedPhone));
     setOtpResent(true);
     setTimeout(() => setOtpResent(false), 30000);
+  };
+
+  const handleBackToPhone = () => {
+    setOtp(['', '', '', '', '', '']);
+    setErrors({});
+    setOtpResent(false);
+    // Reset the redux auth state to go back to phone form
+    window.location.reload();
   };
 
   return (
@@ -159,18 +167,29 @@ const LoginForm = () => {
             {loading ? 'Verifying...' : 'Verify & Continue'}
           </button>
 
-          <div className="flex justify-between text-xs">
+          <div className="space-y-3">
+            <div className="flex justify-between text-xs">
+              <button
+                type="button"
+                onClick={handleResendOTP}
+                disabled={otpResent || loading}
+                className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 disabled:opacity-50 transition-colors"
+              >
+                {otpResent ? 'OTP sent' : 'Resend code'}
+              </button>
+              <span className="text-gray-500">
+                {otpResent ? 'Wait 30s' : 'Check SMS'}
+              </span>
+            </div>
+
             <button
               type="button"
-              onClick={handleResendOTP}
-              disabled={otpResent || loading}
-              className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 disabled:opacity-50 transition-colors"
+              onClick={handleBackToPhone}
+              className="w-full flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              {otpResent ? 'OTP sent' : 'Resend code'}
+              <FiArrowLeft className="w-4 h-4" />
+              Back to Phone Number
             </button>
-            <span className="text-gray-500">
-              {otpResent ? 'Wait 30s' : 'Check SMS'}
-            </span>
           </div>
         </form>
       )}
