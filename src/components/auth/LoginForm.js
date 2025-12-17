@@ -5,6 +5,7 @@ import CountryCodeSelect from './CountryCodeSelect';
 import { login, verifyOTP } from '../../actions/authActions';
 import { validatePhoneNumber, validateOTP } from '../../utils/validators';
 import { FiSmartphone, FiArrowRight, FiArrowLeft } from 'react-icons/fi';
+import dockyardLogo from '../../assets/image/logo512.png';
 
 const LoginForm = () => {
   const dispatch = useDispatch();
@@ -69,13 +70,17 @@ const LoginForm = () => {
 
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="mx-auto w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center mb-3">
-          <FiSmartphone className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+        <div className="mx-auto w-20 h-20 mb-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 flex items-center justify-center p-3 shadow-lg">
+          <img src={dockyardLogo} alt="Colombo Dockyard" className="w-full h-full object-contain" />
         </div>
 
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          {otpSent ? 'Verify OTP' : 'Welcome back'}
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          {otpSent ? 'Verify OTP' : 'Welcome Back'}
         </h1>
+        
+        <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
+          Colombo Dockyard CRM
+        </p>
 
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {otpSent
