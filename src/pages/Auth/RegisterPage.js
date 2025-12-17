@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import RegisterForm from '../../components/auth/RegisterForm';
-import { FiArrowLeft } from 'react-icons/fi';
 
 const RegisterPage = () => {
   return (
@@ -14,28 +13,6 @@ const RegisterPage = () => {
       </div>
 
       <div className="relative flex min-h-screen flex-col">
-
-        {/* Header - Same as login page */}
-        <header className="px-6 py-5">
-          <div className="mx-auto max-w-7xl flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
-                <span className="text-white font-bold text-lg">CD</span>
-              </div>
-              <span className="hidden sm:block text-xl font-semibold text-gray-900 dark:text-white">
-                Colombo Dockyard
-              </span>
-            </Link>
-
-            <Link
-              to="/login"
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-            >
-              <FiArrowLeft />
-              Back to Login
-            </Link>
-          </div>
-        </header>
 
         {/* Main - Same container as login page */}
         <main className="flex flex-1 items-center justify-center px-4 py-10">
