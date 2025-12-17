@@ -77,10 +77,6 @@ const LoginForm = () => {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
           {otpSent ? 'Verify OTP' : 'Welcome Back'}
         </h1>
-        
-        <p className="text-sm font-medium text-blue-600 dark:text-blue-400 mb-1">
-          Colombo Dockyard CRM
-        </p>
 
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {otpSent
