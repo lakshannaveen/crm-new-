@@ -5,87 +5,59 @@ import { FiArrowLeft } from 'react-icons/fi';
 
 const LoginPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 
-                   dark:from-gray-900 dark:to-gray-800">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 
-                      dark:bg-blue-900 rounded-full mix-blend-multiply 
-                      filter blur-3xl opacity-20"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 
-                      dark:bg-purple-900 rounded-full mix-blend-multiply 
-                      filter blur-3xl opacity-20"></div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+
+      {/* Background Blobs */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-300/30 dark:bg-blue-900/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-purple-300/20 dark:bg-purple-900/30 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative min-h-screen flex flex-col">
+      <div className="relative flex min-h-screen flex-col">
+
         {/* Header */}
-        <header className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <Link
-              to="/"
-              className="flex items-center text-gray-900 dark:text-white"
-            >
-              <div className="h-10 w-10 bg-dockyard-blue rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-xl">CD</span>
+        <header className="px-6 py-5">
+          <div className="mx-auto max-w-7xl flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-lg">CD</span>
               </div>
-              <span className="ml-3 text-xl font-semibold hidden sm:inline">
+              <span className="hidden sm:block text-xl font-semibold text-gray-900 dark:text-white">
                 Colombo Dockyard
               </span>
             </Link>
+
             <Link
               to="/"
-              className="flex items-center text-gray-600 dark:text-gray-400 
-                       hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
             >
-              <FiArrowLeft className="mr-2" />
+              <FiArrowLeft />
               Back to Home
             </Link>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-          <div className="w-full max-w-lg">
-            {/* Card Container */}
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg 
-                          rounded-2xl shadow-2xl p-5 sm:p-8">
-              <LoginForm />
-            </div>
-
-            {/* Demo Credentials
-            <div className="mt-8 text-center">
-              <div className="inline-block bg-white/80 dark:bg-gray-800/80 
-                            backdrop-blur-lg rounded-xl p-4 shadow-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <strong>Demo Credentials:</strong>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Phone: +919899090909 • OTP: 123456
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                  Admin: +94123456789 • OTP: 123456
-                </p>
-              </div>
-            </div> */}
-          </div>
+        {/* Main */}
+        <main className="flex flex-1 items-center justify-center px-4 py-10">
+          <LoginForm />
         </main>
 
         {/* Footer */}
-        <footer className="px-4 py-6 text-center text-sm text-gray-600 
-                         dark:text-gray-400">
+        <footer className="px-6 py-6 text-center text-xs text-gray-600 dark:text-gray-400">
           <p>© {new Date().getFullYear()} Colombo Dockyard PLC. All rights reserved.</p>
-          <div className="mt-2 space-x-4">
+          <div className="mt-2 flex justify-center gap-4">
             <Link to="/terms" className="hover:text-gray-900 dark:hover:text-white">
-              Terms of Service
+              Terms
             </Link>
             <Link to="/privacy" className="hover:text-gray-900 dark:hover:text-white">
-              Privacy Policy
+              Privacy
             </Link>
             <Link to="/contact" className="hover:text-gray-900 dark:hover:text-white">
-              Contact Us
+              Contact
             </Link>
           </div>
         </footer>
+
       </div>
     </div>
   );
