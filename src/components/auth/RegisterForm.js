@@ -128,7 +128,7 @@ const RegisterForm = () => {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="mx-auto w-20 h-20 mb-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 flex items-center justify-center p-3 shadow-lg">
+        <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
           <img src={dockyardLogo} alt="Colombo Dockyard" className="w-full h-full object-contain" />
         </div>
 
