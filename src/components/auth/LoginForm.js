@@ -118,7 +118,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full btn-primary h-11 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? 'Sending OTP...' : 'Send code'}
             {!loading && <FiArrowRight />}
@@ -126,7 +126,7 @@ const LoginForm = () => {
 
           <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Don’t have an account?{' '}
-            <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-800">
+            <Link to="/register" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
               Sign up
             </Link>
           </p>
@@ -154,7 +154,7 @@ const LoginForm = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition disabled:opacity-50"
+            className="w-full btn-primary h-11 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Verifying...' : 'Verify & Continue'}
           </button>
@@ -164,7 +164,7 @@ const LoginForm = () => {
               type="button"
               onClick={handleResendOTP}
               disabled={otpResent || loading}
-              className="font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-50"
+              className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 disabled:opacity-50 transition-colors"
             >
               {otpResent ? 'OTP sent' : 'Resend code'}
             </button>

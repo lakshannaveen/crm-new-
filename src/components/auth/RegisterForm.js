@@ -112,7 +112,7 @@ const RegisterForm = () => {
         
         <Link
           to="/login"
-          className="inline-block w-full h-11 rounded-xl bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-2 mt-4"
+          className="inline-block w-full btn-primary h-11 rounded-xl shadow-md flex items-center justify-center gap-2 mt-4"
         >
           Back to Login
           <FiArrowRight />
@@ -258,11 +258,11 @@ const RegisterForm = () => {
           />
           <label htmlFor="terms" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
             I agree to the{' '}
-            <Link to="/terms" className="font-semibold text-blue-600 hover:text-blue-800">
+            <Link to="/terms" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link to="/privacy" className="font-semibold text-blue-600 hover:text-blue-800">
+            <Link to="/privacy" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
               Privacy Policy
             </Link>
           </label>
@@ -272,7 +272,7 @@ const RegisterForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold shadow-md hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full btn-primary h-11 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
@@ -290,7 +290,7 @@ const RegisterForm = () => {
         {/* Login Link */}
         <p className="text-center text-sm text-gray-600 dark:text-gray-400">
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-blue-600 hover:text-blue-800">
+          <Link to="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
             Sign in here
           </Link>
         </p>
