@@ -44,11 +44,11 @@ const RegisterPage = () => {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <main className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
           <div className="w-full max-w-lg">
             {/* Card Container */}
             <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg 
-                          rounded-2xl shadow-2xl p-8">
+                          rounded-2xl shadow-2xl p-5 sm:p-8">
               <RegisterForm />
             </div>
 
