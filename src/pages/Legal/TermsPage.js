@@ -162,6 +162,12 @@ const TermsPage = () => {
               Privacy Policy
             </Link>
             <Link 
+              to="/contact" 
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              Contact Us
+            </Link>
+            <Link 
               to="/login" 
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             >
