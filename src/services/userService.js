@@ -1,3 +1,5 @@
+import api from './api';
+
 // Mock service for user management
 class UserService {
   constructor() {
@@ -59,6 +61,18 @@ class UserService {
     };
 
     return user;
+  }
+
+  async getUserByServiceNo(serviceNo) {
+    if (!serviceNo) {
+      throw new Error('Service number is required');
+    }
+    const response = await api.get('/CDLRequirmentManagement/Login/GetUserByServiceNo', {
+      params: {
+        P_SERVICE_NO: serviceNo,
+      },
+    });
+    return response.data;
   }
 
   async rejectUser(userId) {

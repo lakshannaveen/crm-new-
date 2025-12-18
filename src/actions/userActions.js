@@ -9,6 +9,9 @@ import {
   REJECT_USER_REQUEST,
   REJECT_USER_SUCCESS,
   REJECT_USER_FAILURE,
+  GET_USER_BY_SERVICE_NO_REQUEST,
+  GET_USER_BY_SERVICE_NO_SUCCESS,
+  GET_USER_BY_SERVICE_NO_FAILURE,
 } from '../constants/actionTypes';
 import { userService } from '../services/userService';
 
@@ -29,6 +32,31 @@ export const getUserRequests = () => async (dispatch) => {
       payload: error.message,
     });
     toast.error('Failed to load user requests');
+  }
+};
+
+// Fetch user by service number (real API)
+export const getUserByServiceNo = (serviceNo) => async (dispatch) => {
+  try {
+    dispatch({ type: GET_USER_BY_SERVICE_NO_REQUEST });
+
+    if (!serviceNo) {
+      throw new Error('Service number is required');
+    }
+
+    const response = await userService.getUserByServiceNo(serviceNo);
+
+    dispatch({
+      type: GET_USER_BY_SERVICE_NO_SUCCESS,
+      payload: response,
+    });
+  } catch (error) {
+    const message = error?.response?.data?.message || error.message || 'Failed to fetch user';
+    dispatch({
+      type: GET_USER_BY_SERVICE_NO_FAILURE,
+      payload: message,
+    });
+    toast.error(message);
   }
 };
 

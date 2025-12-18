@@ -77,7 +77,7 @@ const LoadingScreen = () => {
       </div>
 
       {/* Custom CSS for shimmer animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);
@@ -86,7 +86,6 @@ const LoadingScreen = () => {
             transform: translateX(100%);
           }
         }
-        
         .animate-shimmer {
           animation: shimmer 1.5s infinite;
         }

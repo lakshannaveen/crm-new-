@@ -8,6 +8,9 @@ import {
   REJECT_USER_REQUEST,
   REJECT_USER_SUCCESS,
   REJECT_USER_FAILURE,
+  GET_USER_BY_SERVICE_NO_REQUEST,
+  GET_USER_BY_SERVICE_NO_SUCCESS,
+  GET_USER_BY_SERVICE_NO_FAILURE,
 } from '../constants/actionTypes';
 
 const initialState = {
@@ -15,6 +18,9 @@ const initialState = {
   approvedUsers: [],
   loading: false,
   error: null,
+  serviceUser: null,
+  serviceUserLoading: false,
+  serviceUserError: null,
 };
 
 const userReducer = (state = initialState, action) => {
@@ -58,6 +64,28 @@ const userReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         error: action.payload,
+      };
+
+    case GET_USER_BY_SERVICE_NO_REQUEST:
+      return {
+        ...state,
+        serviceUserLoading: true,
+        serviceUserError: null,
+      };
+
+    case GET_USER_BY_SERVICE_NO_SUCCESS:
+      return {
+        ...state,
+        serviceUserLoading: false,
+        serviceUser: action.payload,
+        serviceUserError: null,
+      };
+
+    case GET_USER_BY_SERVICE_NO_FAILURE:
+      return {
+        ...state,
+        serviceUserLoading: false,
+        serviceUserError: action.payload,
       };
 
     default:

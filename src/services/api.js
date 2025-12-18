@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Use window.backurl from index.js for all backend calls
+const API_BASE_URL = (typeof window !== 'undefined' && window.backurl) ? window.backurl : 'https://esystems.cdl.lk/backend-test';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

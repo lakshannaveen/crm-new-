@@ -8,6 +8,9 @@ import App from './App';
 import store from './store';
 import reportWebVitals from './reportWebVitals';
 
+// Expose backend base URL globally for non-module callers
+window.backurl = 'https://esystems.cdl.lk/backend-test';
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
