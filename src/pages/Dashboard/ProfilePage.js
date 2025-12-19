@@ -37,13 +37,11 @@ const ProfilePage = () => {
           name: showValue(pod.pod_name),
           email: showValue(pod.email),
           phone: showValue(pod.telno),
-          position: showValue(pod.contactperson),
+          address: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
+          fax: showValue(pod.faxno),
+          mobile: showValue(pod.pod_mobileno),
+          contactPerson: showValue(pod.contactperson),
           company: showValue(pod.pod_code),
-          location: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
-          website: 'N/A',
-          joinedDate: 'N/A',
-          language: 'N/A',
-          timezone: 'N/A',
         },
         security: {
           twoFactorEnabled: false,
@@ -58,7 +56,7 @@ const ProfilePage = () => {
       };
     }
     return {
-      personal: { name: 'N/A', email: 'N/A', phone: 'N/A', position: 'N/A', company: 'N/A', location: 'N/A', website: 'N/A', joinedDate: 'N/A', language: 'N/A', timezone: 'N/A' },
+      personal: { name: 'N/A', email: 'N/A', phone: 'N/A', address: 'N/A', fax: 'N/A', mobile: 'N/A', contactPerson: 'N/A', company: 'N/A' },
       security: { twoFactorEnabled: false, lastPasswordChange: 'N/A', activeSessions: 0, loginHistory: [] },
       notifications: { email: {}, push: {} },
     };
@@ -71,13 +69,11 @@ const ProfilePage = () => {
     name: safePersonal.name ?? 'N/A',
     email: safePersonal.email ?? 'N/A',
     phone: safePersonal.phone ?? 'N/A',
-    position: safePersonal.position ?? 'N/A',
+    address: safePersonal.address ?? 'N/A',
+    fax: safePersonal.fax ?? 'N/A',
+    mobile: safePersonal.mobile ?? 'N/A',
+    contactPerson: safePersonal.contactPerson ?? 'N/A',
     company: safePersonal.company ?? 'N/A',
-    location: safePersonal.location ?? 'N/A',
-    website: safePersonal.website ?? 'N/A',
-    joinedDate: safePersonal.joinedDate ?? 'N/A',
-    language: safePersonal.language ?? 'N/A',
-    timezone: safePersonal.timezone ?? 'N/A',
   };
   const [formData, setFormData] = useState(safeFormData);
   React.useEffect(() => {
@@ -192,7 +188,7 @@ const ProfilePage = () => {
                       {profileData.personal.name}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {profileData.personal.position}
+                      {profileData.personal.contactPerson}
                     </p>
                   </div>
                   
@@ -321,92 +317,33 @@ const ProfilePage = () => {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Position
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.position}
-                            onChange={(e) => handleInputChange('position', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Company
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.company}
-                            onChange={(e) => handleInputChange('company', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Location
-                          </label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                           <div className="relative">
                             <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="text"
-                              value={formData.location}
-                              onChange={(e) => handleInputChange('location', e.target.value)}
-                              disabled={!isEditing}
-                              className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Website
-                          </label>
-                          <div className="relative">
-                            <FiGlobe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="url"
-                              value={formData.website}
-                              onChange={(e) => handleInputChange('website', e.target.value)}
-                              disabled={!isEditing}
-                              className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                            />
+                            <input type="text" value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Language Preference
-                          </label>
-                          <select
-                            value={formData.language}
-                            onChange={(e) => handleInputChange('language', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          >
-                            <option value="English">English</option>
-                            <option value="Sinhala">Sinhala</option>
-                            <option value="Tamil">Tamil</option>
-                          </select>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fax Number</label>
+                          <input type="text" value={formData.fax} onChange={(e) => handleInputChange('fax', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mobile Number</label>
+                          <input type="text" value={formData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact Person</label>
+                          <input type="text" value={formData.contactPerson} onChange={(e) => handleInputChange('contactPerson', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company</label>
+                          <input type="text" value={formData.company} onChange={(e) => handleInputChange('company', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                       </div>
 
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <div className="flex items-center">
-                          <FiCalendar className="text-blue-500 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              Account Created
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {formatDate(profileData.personal.joinedDate, 'long')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Removed website and language fields as per requirements */}
+
+                      {/* Removed account created date section as per requirements */}
                     </div>
                   )}
 

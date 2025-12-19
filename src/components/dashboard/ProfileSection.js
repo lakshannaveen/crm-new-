@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { FiMapPin, FiPhone, FiMail, FiGlobe, FiCalendar, FiStar } from 'react-icons/fi';
+import { FiMapPin, FiPhone, FiMail, FiGlobe, FiCalendar, FiStar, FiUser } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
 
 const ProfileSection = () => {
@@ -10,23 +10,23 @@ const ProfileSection = () => {
   const showValue = v => (v && v !== '.' && v !== '' ? v : 'N/A');
   let userData = {
     name: 'N/A',
-    location: 'N/A',
+    address: 'N/A',
     phone: 'N/A',
+    fax: 'N/A',
+    mobile: 'N/A',
     email: 'N/A',
-    website: 'N/A',
-    joinedDate: 'N/A',
-    rating: 'N/A',
+    contactPerson: 'N/A',
   };
   if (serviceUser && typeof serviceUser === 'object' && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet.length > 0) {
     const pod = serviceUser.ResultSet[0];
     userData = {
       name: showValue(pod.pod_name),
-      location: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
+      address: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
       phone: showValue(pod.telno),
+      fax: showValue(pod.faxno),
+      mobile: showValue(pod.pod_mobileno),
       email: showValue(pod.email),
-      website: 'N/A',
-      joinedDate: 'N/A',
-      rating: 'N/A',
+      contactPerson: showValue(pod.contactperson),
     };
   }
   return (
@@ -52,60 +52,46 @@ const ProfileSection = () => {
           <FiMail className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Email</p>
-            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-              {userData.email}
-            </p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.email}</p>
           </div>
         </div>
         <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
           <FiPhone className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
           <div className="min-w-0">
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Phone</p>
-            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-              {userData.phone}
-            </p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.phone}</p>
           </div>
         </div>
         <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
           <FiMapPin className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Location</p>
-            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-              {userData.location}
-            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Address</p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.address}</p>
           </div>
         </div>
         <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-          <FiGlobe className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
+          <FiMail className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
           <div className="min-w-0">
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Website</p>
-            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-              {userData.website}
-            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Fax</p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.fax}</p>
+          </div>
+        </div>
+        <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <FiPhone className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Mobile</p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.mobile}</p>
+          </div>
+        </div>
+        <div className="flex items-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <FiUser className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400 mr-2 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">Contact Person</p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{userData.contactPerson}</p>
           </div>
         </div>
       </div>
-      <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-2 text-xs">
-        <div className="flex items-center text-gray-600 dark:text-gray-400">
-          <FiCalendar className="w-3 h-3 mr-1.5 flex-shrink-0" />
-          <span className="truncate">Joined {userData.joinedDate !== 'N/A' ? formatDate(userData.joinedDate, 'short') : 'N/A'}</span>
-        </div>
-        <div className="flex items-center">
-          <div className="flex items-center mr-3">
-            <div className="flex mr-1.5">
-              {[...Array(5)].map((_, i) => (
-                <FiStar
-                  key={i}
-                  className={`w-2.5 h-2.5 ${userData.rating !== 'N/A' && i < Math.floor(userData.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300 dark:text-gray-600'}`}
-                />
-              ))}
-            </div>
-            <span className="text-gray-900 dark:text-white font-medium text-xs">
-              {userData.rating}
-            </span>
-          </div>
-        </div>
-      </div>
+      {/* No bottom info bar, as requested */}
     </div>
   );
 };
