@@ -24,22 +24,13 @@ const LoadingScreen = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="flex flex-col items-center space-y-6 px-4">
-        {/* Logo Container with Animation */}
+        {/* Logo Only */}
         <div className="relative">
-          {/* Animated Rings */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-24 h-24 rounded-full border-2 border-blue-200 dark:border-blue-900 animate-ping opacity-20"></div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-28 h-28 rounded-full border-2 border-blue-300 dark:border-blue-800 animate-pulse"></div>
-          </div>
-          
-          {/* Logo */}
           <div className="relative z-10 bg-white dark:bg-gray-800 rounded-full p-3 shadow-xl">
             <img 
               src={logo} 
               alt="Dockyard Logo" 
-              className="w-16 h-16 object-contain animate-pulse"
+              className="w-16 h-16 object-contain"
             />
           </div>
         </div>
