@@ -1,5 +1,5 @@
-// userService.js
 import api from './api';
+import { BACKEND_BASE_URL } from '../index';
 
 // Mock service for user management
 class UserService {
@@ -69,8 +69,8 @@ class UserService {
       throw new Error('Service number is required');
     }
     try {
-      // Use the full API URL as backend CORS is enabled
-      const response = await api.get('https://esystems.cdl.lk/backend-test/CDLRequirmentManagement/Login/GetUserByServiceNo', {
+      // Use the backend base URL from index.js
+      const response = await api.get(`${BACKEND_BASE_URL}/CDLRequirmentManagement/Login/GetUserByServiceNo`, {
         params: {
           P_SERVICE_NO: serviceNo,
         },
