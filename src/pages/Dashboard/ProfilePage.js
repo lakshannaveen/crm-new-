@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { getUserByServiceNo } from '../../actions/userActions';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import {
@@ -11,6 +12,15 @@ import { formatDate } from '../../utils/formatters';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  const [serviceNo, setServiceNo] = useState('');
+  const { serviceUser, serviceUserLoading, serviceUserError } = useSelector(state => state.user);
+    // Handler for fetching user by service number
+    const handleFetchServiceUser = () => {
+      if (serviceNo) {
+        dispatch(getUserByServiceNo(serviceNo));
+      }
+    };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
@@ -71,6 +81,35 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Menu Button */}
+      {/* Service Number Fetch UI */}
+      <div className="max-w-xl mx-auto mt-6 mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex flex-col md:flex-row items-center gap-4">
+        <input
+          type="text"
+          placeholder="Enter Service Number (e.g. O0204)"
+          value={serviceNo}
+          onChange={e => setServiceNo(e.target.value)}
+          className="input-field flex-1 min-w-0"
+        />
+        <button
+          onClick={handleFetchServiceUser}
+          className="btn-primary px-4 py-2"
+          disabled={!serviceNo || serviceUserLoading}
+        >
+          {serviceUserLoading ? 'Loading...' : 'Fetch User By Service No'}
+        </button>
+      </div>
+      {/* Show result or error */}
+      <div className="max-w-xl mx-auto mb-8">
+        {serviceUserError && (
+          <div className="p-3 bg-red-100 text-red-700 rounded mb-2">{serviceUserError}</div>
+        )}
+        {serviceUser && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl shadow">
+            <h3 className="font-bold text-lg mb-2 text-blue-900 dark:text-blue-200">Service User Data</h3>
+            <pre className="text-xs whitespace-pre-wrap break-all text-gray-800 dark:text-gray-100 bg-transparent">{JSON.stringify(serviceUser, null, 2)}</pre>
+          </div>
+        )}
+      </div>
        
       <button
         onClick={() => setMobileMenuOpen(true)}
