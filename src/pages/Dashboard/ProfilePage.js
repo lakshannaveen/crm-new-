@@ -26,44 +26,63 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
  
-  const profileData = {
-    personal: {
-      name: user?.name || 'EVERGREEN MARINE CORP. (TAIWAN) LTD',
-      email: user?.email || 'john@oceancargolt.com',
-      phone: '+886 033123831',
-      position: 'Ship Owner',
-      company: 'Ocean Cargo Ltd',
-      location: 'LUCHU TAOYUAN COUNTY ,TAIWAN',
-      website: 'www.oceancargolt.com',
-      joinedDate: '2023-06-15',
-      language: 'English',
-      timezone: 'Asia/Colombo (GMT+5:30)',
-    },
-    security: {
-      twoFactorEnabled: false,
-      lastPasswordChange: '2024-01-15',
-      activeSessions: 2,
-      loginHistory: [
-        { device: 'Chrome on Windows', location: 'Colombo, LK', time: '2024-01-20 14:30' },
-        { device: 'Safari on iPhone', location: 'Colombo, LK', time: '2024-01-20 10:15' },
-      ],
-    },
-    notifications: {
-      email: {
-        projectUpdates: true,
-        tenderUpdates: true,
-        securityAlerts: true,
-        newsletter: false,
-      },
-      push: {
-        newMessages: true,
-        deadlineReminders: true,
-        systemAlerts: true,
-      },
-    },
-  };
+  // Only use fetched serviceUser data for profile details
+  const profileData = React.useMemo(() => {
+    // Helper to show N/A if value is missing/empty
+    const showValue = v => (v && v !== '.' && v !== '' ? v : 'N/A');
+    if (serviceUser && typeof serviceUser === 'object' && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet.length > 0) {
+      const pod = serviceUser.ResultSet[0];
+      return {
+        personal: {
+          name: showValue(pod.pod_name),
+          email: showValue(pod.email),
+          phone: showValue(pod.telno),
+          position: showValue(pod.contactperson),
+          company: showValue(pod.pod_code),
+          location: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
+          website: 'N/A',
+          joinedDate: 'N/A',
+          language: 'N/A',
+          timezone: 'N/A',
+        },
+        security: {
+          twoFactorEnabled: false,
+          lastPasswordChange: 'N/A',
+          activeSessions: 0,
+          loginHistory: [],
+        },
+        notifications: {
+          email: {},
+          push: {},
+        },
+      };
+    }
+    return {
+      personal: { name: 'N/A', email: 'N/A', phone: 'N/A', position: 'N/A', company: 'N/A', location: 'N/A', website: 'N/A', joinedDate: 'N/A', language: 'N/A', timezone: 'N/A' },
+      security: { twoFactorEnabled: false, lastPasswordChange: 'N/A', activeSessions: 0, loginHistory: [] },
+      notifications: { email: {}, push: {} },
+    };
+  }, [serviceUser]);
 
-  const [formData, setFormData] = useState(profileData.personal);
+  // When serviceUser changes, update formData
+  const safePersonal = profileData.personal || {};
+  // Always ensure all fields are defined and fallback to 'N/A'
+  const safeFormData = {
+    name: safePersonal.name ?? 'N/A',
+    email: safePersonal.email ?? 'N/A',
+    phone: safePersonal.phone ?? 'N/A',
+    position: safePersonal.position ?? 'N/A',
+    company: safePersonal.company ?? 'N/A',
+    location: safePersonal.location ?? 'N/A',
+    website: safePersonal.website ?? 'N/A',
+    joinedDate: safePersonal.joinedDate ?? 'N/A',
+    language: safePersonal.language ?? 'N/A',
+    timezone: safePersonal.timezone ?? 'N/A',
+  };
+  const [formData, setFormData] = useState(safeFormData);
+  React.useEffect(() => {
+    setFormData(safeFormData);
+  }, [profileData.personal]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -159,7 +178,7 @@ const ProfilePage = () => {
                       <div className="h-32 w-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 
                                     flex items-center justify-center mx-auto mb-4">
                         <span className="text-white text-4xl font-bold">
-                          {profileData.personal.name.charAt(0)}
+                          {profileData.personal.name ? profileData.personal.name.charAt(0) : ''}
                         </span>
                       </div>
                       <button className="absolute bottom-4 right-4 h-10 w-10 bg-white dark:bg-gray-800 
