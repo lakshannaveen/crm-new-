@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Use window.backurl from index.js for all backend calls
-const API_BASE_URL = (typeof window !== 'undefined' && window.backurl) ? window.backurl : 'https://esystems.cdl.lk/backend-test';
-
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  get baseURL() {
+    return (typeof window !== 'undefined' && window.backurl) ? window.backurl : '';
+  },
   headers: {
     'Content-Type': 'application/json',
   },
