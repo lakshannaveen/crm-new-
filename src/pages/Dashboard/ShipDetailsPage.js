@@ -4,8 +4,8 @@
 // // import { getShipDetails } from '../../actions/shipActions';
 // // import Header from '../../components/common/Header';
 // // import Sidebar from '../../components/common/Sidebar';
-// // import { 
-// //   FiArrowLeft, FiCalendar, FiAnchor, FiFlag, FiNavigation, 
+// // import {
+// //   FiArrowLeft, FiCalendar, FiAnchor, FiFlag, FiNavigation,
 // //   FiTrendingUp, FiFileText, FiMapPin, FiUsers, FiTool,
 // //   FiClipboard, FiCheckCircle, FiAlertCircle, FiClock
 // // } from 'react-icons/fi';
@@ -465,8 +465,8 @@
 // import { getShipDetails } from '../../actions/shipActions';
 // import Header from '../../components/common/Header';
 // import Sidebar from '../../components/common/Sidebar';
-// import { 
-//   FiArrowLeft, FiCalendar, FiAnchor, FiFlag, FiNavigation, 
+// import {
+//   FiArrowLeft, FiCalendar, FiAnchor, FiFlag, FiNavigation,
 //   FiTrendingUp, FiFileText, FiMapPin, FiUsers, FiTool,
 //   FiClipboard, FiCheckCircle, FiAlertCircle, FiClock,
 //   FiMenu, FiX
@@ -562,16 +562,16 @@
 
 //       {/* Mobile Sidebar Overlay */}
 //       <div className={`fixed inset-0 z-50 transition-all duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-//         <div 
-//           className="absolute inset-0 bg-black/50" 
-//           onClick={() => setMobileMenuOpen(false)} 
+//         <div
+//           className="absolute inset-0 bg-black/50"
+//           onClick={() => setMobileMenuOpen(false)}
 //         />
 //         <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ${
 //           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
 //         }`}>
 //           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
 //             <span className="font-semibold text-gray-900 dark:text-white">Navigation</span>
-//             <button 
+//             <button
 //               onClick={() => setMobileMenuOpen(false)}
 //               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
 //             >
@@ -595,8 +595,8 @@
 //             {/* Back Button & Breadcrumb - Mobile Optimized */}
 //             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
 //               <div className="flex items-center">
-//                 <Link 
-//                   to="/dashboard" 
+//                 <Link
+//                   to="/dashboard"
 //                   className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm"
 //                 >
 //                   <FiArrowLeft className="mr-2" />
@@ -612,8 +612,8 @@
 //                 <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusColor}`}>
 //                   {statusText}
 //                 </span>
-//                 <Link 
-//                   to={`/projects/${id}`} 
+//                 <Link
+//                   to={`/projects/${id}`}
 //                   className="btn-primary text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap"
 //                 >
 //                   View Project
@@ -626,10 +626,10 @@
 //               <div className="flex flex-col space-y-6">
 //                 {/* Ship Image */}
 //                 <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden -mx-4 sm:mx-0 -mt-4 sm:mt-0">
-//                   <img 
-//                     src={currentShip.image} 
-//                     alt={currentShip.name} 
-//                     className="w-full h-full object-cover" 
+//                   <img
+//                     src={currentShip.image}
+//                     alt={currentShip.name}
+//                     className="w-full h-full object-cover"
 //                   />
 //                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 //                   <div className="absolute bottom-4 left-4 right-4">
@@ -649,14 +649,14 @@
 //                         {currentShip.progress}%
 //                       </p>
 //                       <div className="w-12 sm:w-16 h-1.5 sm:h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-//                         <div 
-//                           className="h-full bg-blue-500" 
-//                           style={{ width: `${currentShip.progress}%` }} 
+//                         <div
+//                           className="h-full bg-blue-500"
+//                           style={{ width: `${currentShip.progress}%` }}
 //                         />
 //                       </div>
 //                     </div>
 //                   </div>
-                  
+
 //                   <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
 //                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Days Remaining</p>
 //                     <div className="flex items-center">
@@ -666,7 +666,7 @@
 //                       </p>
 //                     </div>
 //                   </div>
-                  
+
 //                   <div className="p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg col-span-2 sm:col-span-1">
 //                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Project Budget</p>
 //                     <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">$2.5M</p>
@@ -689,23 +689,23 @@
 //                           </span>
 //                         </div>
 //                       </div>
-                      
+
 //                       <div className="flex-1 text-center">
 //                         <div className="hidden sm:block h-1 w-24 bg-gray-300 dark:bg-gray-600 relative mx-auto">
-//                           <div 
-//                             className="absolute inset-0 bg-blue-500" 
-//                             style={{ width: `${currentShip.progress}%` }} 
+//                           <div
+//                             className="absolute inset-0 bg-blue-500"
+//                             style={{ width: `${currentShip.progress}%` }}
 //                           />
 //                         </div>
 //                         <div className="sm:hidden h-1 w-full bg-gray-300 dark:bg-gray-600 relative">
-//                           <div 
-//                             className="absolute inset-0 bg-blue-500" 
-//                             style={{ width: `${currentShip.progress}%` }} 
+//                           <div
+//                             className="absolute inset-0 bg-blue-500"
+//                             style={{ width: `${currentShip.progress}%` }}
 //                           />
 //                         </div>
 //                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Progress</p>
 //                       </div>
-                      
+
 //                       <div className="flex-1 text-right sm:text-left">
 //                         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Expected Completion</p>
 //                         <div className="flex items-center justify-end sm:justify-start">
@@ -891,9 +891,9 @@
 //                           </div>
 //                           <div className="flex items-center justify-between sm:justify-end">
 //                             <div className="w-24 sm:w-32 h-1.5 sm:h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mr-3 sm:mr-4">
-//                               <div 
-//                                 className="h-full bg-blue-500" 
-//                                 style={{ width: `${task.progress}%` }} 
+//                               <div
+//                                 className="h-full bg-blue-500"
+//                                 style={{ width: `${task.progress}%` }}
 //                               />
 //                             </div>
 //                             <span className="text-sm font-medium text-gray-900 dark:text-white whitespace-nowrap">
@@ -1015,32 +1015,57 @@
 
 // export default ShipDetailsPage;
 
-
-
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link } from 'react-router-dom';
-import { getShipDetails } from '../../actions/shipActions';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
-import { 
-  FiArrowLeft, FiCalendar, FiAnchor, FiFlag, FiNavigation, 
-  FiTrendingUp, FiFileText, FiMapPin, FiUsers, FiTool,
-  FiClipboard, FiCheckCircle, FiAlertCircle, FiClock,
-  FiMenu, FiX, FiDollarSign, FiGlobe, FiUser, FiBriefcase,
-  FiPercent, FiCreditCard, FiPackage, FiBarChart2,
-  FiServer, FiCpu, FiShield, FiMail, FiPhone, FiBook,
-  FiLayers, FiTarget, FiActivity, FiArchive
-} from 'react-icons/fi';
-import { formatDate } from '../../utils/formatters';
-import { getStatusColor, getStatusText } from '../../utils/helpers';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, Link } from "react-router-dom";
+import { getShipDetails } from "../../actions/shipActions";
+import Header from "../../components/common/Header";
+import Sidebar from "../../components/common/Sidebar";
+import {
+  FiArrowLeft,
+  FiCalendar,
+  FiAnchor,
+  FiFlag,
+  FiNavigation,
+  FiTrendingUp,
+  FiFileText,
+  FiMapPin,
+  // FiUsers,
+  FiTool,
+  // FiClipboard,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiClock,
+  FiMenu,
+  FiX,
+  FiDollarSign,
+  FiGlobe,
+  FiUser,
+  FiBriefcase,
+  FiPercent,
+  FiCreditCard,
+  FiPackage,
+  FiBarChart2,
+  FiServer,
+  FiCpu,
+  FiShield,
+  // FiMail,
+  // FiPhone,
+  FiBook,
+  FiLayers,
+  FiTarget,
+  FiActivity,
+  FiArchive,
+} from "react-icons/fi";
+import { formatDate } from "../../utils/formatters";
+import { getStatusColor, getStatusText } from "../../utils/helpers";
 
 const ShipDetailsPage = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { currentShip, loading } = useSelector(state => state.ships);
+  const { currentShip, loading } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -1052,8 +1077,8 @@ const ShipDetailsPage = () => {
       setIsScrolled(window.scrollY > 10);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [dispatch, id]);
 
   if (loading) {
@@ -1071,7 +1096,10 @@ const ShipDetailsPage = () => {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Ship Not Found
           </h2>
-          <Link to="/dashboard" className="btn-primary inline-flex items-center justify-center px-4 py-2">
+          <Link
+            to="/dashboard"
+            className="btn-primary inline-flex items-center justify-center px-4 py-2"
+          >
             <FiArrowLeft className="mr-2" />
             Back to Dashboard
           </Link>
@@ -1085,118 +1113,291 @@ const ShipDetailsPage = () => {
 
   // Basic Specifications
   const basicSpecifications = [
-    { label: 'IMO Number', value: currentShip.imoNumber || 'N/A', icon: FiAnchor },
-    { label: 'Ship Type', value: currentShip.type, icon: FiNavigation },
-    { label: 'Flag', value: currentShip.flag, icon: FiFlag },
-    { label: 'DWT', value: currentShip.dwt, unit: 'tons' },
-    { label: 'Gross Tonnage', value: currentShip.grossTonnage, unit: 'tons' },
-    { label: 'Length', value: currentShip.length, unit: 'm' },
-    { label: 'Beam', value: currentShip.beam, unit: 'm' },
-    { label: 'Draft', value: currentShip.draft, unit: 'm' },
-    { label: 'Year Built', value: currentShip.yearBuilt, icon: FiCalendar },
-    { label: 'Depth', value: currentShip.depth || 'N/A', unit: 'm' },
-    { label: 'Displacement', value: currentShip.displacement || 'N/A', unit: 'tons' },
-    { label: 'Speed', value: currentShip.speed || 'N/A', unit: 'knots' },
+    {
+      label: "IMO Number",
+      value: currentShip.imoNumber || "N/A",
+      icon: FiAnchor,
+    },
+    { label: "Ship Type", value: currentShip.type, icon: FiNavigation },
+    { label: "Flag", value: currentShip.flag, icon: FiFlag },
+    { label: "DWT", value: currentShip.dwt, unit: "tons" },
+    { label: "Gross Tonnage", value: currentShip.grossTonnage, unit: "tons" },
+    { label: "Length", value: currentShip.length, unit: "m" },
+    { label: "Beam", value: currentShip.beam, unit: "m" },
+    { label: "Draft", value: currentShip.draft, unit: "m" },
+    { label: "Year Built", value: currentShip.yearBuilt, icon: FiCalendar },
+    { label: "Depth", value: currentShip.depth || "N/A", unit: "m" },
+    {
+      label: "Displacement",
+      value: currentShip.displacement || "N/A",
+      unit: "tons",
+    },
+    { label: "Speed", value: currentShip.speed || "N/A", unit: "knots" },
   ];
 
   // Financial Information
   const financialInfo = [
-    { label: 'Currency', value: currentShip.currency || 'N/A', icon: FiDollarSign },
-    { label: 'Currency Rate', value: currentShip.currencyRate || 'N/A', icon: FiPercent },
-    { label: 'Foreign Value', value: currentShip.foreignValue || 'N/A', icon: FiDollarSign },
-    { label: 'Local Value', value: currentShip.localValue || 'N/A', icon: FiDollarSign },
-    { label: 'Expected Revenue', value: currentShip.expectedRevenue ? `$${currentShip.expectedRevenue}` : 'N/A', icon: FiBarChart2 },
+    {
+      label: "Currency",
+      value: currentShip.currency ?? "N/A",
+      icon: FiDollarSign,
+    },
+    {
+      label: "Currency Rate",
+      value: currentShip.currencyRate ?? "N/A",
+      icon: FiPercent,
+    },
+    {
+      label: "Foreign Value",
+      value: currentShip.foreignValue ?? "N/A",
+      icon: FiDollarSign,
+    },
+    {
+      label: "Local Value",
+      value: currentShip.localValue ?? "N/A",
+      icon: FiDollarSign,
+    },
+    {
+      label: "Expected Revenue",
+      value:
+        currentShip.expectedRevenue != null &&
+        currentShip.expectedRevenue !== ""
+          ? `$${currentShip.expectedRevenue}`
+          : "N/A",
+      icon: FiBarChart2,
+    },
   ];
 
   // Management Information
   const managementInfo = [
-    { label: 'Ship Manager', value: currentShip.shipManager || 'N/A', icon: FiUser },
-    { label: 'Estimate Engineer', value: currentShip.estimateEngineer || 'N/A', icon: FiTool },
-    { label: 'Project Manager', value: currentShip.projectManager || 'N/A', icon: FiBriefcase },
-    { label: 'Invoice Engineer', value: currentShip.invoiceEngineer || 'N/A', icon: FiCreditCard },
-    { label: 'Project Engineer', value: currentShip.projectEngineer || 'N/A', icon: FiServer },
+    {
+      label: "Ship Manager",
+      value: currentShip.shipManager || "N/A",
+      icon: FiUser,
+    },
+    {
+      label: "Estimate Engineer",
+      value: currentShip.estimateEngineer || "N/A",
+      icon: FiTool,
+    },
+    {
+      label: "Project Manager",
+      value: currentShip.projectManager || "N/A",
+      icon: FiBriefcase,
+    },
+    {
+      label: "Invoice Engineer",
+      value: currentShip.invoiceEngineer || "N/A",
+      icon: FiCreditCard,
+    },
+    {
+      label: "Project Engineer",
+      value: currentShip.projectEngineer || "N/A",
+      icon: FiServer,
+    },
   ];
 
   // Project Details
   const projectDetails = [
-    { label: 'Job Category', value: currentShip.shipCategory || 'N/A', icon: FiPackage },
-    { label: 'Job Main', value: currentShip.jobMain || 'N/A', icon: FiLayers },
-    { label: 'Project Name', value: currentShip.projectName || currentShip.name, icon: FiTarget },
-    { label: 'Repair Summary', value: currentShip.repairSummary || 'N/A', icon: FiFileText },
-    { label: 'Vessel History', value: currentShip.vesselHistory || 'N/A', icon: FiArchive },
+    {
+      label: "Job Category",
+      value: currentShip.shipCategory || "N/A",
+      icon: FiPackage,
+    },
+    { label: "Job Main", value: currentShip.jobMain || "N/A", icon: FiLayers },
+    {
+      label: "Project Name",
+      value: currentShip.projectName || currentShip.name,
+      icon: FiTarget,
+    },
+    {
+      label: "Repair Summary",
+      value: currentShip.repairSummary || "N/A",
+      icon: FiFileText,
+    },
+    {
+      label: "Vessel History",
+      value: currentShip.vesselHistory || "N/A",
+      icon: FiArchive,
+    },
   ];
 
   // Duration Information
   const durationInfo = [
-    { label: 'Afloat Duration', value: currentShip.afloatDuration ? `${currentShip.afloatDuration} days` : 'N/A', icon: FiClock },
-    { label: 'In Dock Duration', value: currentShip.inDockDuration ? `${currentShip.inDockDuration} days` : 'N/A', icon: FiCalendar },
+    {
+      label: "Afloat Duration",
+      value: currentShip.afloatDuration
+        ? `${currentShip.afloatDuration} days`
+        : "N/A",
+      icon: FiClock,
+    },
+    {
+      label: "In Dock Duration",
+      value: currentShip.inDockDuration
+        ? `${currentShip.inDockDuration} days`
+        : "N/A",
+      icon: FiCalendar,
+    },
   ];
 
   // Classification & Survey
   const classificationInfo = [
-    { label: 'Class Notation', value: currentShip.classNotation || 'N/A', icon: FiShield },
-    { label: 'Classification Dual', value: currentShip.classificationDual || 'N/A', icon: FiCpu },
-    { label: 'Estimate Labor Rate', value: currentShip.estimateLaborRate || 'N/A', icon: FiPercent },
+    {
+      label: "Class Notation",
+      value: currentShip.classNotation || "N/A",
+      icon: FiShield,
+    },
+    {
+      label: "Classification Dual",
+      value: currentShip.classificationDual || "N/A",
+      icon: FiCpu,
+    },
+    {
+      label: "Estimate Labor Rate",
+      value: currentShip.estimateLaborRate || "N/A",
+      icon: FiPercent,
+    },
   ];
 
   // Code Information
   const codeInfo = [
-    { label: 'Agent Code', value: currentShip.agentCode || 'N/A', icon: FiUser },
-    { label: 'Owner Code', value: currentShip.ownerCode || 'N/A', icon: FiBriefcase },
-    { label: 'Payment Code', value: currentShip.paymentCode || 'N/A', icon: FiCreditCard },
+    {
+      label: "Agent Code",
+      value: currentShip.agentCode || "N/A",
+      icon: FiUser,
+    },
+    {
+      label: "Owner Code",
+      value: currentShip.ownerCode || "N/A",
+      icon: FiBriefcase,
+    },
+    {
+      label: "Payment Code",
+      value: currentShip.paymentCode || "N/A",
+      icon: FiCreditCard,
+    },
   ];
 
   // Coating Information
   const coatingInfo = [
-    { label: 'Coating Inspector', value: currentShip.coatingInspector || 'N/A', icon: FiCheckCircle },
-    { label: 'Coating Provider', value: currentShip.coatingProvider || 'N/A', icon: FiPackage },
+    {
+      label: "Coating Inspector",
+      value: currentShip.coatingInspector || "N/A",
+      icon: FiCheckCircle,
+    },
+    {
+      label: "Coating Provider",
+      value: currentShip.coatingProvider || "N/A",
+      icon: FiPackage,
+    },
   ];
 
   // Status Information
   const statusInfo = [
-    { label: 'Work Done Status', value: currentShip.workDoneStatus || 'N/A', icon: FiActivity },
-    { label: 'Bill Status', value: currentShip.billStatus || 'N/A', icon: FiFileText },
-    { label: 'Invoice Status', value: currentShip.invoiceStatus || 'N/A', icon: FiCreditCard },
-    { label: 'Dock Number', value: currentShip.dockNumber || 'N/A', icon: FiMapPin },
-    { label: 'Completion Date', value: currentShip.completionDate || 'N/A', icon: FiCalendar },
+    {
+      label: "Work Done Status",
+      value: currentShip.workDoneStatus || "N/A",
+      icon: FiActivity,
+    },
+    {
+      label: "Bill Status",
+      value: currentShip.billStatus || "N/A",
+      icon: FiFileText,
+    },
+    {
+      label: "Invoice Status",
+      value: currentShip.invoiceStatus || "N/A",
+      icon: FiCreditCard,
+    },
+    {
+      label: "Dock Number",
+      value: currentShip.dockNumber || "N/A",
+      icon: FiMapPin,
+    },
+    {
+      label: "Completion Date",
+      value: currentShip.completionDate || "N/A",
+      icon: FiCalendar,
+    },
   ];
 
   // Contact Information
   const contactInfo = [
-    { label: 'Country', value: currentShip.country || 'N/A', icon: FiGlobe },
-    { label: 'PPD Site', value: currentShip.ppdSite || 'N/A', icon: FiMapPin },
-    { label: 'Previous Name', value: currentShip.previousName || 'N/A', icon: FiBook },
+    { label: "Country", value: currentShip.country || "N/A", icon: FiGlobe },
+    { label: "PPD Site", value: currentShip.ppdSite || "N/A", icon: FiMapPin },
+    {
+      label: "Previous Name",
+      value: currentShip.previousName || "N/A",
+      icon: FiBook,
+    },
   ];
 
   const maintenance = [
-    { label: 'Last Dry Docking', value: currentShip.lastDryDocking, icon: FiCalendar },
-    { label: 'Next Dry Docking', value: currentShip.nextDryDocking, icon: FiTrendingUp },
-    { label: 'Class Survey Due', value: currentShip.classSurveyDue, icon: FiCheckCircle },
+    {
+      label: "Last Dry Docking",
+      value: currentShip.lastDryDocking,
+      icon: FiCalendar,
+    },
+    {
+      label: "Next Dry Docking",
+      value: currentShip.nextDryDocking,
+      icon: FiTrendingUp,
+    },
+    {
+      label: "Class Survey Due",
+      value: currentShip.classSurveyDue,
+      icon: FiCheckCircle,
+    },
   ];
 
   const tasks = [
-    { id: 1, title: 'Hull Cleaning & Painting', status: 'completed', progress: 100 },
-    { id: 2, title: 'Engine Overhaul', status: 'in_progress', progress: 75 },
-    { id: 3, title: 'Navigation System Update', status: 'in_progress', progress: 60 },
-    { id: 4, title: 'Safety Equipment Inspection', status: 'pending', progress: 30 },
-    { id: 5, title: 'Cargo Hold Maintenance', status: 'pending', progress: 10 },
+    {
+      id: 1,
+      title: "Hull Cleaning & Painting",
+      status: "completed",
+      progress: 100,
+    },
+    { id: 2, title: "Engine Overhaul", status: "in_progress", progress: 75 },
+    {
+      id: 3,
+      title: "Navigation System Update",
+      status: "in_progress",
+      progress: 60,
+    },
+    {
+      id: 4,
+      title: "Safety Equipment Inspection",
+      status: "pending",
+      progress: 30,
+    },
+    { id: 5, title: "Cargo Hold Maintenance", status: "pending", progress: 10 },
   ];
 
   const renderInfoSection = (title, items, columns = 3) => {
     return (
       <div className="space-y-4">
-        <h4 className="text-base font-semibold text-gray-900 dark:text-white">{title}</h4>
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns} gap-3`}>
+        <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+          {title}
+        </h4>
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-${columns} gap-3`}
+        >
           {items.map((item, index) => (
-            <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div
+              key={index}
+              className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+            >
               <div className="flex items-center mb-1">
-                {item.icon && <item.icon className="mr-2 text-gray-400 w-4 h-4" />}
+                {item.icon && (
+                  <item.icon className="mr-2 text-gray-400 w-4 h-4" />
+                )}
                 <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
                   {item.label}
                 </span>
               </div>
               <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                {item.value} {item.unit && (
+                {item.value}{" "}
+                {item.unit && (
                   <span className="text-xs text-gray-500">{item.unit}</span>
                 )}
               </p>
@@ -1213,24 +1414,32 @@ const ShipDetailsPage = () => {
       <button
         onClick={() => setMobileMenuOpen(true)}
         className={`md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg transition-all ${
-          isScrolled ? 'shadow-lg' : 'shadow'
+          isScrolled ? "shadow-lg" : "shadow"
         }`}
       >
         <FiMenu className="w-6 h-6" />
       </button>
 
       {/* Mobile Sidebar Overlay */}
-      <div className={`fixed inset-0 z-50 transition-all duration-300 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
-        <div 
-          className="absolute inset-0 bg-black/50" 
-          onClick={() => setMobileMenuOpen(false)} 
+      <div
+        className={`fixed inset-0 z-50 transition-all duration-300 ${
+          mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setMobileMenuOpen(false)}
         />
-        <div className={`absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ${
-          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}>
+        <div
+          className={`absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 transform transition-transform duration-300 ${
+            mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
           <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <span className="font-semibold text-gray-900 dark:text-white">Navigation</span>
-            <button 
+            <span className="font-semibold text-gray-900 dark:text-white">
+              Navigation
+            </span>
+            <button
               onClick={() => setMobileMenuOpen(false)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
@@ -1254,8 +1463,8 @@ const ShipDetailsPage = () => {
             {/* Back Button & Breadcrumb */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
               <div className="flex items-center">
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
                   className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm"
                 >
                   <FiArrowLeft className="mr-2" />
@@ -1268,11 +1477,13 @@ const ShipDetailsPage = () => {
                 </span>
               </div>
               <div className="flex items-center space-x-3">
-                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusColor}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusColor}`}
+                >
                   {statusText}
                 </span>
-                <Link 
-                  to={`/projects/${id}`} 
+                <Link
+                  to={`/projects/${id}`}
                   className="btn-primary text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap"
                 >
                   View Project
@@ -1285,16 +1496,19 @@ const ShipDetailsPage = () => {
               <div className="flex flex-col space-y-6">
                 {/* Ship Image */}
                 <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden -mx-4 sm:mx-0 -mt-4 sm:mt-0">
-                  <img 
-                    src={currentShip.image} 
-                    alt={currentShip.name} 
-                    className="w-full h-full object-cover" 
+                  <img
+                    src={currentShip.image}
+                    alt={currentShip.name}
+                    className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   <div className="absolute bottom-4 left-4 right-4">
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 truncate">{currentShip.name}</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-white mb-1 truncate">
+                      {currentShip.name}
+                    </h1>
                     <p className="text-gray-200 text-xs sm:text-sm truncate">
-                      {currentShip.imoNumber || 'No IMO'} • {currentShip.flag} • {currentShip.type}
+                      {currentShip.imoNumber || "No IMO"} • {currentShip.flag} •{" "}
+                      {currentShip.type}
                     </p>
                     {currentShip.previousName && (
                       <p className="text-gray-300 text-xs mt-1">
@@ -1307,41 +1521,49 @@ const ShipDetailsPage = () => {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                   <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Repair Progress</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
+                      Repair Progress
+                    </p>
                     <div className="flex items-center justify-between">
                       <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                         {currentShip.progress}%
                       </p>
                       <div className="w-12 sm:w-16 h-1.5 sm:h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500" 
-                          style={{ width: `${currentShip.progress}%` }} 
+                        <div
+                          className="h-full bg-blue-500"
+                          style={{ width: `${currentShip.progress}%` }}
                         />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Days in Dock</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
+                      Days in Dock
+                    </p>
                     <div className="flex items-center">
                       <FiCalendar className="text-green-500 mr-2 w-4 h-4 sm:w-5 sm:h-5" />
                       <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
-                        {currentShip.inDockDuration || '0'}
+                        {currentShip.inDockDuration || "0"}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Expected Revenue</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
+                      Expected Revenue
+                    </p>
                     <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-                      ${currentShip.expectedRevenue || '0'}
+                      ${currentShip.expectedRevenue ?? "0"}
                     </p>
                   </div>
 
                   <div className="p-3 sm:p-4 bg-orange-50 dark:bg-orange-900/30 rounded-lg">
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">Job Category</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
+                      Job Category
+                    </p>
                     <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-                      {currentShip.shipCategory || 'N/A'}
+                      {currentShip.shipCategory || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -1354,37 +1576,43 @@ const ShipDetailsPage = () => {
                   <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-4 sm:space-y-0">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                       <div className="flex-1">
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Start Date</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          Start Date
+                        </p>
                         <div className="flex items-center">
                           <FiCalendar className="mr-2 text-gray-400 w-4 h-4" />
                           <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                            {formatDate(currentShip.startDate, 'short')}
+                            {formatDate(currentShip.startDate, "short")}
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="flex-1 text-center">
                         <div className="hidden sm:block h-1 w-24 bg-gray-300 dark:bg-gray-600 relative mx-auto">
-                          <div 
-                            className="absolute inset-0 bg-blue-500" 
-                            style={{ width: `${currentShip.progress}%` }} 
+                          <div
+                            className="absolute inset-0 bg-blue-500"
+                            style={{ width: `${currentShip.progress}%` }}
                           />
                         </div>
                         <div className="sm:hidden h-1 w-full bg-gray-300 dark:bg-gray-600 relative">
-                          <div 
-                            className="absolute inset-0 bg-blue-500" 
-                            style={{ width: `${currentShip.progress}%` }} 
+                          <div
+                            className="absolute inset-0 bg-blue-500"
+                            style={{ width: `${currentShip.progress}%` }}
                           />
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Progress</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Progress
+                        </p>
                       </div>
-                      
+
                       <div className="flex-1 text-right sm:text-left">
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">Expected Completion</p>
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">
+                          Expected Completion
+                        </p>
                         <div className="flex items-center justify-end sm:justify-start">
                           <FiCalendar className="mr-2 text-gray-400 w-4 h-4" />
                           <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                            {formatDate(currentShip.endDate, 'short')}
+                            {formatDate(currentShip.endDate, "short")}
                           </span>
                         </div>
                       </div>
@@ -1399,21 +1627,21 @@ const ShipDetailsPage = () => {
               <div className="relative">
                 <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
                   {[
-                    'overview', 
-                    'specifications', 
-                    'financial', 
-                    'management', 
-                    'project', 
-                    'status', 
-                    'documents'
+                    "overview",
+                    "specifications",
+                    "financial",
+                    "management",
+                    "project",
+                    "status",
+                    "documents",
                   ].map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={`px-4 py-2 font-medium text-sm whitespace-nowrap border-b-2 transition-colors flex-shrink-0 ${
                         activeTab === tab
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                          ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                          : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                       }`}
                     >
                       {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -1425,17 +1653,26 @@ const ShipDetailsPage = () => {
 
             {/* Tab Content */}
             <div className="card">
-              {activeTab === 'overview' && (
+              {activeTab === "overview" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Basic Information', basicSpecifications.slice(0, 6), 3)}
-                  {renderInfoSection('Financial Overview', financialInfo, 3)}
-                  {renderInfoSection('Management Team', managementInfo, 3)}
-                  
+                  {renderInfoSection(
+                    "Basic Information",
+                    basicSpecifications.slice(0, 6),
+                    3
+                  )}
+                  {renderInfoSection("Financial Overview", financialInfo, 3)}
+                  {renderInfoSection("Management Team", managementInfo, 3)}
+
                   <div className="space-y-4">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Maintenance Schedule</h4>
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Maintenance Schedule
+                    </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {maintenance.map((item, index) => (
-                        <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div
+                          key={index}
+                          className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                        >
                           <div className="flex items-center mb-1">
                             <item.icon className="mr-2 text-gray-400 w-4 h-4" />
                             <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -1443,7 +1680,7 @@ const ShipDetailsPage = () => {
                             </span>
                           </div>
                           <p className="font-medium text-sm text-gray-900 dark:text-white">
-                            {formatDate(item.value, 'short')}
+                            {formatDate(item.value, "short")}
                           </p>
                         </div>
                       ))}
@@ -1452,29 +1689,43 @@ const ShipDetailsPage = () => {
                 </div>
               )}
 
-              {activeTab === 'specifications' && (
+              {activeTab === "specifications" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Ship Specifications', basicSpecifications, 3)}
-                  {renderInfoSection('Contact Information', contactInfo, 2)}
-                  {renderInfoSection('Duration Information', durationInfo, 2)}
+                  {renderInfoSection(
+                    "Ship Specifications",
+                    basicSpecifications,
+                    3
+                  )}
+                  {renderInfoSection("Contact Information", contactInfo, 2)}
+                  {renderInfoSection("Duration Information", durationInfo, 2)}
                 </div>
               )}
 
-              {activeTab === 'financial' && (
+              {activeTab === "financial" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Financial Details', financialInfo, 2)}
-                  {renderInfoSection('Code Information', codeInfo, 3)}
+                  {renderInfoSection("Financial Details", financialInfo, 2)}
+                  {renderInfoSection("Code Information", codeInfo, 3)}
                   <div className="space-y-4">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Currency Information</h4>
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Currency Information
+                    </h4>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Currency</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{currentShip.currency || 'N/A'}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            Currency
+                          </p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {currentShip.currency || "N/A"}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Exchange Rate</p>
-                          <p className="font-medium text-gray-900 dark:text-white">{currentShip.currencyRate || 'N/A'}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            Exchange Rate
+                          </p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {currentShip.currencyRate ?? "N/A"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -1482,30 +1733,39 @@ const ShipDetailsPage = () => {
                 </div>
               )}
 
-              {activeTab === 'management' && (
+              {activeTab === "management" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Management Team', managementInfo, 2)}
-                  {renderInfoSection('Coating Information', coatingInfo, 2)}
-                  {renderInfoSection('Code Information', codeInfo, 3)}
+                  {renderInfoSection("Management Team", managementInfo, 2)}
+                  {renderInfoSection("Coating Information", coatingInfo, 2)}
+                  {renderInfoSection("Code Information", codeInfo, 3)}
                 </div>
               )}
 
-              {activeTab === 'project' && (
+              {activeTab === "project" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Project Details', projectDetails, 2)}
-                  {renderInfoSection('Classification & Survey', classificationInfo, 2)}
-                  {renderInfoSection('Duration Information', durationInfo, 2)}
-                  
+                  {renderInfoSection("Project Details", projectDetails, 2)}
+                  {renderInfoSection(
+                    "Classification & Survey",
+                    classificationInfo,
+                    2
+                  )}
+                  {renderInfoSection("Duration Information", durationInfo, 2)}
+
                   <div className="space-y-4">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Project Tasks</h4>
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Project Tasks
+                    </h4>
                     <div className="space-y-3">
                       {tasks.map((task) => (
-                        <div key={task.id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div
+                          key={task.id}
+                          className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                        >
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                             <div className="flex items-center flex-1 min-w-0">
-                              {task.status === 'completed' ? (
+                              {task.status === "completed" ? (
                                 <FiCheckCircle className="text-green-500 mr-3 w-4 h-4" />
-                              ) : task.status === 'in_progress' ? (
+                              ) : task.status === "in_progress" ? (
                                 <FiClock className="text-blue-500 mr-3 w-4 h-4" />
                               ) : (
                                 <FiAlertCircle className="text-yellow-500 mr-3 w-4 h-4" />
@@ -1518,9 +1778,9 @@ const ShipDetailsPage = () => {
                             </div>
                             <div className="flex items-center justify-between sm:justify-end">
                               <div className="w-24 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mr-3">
-                                <div 
-                                  className="h-full bg-blue-500" 
-                                  style={{ width: `${task.progress}%` }} 
+                                <div
+                                  className="h-full bg-blue-500"
+                                  style={{ width: `${task.progress}%` }}
                                 />
                               </div>
                               <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -1535,28 +1795,34 @@ const ShipDetailsPage = () => {
                 </div>
               )}
 
-              {activeTab === 'status' && (
+              {activeTab === "status" && (
                 <div className="space-y-8">
-                  {renderInfoSection('Status Information', statusInfo, 2)}
-                  
+                  {renderInfoSection("Status Information", statusInfo, 2)}
+
                   <div className="space-y-4">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">Current Status</h4>
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Current Status
+                    </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Work Status</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Work Status
+                        </p>
                         <div className="flex items-center">
                           <FiActivity className="text-blue-500 mr-2" />
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {currentShip.workDoneStatus || 'N/A'}
+                            {currentShip.workDoneStatus || "N/A"}
                           </span>
                         </div>
                       </div>
                       <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Billing Status</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          Billing Status
+                        </p>
                         <div className="flex items-center">
                           <FiFileText className="text-green-500 mr-2" />
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {currentShip.billStatus || 'N/A'}
+                            {currentShip.billStatus || "N/A"}
                           </span>
                         </div>
                       </div>
@@ -1565,7 +1831,7 @@ const ShipDetailsPage = () => {
                 </div>
               )}
 
-              {activeTab === 'documents' && (
+              {activeTab === "documents" && (
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-6">
@@ -1573,14 +1839,47 @@ const ShipDetailsPage = () => {
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {[
-                        { name: 'Engineering Drawings', type: 'PDF', size: '2.4 MB', status: 'approved' },
-                        { name: 'Class Approval Certificate', type: 'PDF', size: '1.1 MB', status: 'approved' },
-                        { name: 'Safety Plan', type: 'DOC', size: '3.2 MB', status: 'pending' },
-                        { name: 'Inspection Reports', type: 'PDF', size: '4.7 MB', status: 'approved' },
-                        { name: 'Quality Control Documents', type: 'XLS', size: '2.8 MB', status: 'in_review' },
-                        { name: 'Final Survey Report', type: 'PDF', size: '5.3 MB', status: 'pending' },
+                        {
+                          name: "Engineering Drawings",
+                          type: "PDF",
+                          size: "2.4 MB",
+                          status: "approved",
+                        },
+                        {
+                          name: "Class Approval Certificate",
+                          type: "PDF",
+                          size: "1.1 MB",
+                          status: "approved",
+                        },
+                        {
+                          name: "Safety Plan",
+                          type: "DOC",
+                          size: "3.2 MB",
+                          status: "pending",
+                        },
+                        {
+                          name: "Inspection Reports",
+                          type: "PDF",
+                          size: "4.7 MB",
+                          status: "approved",
+                        },
+                        {
+                          name: "Quality Control Documents",
+                          type: "XLS",
+                          size: "2.8 MB",
+                          status: "in_review",
+                        },
+                        {
+                          name: "Final Survey Report",
+                          type: "PDF",
+                          size: "5.3 MB",
+                          status: "pending",
+                        },
                       ].map((doc, index) => (
-                        <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div
+                          key={index}
+                          className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                        >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
@@ -1590,11 +1889,15 @@ const ShipDetailsPage = () => {
                                 {doc.type} • {doc.size}
                               </p>
                             </div>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              doc.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-                              doc.status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-                              'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                            }`}>
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-medium ${
+                                doc.status === "approved"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                  : doc.status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                              }`}
+                            >
                               {doc.status}
                             </span>
                           </div>

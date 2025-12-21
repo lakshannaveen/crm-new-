@@ -1,21 +1,32 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiSettings, FiCalendar, FiAnchor, FiFlag } from 'react-icons/fi';
-import { formatDate } from '../../utils/formatters';
-import { getStatusColor, getStatusText } from '../../utils/helpers';
-import ShipDetailsModal from './ShipDetailsModal';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { FiCalendar, FiAnchor, FiFlag } from "react-icons/fi";
+import { formatDate } from "../../utils/formatters";
+import { getStatusColor, getStatusText } from "../../utils/helpers";
+import { setSelectedShipJmain } from "../../actions/shipActions";
+import ShipDetailsModal from "./ShipDetailsModal";
 
 const ShipCard = ({ ship }) => {
+  const dispatch = useDispatch();
   const [showDetails, setShowDetails] = useState(false);
 
   const statusColor = getStatusColor(ship.status);
   const statusText = getStatusText(ship.status);
 
+  const handleViewDetails = () => {
+    // Store the ship's JMAIN in localStorage before showing details
+    if (ship.jmainNo || ship.SHIP_JMAIN) {
+      dispatch(setSelectedShipJmain(ship.jmainNo || ship.SHIP_JMAIN));
+    }
+    setShowDetails(true);
+  };
+
   const getProgressColor = (progress) => {
-    if (progress >= 75) return 'bg-green-500';
-    if (progress >= 50) return 'bg-blue-500';
-    if (progress >= 25) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (progress >= 75) return "bg-green-500";
+    if (progress >= 50) return "bg-blue-500";
+    if (progress >= 25) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   return (
@@ -31,7 +42,9 @@ const ShipCard = ({ ship }) => {
                 className="w-full h-full object-cover"
               />
               <div className="absolute top-3 right-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}
+                >
                   {statusText}
                 </span>
               </div>
@@ -56,7 +69,7 @@ const ShipCard = ({ ship }) => {
                 </p>
               </div>
               <button
-                onClick={() => setShowDetails(true)}
+                onClick={handleViewDetails}
                 className="mt-2 md:mt-0 px-4 py-2 bg-blue-50 text-blue-600 
                          dark:bg-blue-900/30 dark:text-blue-400 rounded-lg 
                          hover:bg-blue-100 dark:hover:bg-blue-900/50 
@@ -74,7 +87,9 @@ const ShipCard = ({ ship }) => {
               </div>
               <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-full ${getProgressColor(ship.progress)} rounded-full 
+                  className={`h-full ${getProgressColor(
+                    ship.progress
+                  )} rounded-full 
                            transition-all duration-300`}
                   style={{ width: `${ship.progress}%` }}
                 />
@@ -90,7 +105,7 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {formatDate(ship.startDate, 'short')}
+                    {formatDate(ship.startDate, "short")}
                   </span>
                 </div>
               </div>
@@ -101,7 +116,7 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {formatDate(ship.endDate, 'short')}
+                    {formatDate(ship.endDate, "short")}
                   </span>
                 </div>
               </div>
@@ -117,7 +132,7 @@ const ShipCard = ({ ship }) => {
               </Link>
               <button
                 className="flex-1 min-w-[120px] btn-secondary py-2 text-sm"
-                onClick={() => setShowDetails(true)}
+                onClick={handleViewDetails}
               >
                 Quick View
               </button>

@@ -11,7 +11,10 @@ import {
   UPDATE_SHIP_REQUEST,
   UPDATE_SHIP_SUCCESS,
   UPDATE_SHIP_FAILURE,
-} from '../constants/actionTypes';
+  FETCH_SHIPS_REQUEST,
+  FETCH_SHIPS_SUCCESS,
+  FETCH_SHIPS_FAILURE,
+} from "../constants/actionTypes";
 
 const initialState = {
   ships: [],
@@ -32,11 +35,21 @@ const shipReducer = (state = initialState, action) => {
         error: null,
       };
 
+      case FETCH_SHIPS_REQUEST:
+      return { ...state, loading: true, error: null };
+
+    case FETCH_SHIPS_SUCCESS:
+      return { ...state, loading: false, ships: action.payload };
+
+    case FETCH_SHIPS_FAILURE:
+      return { ...state, loading: false, error: action.payload };
+
+
     case GET_SHIPS_SUCCESS:
       return {
         ...state,
         loading: false,
-        ships: action.payload,
+        ships: Array.isArray(action.payload) ? action.payload : [],
       };
 
     case GET_SHIP_DETAILS_SUCCESS:
@@ -57,7 +70,7 @@ const shipReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        ships: state.ships.map(ship =>
+        ships: state.ships.map((ship) =>
           ship.id === action.payload.id ? action.payload : ship
         ),
         currentShip: action.payload,

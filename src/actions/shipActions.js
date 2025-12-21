@@ -1,8 +1,9 @@
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import {
   GET_SHIPS_REQUEST,
   GET_SHIPS_SUCCESS,
   GET_SHIPS_FAILURE,
+  SET_SELECTED_SHIP_JMAIN,
   GET_SHIP_DETAILS_REQUEST,
   GET_SHIP_DETAILS_SUCCESS,
   GET_SHIP_DETAILS_FAILURE,
@@ -12,15 +13,40 @@ import {
   UPDATE_SHIP_REQUEST,
   UPDATE_SHIP_SUCCESS,
   UPDATE_SHIP_FAILURE,
-} from '../constants/actionTypes';
-import { shipService } from '../services/shipService';
+  FETCH_SHIPS_REQUEST,
+  FETCH_SHIPS_SUCCESS,
+  FETCH_SHIPS_FAILURE,
+} from "../constants/actionTypes";
+import { shipService } from "../services/shipService";
+
+export const fetchOwnerShips = (serviceNo) => async (dispatch) => {
+  dispatch({ type: FETCH_SHIPS_REQUEST });
+
+  try {
+    const ships = await shipService.getShips(serviceNo);
+    dispatch({ type: FETCH_SHIPS_SUCCESS, payload: ships });
+  } catch (error) {
+    dispatch({
+      type: FETCH_SHIPS_FAILURE,
+      payload: error.message,
+    });
+  }
+};
 
 // Get all ships for current user
-export const getShips = () => async (dispatch) => {
+export const getShips = () => async (dispatch, getState) => {
   try {
     dispatch({ type: GET_SHIPS_REQUEST });
 
-    const ships = await shipService.getShips();
+    // Get serviceNo from logged-in user
+    const { auth } = getState();
+    const serviceNo = auth.user?.serviceNo;
+
+    if (!serviceNo) {
+      throw new Error("User service number not found. Please log in again.");
+    }
+
+    const ships = await shipService.getShips(serviceNo);
 
     dispatch({
       type: GET_SHIPS_SUCCESS,
@@ -31,16 +57,44 @@ export const getShips = () => async (dispatch) => {
       type: GET_SHIPS_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to load ships');
+    toast.error(error.message || "Failed to load ships");
+  }
+};
+
+// Set selected ship JMAIN in localStorage
+export const setSelectedShipJmain = (jmainNo) => (dispatch) => {
+  if (jmainNo) {
+    localStorage.setItem("SELECTED_SHIP_JMAIN", jmainNo);
+    dispatch({
+      type: SET_SELECTED_SHIP_JMAIN,
+      payload: jmainNo,
+    });
   }
 };
 
 // Get ship details by ID
-export const getShipDetails = (shipId) => async (dispatch) => {
+export const getShipDetails = (jmainNo) => async (dispatch, getState) => {
   try {
     dispatch({ type: GET_SHIP_DETAILS_REQUEST });
 
-    const ship = await shipService.getShipDetails(shipId);
+    // Get serviceNo from logged-in user
+    const { auth } = getState();
+    const serviceNo = auth.user?.serviceNo;
+
+    if (!serviceNo) {
+      throw new Error("User service number not found. Please log in again.");
+    }
+
+    // If jmainNo not provided, try to get from localStorage
+    const jmain = jmainNo || localStorage.getItem("SELECTED_SHIP_JMAIN");
+
+    if (!jmain) {
+      throw new Error(
+        "Ship JMAIN number not found. Please select a ship first."
+      );
+    }
+
+    const ship = await shipService.getShipDetails(serviceNo, jmain);
 
     dispatch({
       type: GET_SHIP_DETAILS_SUCCESS,
@@ -51,7 +105,7 @@ export const getShipDetails = (shipId) => async (dispatch) => {
       type: GET_SHIP_DETAILS_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to load ship details');
+    toast.error(error.message || "Failed to load ship details");
   }
 };
 
@@ -67,13 +121,13 @@ export const addShip = (shipData) => async (dispatch) => {
       payload: newShip,
     });
 
-    toast.success('Ship added successfully');
+    toast.success("Ship added successfully");
   } catch (error) {
     dispatch({
       type: ADD_SHIP_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to add ship');
+    toast.error("Failed to add ship");
   }
 };
 
@@ -89,12 +143,12 @@ export const updateShip = (shipId, shipData) => async (dispatch) => {
       payload: updatedShip,
     });
 
-    toast.success('Ship updated successfully');
+    toast.success("Ship updated successfully");
   } catch (error) {
     dispatch({
       type: UPDATE_SHIP_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to update ship');
+    toast.error("Failed to update ship");
   }
 };
