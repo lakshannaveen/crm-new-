@@ -114,21 +114,13 @@
 import oceanQueenImage from "../assets/image/ocean_queen_12.jpg";
 import SeaVoyagerImage from "../assets/image/MV Sea Voyager.jpg";
 import BlueWaveImage from "../assets/image/MV Blue Wave.jpg";
-import EverUniqueImage from "../assets/image/unq.jpg"
+import EverUniqueImage from "../assets/image/unq.jpg";
 import axios from "axios";
 import { BACKEND_BASE_URL } from "..";
 
 class ShipService {
   // Transform API response to component-expected format
   transformShipData(apiShip) {
-    const pick = (...keys) => {
-      for (const key of keys) {
-        const value = apiShip?.[key];
-        if (value !== undefined && value !== null && value !== "") return value;
-      }
-      return undefined;
-    };
-
     return {
       id: apiShip.SHIP_JMAIN,
       jmainNo: apiShip.SHIP_JMAIN,
@@ -147,145 +139,6 @@ class ShipService {
       draft: apiShip.SHIP_DRAFT ? `${apiShip.SHIP_DRAFT}m` : "",
       yearBuilt: apiShip.SHIP_COMPLETION_DATE,
 
-      // Financial fields (used in ShipDetailsPage)
-      currency: pick("SHIP_CURRENCY", "CURRENCY", "CURRENCY_CODE", "CURR_CODE"),
-      currencyRate: pick(
-        "SHIP_CURRENCY_RATE",
-        "CURRENCY_RATE",
-        "EXCHANGE_RATE",
-        "CURR_RATE",
-        "CURRENCY_EXCHANGE_RATE"
-      ),
-      foreignValue: pick(
-        "SHIP_FOREIGN_VALUE",
-        "FOREIGN_VALUE",
-        "FOREIGN_AMOUNT",
-        "FC_VALUE",
-        "FC_AMOUNT"
-      ),
-      localValue: pick(
-        "SHIP_LOCAL_VALUE",
-        "LOCAL_VALUE",
-        "LOCAL_AMOUNT",
-        "LC_VALUE",
-        "LC_AMOUNT"
-      ),
-      expectedRevenue: pick(
-        "SHIP_EXPECTED_REVENUE",
-        "EXPECTED_REVENUE",
-        "EXP_REVENUE",
-        "ESTIMATE_VALUE",
-        "SHIP_ESTIMATE_VALUE"
-      ),
-
-      // A few common extra fields referenced by the details page
-      shipCategory: pick("SHIP_CATEGORY", "JOB_CATEGORY", "SHIP_JOB_CATEGORY","SHIP_JCAT" ),
-      jobMain: pick("JOB_MAIN", "SHIP_JOB_MAIN", "SHIP_JOB_MAIN_DESC","SHIP_JMAIN"),
-      projectName: pick("PROJECT_NAME", "SHIP_PROJECT_NAME"),
-      repairSummary: pick("REPAIR_SUMMARY", "SHIP_REPAIR_SUMMARY"),
-      vesselHistory: pick("VESSEL_HISTORY", "SHIP_VESSEL_HISTORY"),
-
-      // Management fields
-      shipManager: pick("SHIP_MANAGER", "MANAGER", "SHIP_MANAGER_NAME", "SHIP_SHIP_MANAGER"),
-      estimateEngineer: pick(
-        "ESTIMATE_ENGINEER",
-        "EST_ENGINEER",
-        "SHIP_ESTIMATE_ENGINEER"
-      ),
-      projectManager: pick(
-        "PROJECT_MANAGER",
-        "PROJ_MANAGER",
-        "SHIP_PROJECT_MANAGER"
-      ),
-      invoiceEngineer: pick(
-        "INVOICE_ENGINEER",
-        "INV_ENGINEER",
-        "SHIP_INVOICE_ENGINEER"
-      ),
-      projectEngineer: pick(
-        "PROJECT_ENGINEER",
-        "PROJ_ENGINEER",
-        "SHIP_PROJECT_ENGINEER"
-      ),
-
-      // Status fields
-      workDoneStatus: pick(
-        "WORK_DONE_STATUS",
-        "SHIP_WORK_DONE_STATUS",
-        "WD_STATUS",
-        "SHIP_WD_STATUS"
-      ),
-      billStatus: pick("BILL_STATUS", "SHIP_BILL_STATUS", "BILLING_STATUS"),
-      invoiceStatus: pick(
-        "INVOICE_STATUS",
-        "SHIP_INVOICE_STATUS",
-        "INV_STATUS"
-      ),
-      dockNumber: pick(
-        "DOCK_NUMBER",
-        "SHIP_DOCK_NUMBER",
-        "DOCK_NO",
-        "SHIP_DOCKNO"
-      ),
-      completionDate: pick(
-        "COMPLETION_DATE",
-        "SHIP_COMPLETION_DATE",
-        "COMPLETE_DATE"
-      ),
-
-      // Classification fields
-      classNotation: pick("CLASS_NOTATION", "SHIP_CLASS_NOTATION", "CLASS_NOT"),
-      classificationDual: pick(
-        "CLASSIFICATION_DUAL",
-        "SHIP_CLASSIFICATION_DUAL",
-        "CLASS_DUAL"
-      ),
-      estimateLaborRate: pick(
-        "ESTIMATE_LABOR_RATE",
-        "EST_LABOR_RATE",
-        "SHIP_EST_LABOR_RATE"
-      ),
-
-      // Code fields
-      agentCode: pick("AGENT_CODE", "SHIP_AGENT_CODE", "AGT_CODE"),
-      ownerCode: pick("OWNER_CODE", "SHIP_OWNER_CODE", "OWN_CODE"),
-      paymentCode: pick("PAYMENT_CODE", "SHIP_PAYMENT_CODE", "PAY_CODE"),
-
-      // Coating fields
-      coatingInspector: pick(
-        "COATING_INSPECTOR",
-        "SHIP_COATING_INSPECTOR",
-        "COAT_INSPECTOR"
-      ),
-      coatingProvider: pick(
-        "COATING_PROVIDER",
-        "SHIP_COATING_PROVIDER",
-        "COAT_PROVIDER"
-      ),
-
-      // Duration fields
-      afloatDuration: pick(
-        "AFLOAT_DURATION",
-        "SHIP_AFLOAT_DURATION",
-        "AFLOAT_DAYS", "SHIP_AFLOT_DURATION"
-      ),
-      inDockDuration: pick(
-        "IN_DOCK_DURATION",
-        "SHIP_INDOCK_DURATION",
-        "DOCK_DURATION",
-        "DOCK_DAYS"
-      ),
-
-      // Additional specifications
-      depth: pick("SHIP_DEPTH", "DEPTH", "SHIP_DEPTH_MOULDED"),
-      displacement: pick("SHIP_DISPLACEMENT", "DISPLACEMENT", "DISPL"),
-      speed: pick("SHIP_SPEED", "SPEED", "SERVICE_SPEED"),
-      previousName: pick("PREVIOUS_NAME", "SHIP_PREVIOUS_NAME", "PREV_NAME","SHIP_VESSEL_EXNAME"),
-
-      // Contact/Location fields
-      country: pick("COUNTRY", "SHIP_COUNTRY", "COUNTRY_NAME"),
-      ppdSite: pick("PPD_SITE", "SHIP_PPD_SITE", "SITE"),
-
       status: "planned",
       progress: 0,
       startDate: new Date().toISOString(),
@@ -297,25 +150,25 @@ class ShipService {
 
   getVesselType(code) {
     const map = {
-    '1': 'Bulk Carrier',
-      '2': 'Tanker',
-      '3': 'General Cargo',
-      '4': 'Passenger Ship',
-      '5': 'Offshore',
-      '6': 'Tug/Barge',
-      '7': 'Container Ship',
-      '8': 'RO-RO',
-      '9': 'Reefer',
-      '10': 'LNG Carrier',
-      '11': 'LPG Carrier',
-      '12': 'Chemical Tanker'
+      1: "Bulk Carrier",
+      2: "Tanker",
+      3: "General Cargo",
+      4: "Passenger Ship",
+      5: "Offshore",
+      6: "Tug/Barge",
+      7: "Container Ship",
+      8: "RO-RO",
+      9: "Reefer",
+      10: "LNG Carrier",
+      11: "LPG Carrier",
+      12: "Chemical Tanker",
     };
     return map[code] || "Other";
   }
 
   getShipImage(ship) {
     const type = (ship.SHIP_VESSEL_TYPE || "").toString();
-    if (type === "7") return oceanQueenImage,EverUniqueImage;
+    if (type === "7") return oceanQueenImage, EverUniqueImage;
     if (type === "1") return SeaVoyagerImage;
     if (type === "2") return BlueWaveImage;
     return oceanQueenImage;
