@@ -14,7 +14,7 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
-} from "../constants/actionTypes";
+} from "../constants/shipActionTypes";
 
 const initialState = {
   ships: [],
@@ -35,7 +35,7 @@ const shipReducer = (state = initialState, action) => {
         error: null,
       };
 
-      case FETCH_SHIPS_REQUEST:
+    case FETCH_SHIPS_REQUEST:
       return { ...state, loading: true, error: null };
 
     case FETCH_SHIPS_SUCCESS:
@@ -43,7 +43,6 @@ const shipReducer = (state = initialState, action) => {
 
     case FETCH_SHIPS_FAILURE:
       return { ...state, loading: false, error: action.payload };
-
 
     case GET_SHIPS_SUCCESS:
       return {

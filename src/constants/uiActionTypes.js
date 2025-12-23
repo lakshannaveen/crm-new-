@@ -1,0 +1,6 @@
+// UI Actions
+export const SHOW_NOTIFICATION = "SHOW_NOTIFICATION";
+export const HIDE_NOTIFICATION = "HIDE_NOTIFICATION";
+export const SHOW_MODAL = "SHOW_MODAL";
+export const HIDE_MODAL = "HIDE_MODAL";
+export const CLEAR_AUTH_ERRORS = "CLEAR_AUTH_ERRORS";
