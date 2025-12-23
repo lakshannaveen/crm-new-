@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { getUserByServiceNo } from '../../actions/userActions';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import {
@@ -11,49 +12,73 @@ import { formatDate } from '../../utils/formatters';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  const [serviceNo, setServiceNo] = useState('');
+  const { serviceUser, serviceUserLoading, serviceUserError } = useSelector(state => state.user);
+    // Handler for fetching user by service number
+    const handleFetchServiceUser = () => {
+      if (serviceNo) {
+        dispatch(getUserByServiceNo(serviceNo));
+      }
+    };
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
 
  
-  const profileData = {
-    personal: {
-      name: user?.name || 'EVERGREEN MARINE CORP. (TAIWAN) LTD',
-      email: user?.email || 'john@oceancargolt.com',
-      phone: '+886 033123831',
-      position: 'Ship Owner',
-      company: 'Ocean Cargo Ltd',
-      location: 'LUCHU TAOYUAN COUNTY ,TAIWAN',
-      website: 'www.oceancargolt.com',
-      joinedDate: '2023-06-15',
-      language: 'English',
-      timezone: 'Asia/Colombo (GMT+5:30)',
-    },
-    security: {
-      twoFactorEnabled: false,
-      lastPasswordChange: '2024-01-15',
-      activeSessions: 2,
-      loginHistory: [
-        { device: 'Chrome on Windows', location: 'Colombo, LK', time: '2024-01-20 14:30' },
-        { device: 'Safari on iPhone', location: 'Colombo, LK', time: '2024-01-20 10:15' },
-      ],
-    },
-    notifications: {
-      email: {
-        projectUpdates: true,
-        tenderUpdates: true,
-        securityAlerts: true,
-        newsletter: false,
-      },
-      push: {
-        newMessages: true,
-        deadlineReminders: true,
-        systemAlerts: true,
-      },
-    },
-  };
+  // Only use fetched serviceUser data for profile details
+  const profileData = React.useMemo(() => {
+    // Helper to show N/A if value is missing/empty
+    const showValue = v => (v && v !== '.' && v !== '' ? v : 'N/A');
+    if (serviceUser && typeof serviceUser === 'object' && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet.length > 0) {
+      const pod = serviceUser.ResultSet[0];
+      return {
+        personal: {
+          name: showValue(pod.pod_name),
+          email: showValue(pod.email),
+          phone: showValue(pod.telno),
+          address: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
+          fax: showValue(pod.faxno),
+          mobile: showValue(pod.pod_mobileno),
+          contactPerson: showValue(pod.contactperson),
+          company: showValue(pod.pod_code),
+        },
+        security: {
+          twoFactorEnabled: false,
+          lastPasswordChange: 'N/A',
+          activeSessions: 0,
+          loginHistory: [],
+        },
+        notifications: {
+          email: {},
+          push: {},
+        },
+      };
+    }
+    return {
+      personal: { name: 'N/A', email: 'N/A', phone: 'N/A', address: 'N/A', fax: 'N/A', mobile: 'N/A', contactPerson: 'N/A', company: 'N/A' },
+      security: { twoFactorEnabled: false, lastPasswordChange: 'N/A', activeSessions: 0, loginHistory: [] },
+      notifications: { email: {}, push: {} },
+    };
+  }, [serviceUser]);
 
-  const [formData, setFormData] = useState(profileData.personal);
+  // When serviceUser changes, update formData
+  const safePersonal = profileData.personal || {};
+  // Always ensure all fields are defined and fallback to 'N/A'
+  const safeFormData = {
+    name: safePersonal.name ?? 'N/A',
+    email: safePersonal.email ?? 'N/A',
+    phone: safePersonal.phone ?? 'N/A',
+    address: safePersonal.address ?? 'N/A',
+    fax: safePersonal.fax ?? 'N/A',
+    mobile: safePersonal.mobile ?? 'N/A',
+    contactPerson: safePersonal.contactPerson ?? 'N/A',
+    company: safePersonal.company ?? 'N/A',
+  };
+  const [formData, setFormData] = useState(safeFormData);
+  React.useEffect(() => {
+    setFormData(safeFormData);
+  }, [profileData.personal]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -71,6 +96,35 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Menu Button */}
+      {/* Service Number Fetch UI */}
+      <div className="max-w-xl mx-auto mt-6 mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex flex-col md:flex-row items-center gap-4">
+        <input
+          type="text"
+          placeholder="Enter Service Number (e.g. O0204)"
+          value={serviceNo}
+          onChange={e => setServiceNo(e.target.value)}
+          className="input-field flex-1 min-w-0"
+        />
+        <button
+          onClick={handleFetchServiceUser}
+          className="btn-primary px-4 py-2"
+          disabled={!serviceNo || serviceUserLoading}
+        >
+          {serviceUserLoading ? 'Loading...' : 'Fetch User By Service No'}
+        </button>
+      </div>
+      {/* Show result or error */}
+      <div className="max-w-xl mx-auto mb-8">
+        {serviceUserError && (
+          <div className="p-3 bg-red-100 text-red-700 rounded mb-2">{serviceUserError}</div>
+        )}
+        {serviceUser && (
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl shadow">
+            <h3 className="font-bold text-lg mb-2 text-blue-900 dark:text-blue-200">Service User Data</h3>
+            <pre className="text-xs whitespace-pre-wrap break-all text-gray-800 dark:text-gray-100 bg-transparent">{JSON.stringify(serviceUser, null, 2)}</pre>
+          </div>
+        )}
+      </div>
        
       <button
         onClick={() => setMobileMenuOpen(true)}
@@ -120,7 +174,7 @@ const ProfilePage = () => {
                       <div className="h-32 w-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 
                                     flex items-center justify-center mx-auto mb-4">
                         <span className="text-white text-4xl font-bold">
-                          {profileData.personal.name.charAt(0)}
+                          {profileData.personal.name ? profileData.personal.name.charAt(0) : ''}
                         </span>
                       </div>
                       <button className="absolute bottom-4 right-4 h-10 w-10 bg-white dark:bg-gray-800 
@@ -134,7 +188,7 @@ const ProfilePage = () => {
                       {profileData.personal.name}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {profileData.personal.position}
+                      {profileData.personal.contactPerson}
                     </p>
                   </div>
                   
@@ -263,92 +317,33 @@ const ProfilePage = () => {
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Position
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.position}
-                            onChange={(e) => handleInputChange('position', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Company
-                          </label>
-                          <input
-                            type="text"
-                            value={formData.company}
-                            onChange={(e) => handleInputChange('company', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Location
-                          </label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                           <div className="relative">
                             <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="text"
-                              value={formData.location}
-                              onChange={(e) => handleInputChange('location', e.target.value)}
-                              disabled={!isEditing}
-                              className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Website
-                          </label>
-                          <div className="relative">
-                            <FiGlobe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="url"
-                              value={formData.website}
-                              onChange={(e) => handleInputChange('website', e.target.value)}
-                              disabled={!isEditing}
-                              className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                            />
+                            <input type="text" value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Language Preference
-                          </label>
-                          <select
-                            value={formData.language}
-                            onChange={(e) => handleInputChange('language', e.target.value)}
-                            disabled={!isEditing}
-                            className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                          >
-                            <option value="English">English</option>
-                            <option value="Sinhala">Sinhala</option>
-                            <option value="Tamil">Tamil</option>
-                          </select>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fax Number</label>
+                          <input type="text" value={formData.fax} onChange={(e) => handleInputChange('fax', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mobile Number</label>
+                          <input type="text" value={formData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact Person</label>
+                          <input type="text" value={formData.contactPerson} onChange={(e) => handleInputChange('contactPerson', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company</label>
+                          <input type="text" value={formData.company} onChange={(e) => handleInputChange('company', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                       </div>
 
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                        <div className="flex items-center">
-                          <FiCalendar className="text-blue-500 mr-3" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900 dark:text-white">
-                              Account Created
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {formatDate(profileData.personal.joinedDate, 'long')}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                      {/* Removed website and language fields as per requirements */}
+
+                      {/* Removed account created date section as per requirements */}
                     </div>
                   )}
 

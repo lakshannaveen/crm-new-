@@ -2,10 +2,11 @@
 const config = {
   // API Configuration
   api: {
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+    baseURL: process.env.REACT_APP_API_URL || 'https://esystems.cdl.lk/backend-test',
     timeout: 30000,
     retryAttempts: 3,
   },
+  
 
   // Authentication
   auth: {

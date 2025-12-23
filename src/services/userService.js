@@ -1,4 +1,5 @@
 import api from './api';
+import { BACKEND_BASE_URL } from '../index';
 
 // Mock service for user management
 class UserService {
@@ -67,12 +68,29 @@ class UserService {
     if (!serviceNo) {
       throw new Error('Service number is required');
     }
-    const response = await api.get('/CDLRequirmentManagement/Login/GetUserByServiceNo', {
-      params: {
-        P_SERVICE_NO: serviceNo,
-      },
-    });
-    return response.data;
+    try {
+      // Use the backend base URL from index.js
+      const response = await api.get(`${BACKEND_BASE_URL}/CDLRequirmentManagement/Login/GetUserByServiceNo`, {
+        params: {
+          P_SERVICE_NO: serviceNo,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching user by service number:', error);
+      
+      // Check if it's a 404 error
+      if (error.response && error.response.status === 404) {
+        throw new Error(`API endpoint not found. Please check if the endpoint '/Login/GetUserByServiceNo' exists on the backend.`);
+      }
+      
+      // Check if it's a network error
+      if (error.message.includes('Network Error')) {
+        throw new Error('Unable to connect to the server. Please check your internet connection.');
+      }
+      
+      throw new Error(error.response?.data?.message || error.message || 'Failed to fetch user');
+    }
   }
 
   async rejectUser(userId) {
