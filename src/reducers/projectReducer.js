@@ -8,7 +8,7 @@ import {
   UPDATE_PROJECT_PROGRESS_REQUEST,
   UPDATE_PROJECT_PROGRESS_SUCCESS,
   UPDATE_PROJECT_PROGRESS_FAILURE,
-} from '../constants/actionTypes';
+} from "../constants/projectActionTypes";
 
 const initialState = {
   projects: [],
@@ -46,7 +46,7 @@ const projectReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        projects: state.projects.map(project =>
+        projects: state.projects.map((project) =>
           project.id === action.payload.id ? action.payload : project
         ),
         currentProject: action.payload,

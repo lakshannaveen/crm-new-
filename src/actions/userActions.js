@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import {
   GET_USER_REQUESTS_REQUEST,
   GET_USER_REQUESTS_SUCCESS,
@@ -12,8 +12,8 @@ import {
   GET_USER_BY_SERVICE_NO_REQUEST,
   GET_USER_BY_SERVICE_NO_SUCCESS,
   GET_USER_BY_SERVICE_NO_FAILURE,
-} from '../constants/actionTypes';
-import { userService } from '../services/userService';
+} from "../constants/userActionTypes";
+import { userService } from "../services/userService";
 
 // Get user requests
 export const getUserRequests = () => async (dispatch) => {
@@ -31,7 +31,7 @@ export const getUserRequests = () => async (dispatch) => {
       type: GET_USER_REQUESTS_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to load user requests');
+    toast.error("Failed to load user requests");
   }
 };
 
@@ -41,7 +41,7 @@ export const getUserByServiceNo = (serviceNo) => async (dispatch) => {
     dispatch({ type: GET_USER_BY_SERVICE_NO_REQUEST });
 
     if (!serviceNo) {
-      throw new Error('Service number is required');
+      throw new Error("Service number is required");
     }
 
     const response = await userService.getUserByServiceNo(serviceNo);
@@ -51,7 +51,8 @@ export const getUserByServiceNo = (serviceNo) => async (dispatch) => {
       payload: response,
     });
   } catch (error) {
-    const message = error?.response?.data?.message || error.message || 'Failed to fetch user';
+    const message =
+      error?.response?.data?.message || error.message || "Failed to fetch user";
     dispatch({
       type: GET_USER_BY_SERVICE_NO_FAILURE,
       payload: message,
@@ -72,13 +73,13 @@ export const approveUser = (userId) => async (dispatch) => {
       payload: { id: userId, user },
     });
 
-    toast.success('User approved successfully');
+    toast.success("User approved successfully");
   } catch (error) {
     dispatch({
       type: APPROVE_USER_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to approve user');
+    toast.error("Failed to approve user");
   }
 };
 
@@ -94,12 +95,12 @@ export const rejectUser = (userId) => async (dispatch) => {
       payload: userId,
     });
 
-    toast.success('User request rejected');
+    toast.success("User request rejected");
   } catch (error) {
     dispatch({
       type: REJECT_USER_FAILURE,
       payload: error.message,
     });
-    toast.error('Failed to reject user');
+    toast.error("Failed to reject user");
   }
 };

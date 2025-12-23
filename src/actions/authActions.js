@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import {
   LOGIN_REQUEST,
   LOGIN_SUCCESS,
@@ -13,8 +13,8 @@ import {
   LOAD_USER_REQUEST,
   LOAD_USER_SUCCESS,
   LOAD_USER_FAILURE,
-} from '../constants/actionTypes';
-import { authService } from '../services/authService';
+} from "../constants/authActionTypes";
+import { authService } from "../services/authService";
 
 // Login with phone number
 export const login = (phoneNumber) => async (dispatch) => {
@@ -23,7 +23,7 @@ export const login = (phoneNumber) => async (dispatch) => {
 
     // Validate phone number
     if (!phoneNumber || phoneNumber.length < 10) {
-      throw new Error('Please enter a valid phone number');
+      throw new Error("Please enter a valid phone number");
     }
 
     // Send OTP (mock API call)
@@ -50,7 +50,7 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
     dispatch({ type: VERIFY_OTP_REQUEST });
 
     if (!otp || otp.length !== 6) {
-      throw new Error('Please enter a valid 6-digit OTP');
+      throw new Error("Please enter a valid 6-digit OTP");
     }
 
     // Mock OTP verification (in real app, this would be API call)
@@ -64,7 +64,7 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
       },
     });
 
-    toast.success('Login successful!');
+    toast.success("Login successful!");
   } catch (error) {
     dispatch({
       type: VERIFY_OTP_FAILURE,
@@ -81,7 +81,7 @@ export const register = (userData) => async (dispatch) => {
 
     // Validate user data
     if (!userData.name || !userData.phone) {
-      throw new Error('Please fill all required fields');
+      throw new Error("Please fill all required fields");
     }
 
     // Mock registration (in real app, this would be API call)
@@ -92,7 +92,7 @@ export const register = (userData) => async (dispatch) => {
       payload: response,
     });
 
-    toast.success('Registration request sent successfully!');
+    toast.success("Registration request sent successfully!");
   } catch (error) {
     dispatch({
       type: REGISTER_FAILURE,
@@ -107,9 +107,9 @@ export const loadUser = () => async (dispatch) => {
   try {
     dispatch({ type: LOAD_USER_REQUEST });
 
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
-      throw new Error('No token found');
+      throw new Error("No token found");
     }
 
     // Mock API call to get user data
@@ -130,5 +130,5 @@ export const loadUser = () => async (dispatch) => {
 // Logout user
 export const logout = () => (dispatch) => {
   dispatch({ type: LOGOUT });
-  toast.success('Logged out successfully');
+  toast.success("Logged out successfully");
 };

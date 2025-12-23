@@ -15,17 +15,17 @@ import {
   RESEND_OTP_REQUEST,
   RESEND_OTP_SUCCESS,
   RESEND_OTP_FAILURE,
-  CLEAR_AUTH_ERRORS,
-} from '../constants/actionTypes';
+} from "../constants/authActionTypes";
+import { CLEAR_AUTH_ERRORS } from "../constants/uiActionTypes";
 
 const initialState = {
-  token: localStorage.getItem('token'),
+  token: localStorage.getItem("token"),
   isAuthenticated: false,
-  user: JSON.parse(localStorage.getItem('user')) || null,
+  user: JSON.parse(localStorage.getItem("user")) || null,
   loading: false,
   error: null,
   otpSent: false,
-  phoneNumber: '',
+  phoneNumber: "",
   otpResent: false,
   registrationSuccess: false,
 };
@@ -63,8 +63,8 @@ const authReducer = (state = initialState, action) => {
       };
 
     case VERIFY_OTP_SUCCESS:
-      localStorage.setItem('token', action.payload.token);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      localStorage.setItem("token", action.payload.token);
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
       return {
         ...state,
         isAuthenticated: true,
@@ -72,7 +72,7 @@ const authReducer = (state = initialState, action) => {
         token: action.payload.token,
         user: action.payload.user,
         otpSent: false,
-        phoneNumber: '',
+        phoneNumber: "",
         error: null,
         registrationSuccess: false,
       };
@@ -102,23 +102,24 @@ const authReducer = (state = initialState, action) => {
     case RESEND_OTP_FAILURE:
       // Don't clear token for load user failures to allow retry
       if (action.type !== LOAD_USER_FAILURE) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
       }
       return {
         ...state,
         token: action.type === LOAD_USER_FAILURE ? state.token : null,
-        isAuthenticated: action.type === LOAD_USER_FAILURE ? state.isAuthenticated : false,
+        isAuthenticated:
+          action.type === LOAD_USER_FAILURE ? state.isAuthenticated : false,
         loading: false,
         user: action.type === LOAD_USER_FAILURE ? state.user : null,
         error: action.payload,
         otpSent: false,
-        phoneNumber: '',
+        phoneNumber: "",
       };
 
     case LOGOUT:
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       return {
         ...state,
         token: null,
@@ -127,7 +128,7 @@ const authReducer = (state = initialState, action) => {
         loading: false,
         error: null,
         otpSent: false,
-        phoneNumber: '',
+        phoneNumber: "",
         registrationSuccess: false,
       };
 

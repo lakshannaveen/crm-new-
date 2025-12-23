@@ -1,4 +1,4 @@
-import { TOGGLE_THEME, SET_THEME } from '../constants/actionTypes';
+import { TOGGLE_THEME, SET_THEME } from "../constants/themeActionTypes";
 
 export const toggleTheme = () => ({
   type: TOGGLE_THEME,

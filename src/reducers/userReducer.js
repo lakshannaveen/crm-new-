@@ -11,7 +11,7 @@ import {
   GET_USER_BY_SERVICE_NO_REQUEST,
   GET_USER_BY_SERVICE_NO_SUCCESS,
   GET_USER_BY_SERVICE_NO_FAILURE,
-} from '../constants/actionTypes';
+} from "../constants/userActionTypes";
 
 const initialState = {
   userRequests: [],
@@ -46,7 +46,9 @@ const userReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        userRequests: state.userRequests.filter(user => user.id !== action.payload),
+        userRequests: state.userRequests.filter(
+          (user) => user.id !== action.payload
+        ),
         approvedUsers: [...state.approvedUsers, action.payload.user],
       };
 
@@ -54,7 +56,9 @@ const userReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
-        userRequests: state.userRequests.filter(user => user.id !== action.payload),
+        userRequests: state.userRequests.filter(
+          (user) => user.id !== action.payload
+        ),
       };
 
     case GET_USER_REQUESTS_FAILURE:

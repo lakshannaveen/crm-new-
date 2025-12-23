@@ -16,7 +16,7 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
-} from "../constants/actionTypes";
+} from "../constants/shipActionTypes";
 import { shipService } from "../services/shipService";
 
 export const fetchOwnerShips = (serviceNo) => async (dispatch) => {
