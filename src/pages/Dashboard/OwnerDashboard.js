@@ -308,6 +308,7 @@ const OwnerDashboard = () => {
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [showAllShips, setShowAllShips] = useState(false);
 
   useEffect(() => {
     dispatch(getShips());
@@ -322,6 +323,9 @@ const OwnerDashboard = () => {
     if (activeFilter === 'planned') return ship.status === 'planned';
     return true;
   });
+
+  // Show only first 3 ships by default
+  const displayedShips = showAllShips ? filteredShips : filteredShips.slice(0, 3);
 
   const stats = {
     total: ships.length,
@@ -491,11 +495,28 @@ const OwnerDashboard = () => {
                                 border-blue-600"></div>
                 </div>
               ) : filteredShips.length > 0 ? (
-                <div className="space-y-6">
-                  {filteredShips.map((ship) => (
-                    <ShipCard key={ship.id} ship={ship} />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-6">
+                    {displayedShips.map((ship) => (
+                      <ShipCard key={ship.id} ship={ship} />
+                    ))}
+                  </div>
+                  
+                  {/* See More / See Less Button */}
+                  {filteredShips.length > 3 && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={() => setShowAllShips(!showAllShips)}
+                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg 
+                                 transition-colors duration-200 font-medium"
+                      >
+                        {showAllShips 
+                          ? 'Show Less' 
+                          : `See More (${filteredShips.length - 3} more)`}
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="text-center py-12">
                   <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 
