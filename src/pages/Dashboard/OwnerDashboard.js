@@ -293,6 +293,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getShips } from '../../actions/shipActions';
+import { getUserByServiceNo } from '../../actions/userActions';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import ProfileSection from '../../components/dashboard/ProfileSection';
@@ -310,6 +311,9 @@ const OwnerDashboard = () => {
 
   useEffect(() => {
     dispatch(getShips());
+    // Auto-fetch user profile data for dashboard
+    const HARDCODED_SERVICE_NO = 'O0204'; // Keep in sync with ProfilePage
+    dispatch(getUserByServiceNo(HARDCODED_SERVICE_NO));
   }, [dispatch]);
 
   const filteredShips = ships.filter(ship => {

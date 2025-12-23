@@ -13,14 +13,13 @@ import { formatDate } from '../../utils/formatters';
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
-  const [serviceNo, setServiceNo] = useState('');
-  const { serviceUser, serviceUserLoading, serviceUserError } = useSelector(state => state.user);
-    // Handler for fetching user by service number
-    const handleFetchServiceUser = () => {
-      if (serviceNo) {
-        dispatch(getUserByServiceNo(serviceNo));
-      }
-    };
+  // Hardcoded service number for auto-fetch
+  const HARDCODED_SERVICE_NO = 'O0204'; // Change as needed
+  const { serviceUser, serviceUserError } = useSelector(state => state.user);
+
+  React.useEffect(() => {
+    dispatch(getUserByServiceNo(HARDCODED_SERVICE_NO));
+  }, [dispatch]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
@@ -96,23 +95,7 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Menu Button */}
-      {/* Service Number Fetch UI */}
-      <div className="max-w-xl mx-auto mt-6 mb-6 p-4 bg-white dark:bg-gray-800 rounded-xl shadow flex flex-col md:flex-row items-center gap-4">
-        <input
-          type="text"
-          placeholder="Enter Service Number (e.g. O0204)"
-          value={serviceNo}
-          onChange={e => setServiceNo(e.target.value)}
-          className="input-field flex-1 min-w-0"
-        />
-        <button
-          onClick={handleFetchServiceUser}
-          className="btn-primary px-4 py-2"
-          disabled={!serviceNo || serviceUserLoading}
-        >
-          {serviceUserLoading ? 'Loading...' : 'Fetch User By Service No'}
-        </button>
-      </div>
+    
       {/* Show result or error */}
       <div className="max-w-xl mx-auto mb-8">
         {serviceUserError && (
