@@ -96,16 +96,10 @@ const ProfilePage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Menu Button */}
     
-      {/* Show result or error */}
+      {/* Show result or error - removed Service User Data debug output as requested */}
       <div className="max-w-xl mx-auto mb-8">
         {serviceUserError && (
           <div className="p-3 bg-red-100 text-red-700 rounded mb-2">{serviceUserError}</div>
-        )}
-        {serviceUser && (
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-xl shadow">
-            <h3 className="font-bold text-lg mb-2 text-blue-900 dark:text-blue-200">Service User Data</h3>
-            <pre className="text-xs whitespace-pre-wrap break-all text-gray-800 dark:text-gray-100 bg-transparent">{JSON.stringify(serviceUser, null, 2)}</pre>
-          </div>
         )}
       </div>
        
