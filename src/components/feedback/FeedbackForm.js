@@ -1,867 +1,3 @@
-// import React, { useState } from 'react';
-// import { useSelector } from 'react-redux';
-// import { FiCheck, FiAlertCircle, FiStar, FiMessageSquare, FiCalendar } from 'react-icons/fi';
-// import { formatDate } from '../../utils/formatters';
-// import FeedbackStep from './FeedbackStep';
-// import FeedbackReview from './FeedbackReview';
-// import FeedbackConfirmation from './FeedbackConfirmation';
-
-// const FeedbackForm = ({ vessel }) => {
-//   const { user } = useSelector(state => state.auth);
-  
-//   const [currentStep, setCurrentStep] = useState(0);
-//   const [formData, setFormData] = useState({
-//     // Vessel Information
-//     vesselName: vessel?.name || "M.V. SSL THAMIRABARANI",
-//     vesselIMO: vessel?.imoNumber || "IMO: 9312468",
-//     vesselSR: "SR/4354",
-//     ownerRep: "MR. KABILAN SADASIVAM - FLEET MANAGEMENT INDIA PVT LTD (INDIA)",
-//     shipManager: "MR. SAMPATH WIJESINGHE",
-//     feedbackDate: new Date().toISOString().split('T')[0],
-//     arrivalDate: "",
-//     completionDate: "",
-//     sailingDate: "",
-//     specDuration: "",
-//     agreedDuration: "",
-//     actualDuration: "",
-    
-//     // Ratings (0-100 scale)
-//     ratings: {
-//       responsiveness: 0,
-//       publicRelations: 0,
-//       deckPlanning: 0,
-//       deckPipesQuality: 0,
-//       deckPipesTimely: 0,
-//       deckTankQuality: 0,
-//       deckTankTimely: 0,
-//       deckMachineryQuality: 0,
-//       deckMachineryTimely: 0,
-//       deckSteelQuality: 0,
-//       deckSteelTimely: 0,
-//       enginePlanning: 0,
-//       enginePipesQuality: 0,
-//       enginePipesTimely: 0,
-//       rudderQuality: 0,
-//       rudderTimely: 0,
-//       mainEngineQuality: 0,
-//       mainEngineTimely: 0,
-//       otherEngineQuality: 0,
-//       otherEngineTimely: 0,
-//       steelPlanning: 0,
-//       steelWorkQuality: 0,
-//       steelWorkTimely: 0,
-//       electricalPlanning: 0,
-//       electricalQuality: 0,
-//       electricalTimely: 0,
-//       electronicQuality: 0,
-//       electronicTimely: 0,
-//       automationQuality: 0,
-//       automationTimely: 0,
-//       surfacePlanning: 0,
-//       blastingQuality: 0,
-//       blastingTimely: 0,
-//       paintingQuality: 0,
-//       paintingTimely: 0,
-//       tankCleaningQuality: 0,
-//       tankCleaningTimely: 0,
-//       stagingQuality: 0,
-//       docking: 0,
-//       undocking: 0,
-//       mooring: 0,
-//       unmooring: 0,
-//       outfittingPlanning: 0,
-//       carpentryQuality: 0,
-//       carpentryTimely: 0,
-//       claddingQuality: 0,
-//       claddingTimely: 0,
-//       aluminumQuality: 0,
-//       aluminumTimely: 0,
-//       generalServices: 0,
-//       materialsQuality: 0,
-//       materialsDelivery: 0,
-//       overallQuality: 0,
-//       safetyEnvironment: 0,
-//       competitorPerformance: 0,
-//     },
-    
-//     // Yes/No Questions
-//     valueForMoney: null,
-//     recommend: null,
-    
-//     // Additional Comments
-//     poorAverageDetails: "",
-//     observations: "",
-//     shipManagerComments: "",
-    
-//     // Feedback Reference
-//     feedbackRef: `FB-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
-//   });
-
-//   const steps = [
-//     { id: 0, title: 'Vessel Details', icon: <FiCalendar /> },
-//     { id: 1, title: 'Responsiveness & PR', icon: <FiMessageSquare /> },
-//     { id: 2, title: 'Deck Department', icon: <FiStar /> },
-//     { id: 3, title: 'Engine Department', icon: <FiStar /> },
-//     { id: 4, title: 'Steel & Electrical', icon: <FiStar /> },
-//     { id: 5, title: 'Surface & Docking', icon: <FiStar /> },
-//     { id: 6, title: 'Outfitting & Services', icon: <FiStar /> },
-//     { id: 7, title: 'Overall Evaluation', icon: <FiAlertCircle /> },
-//     { id: 8, title: 'Review & Submit', icon: <FiCheck /> },
-//   ];
-
-//   const handleRatingChange = (category, value) => {
-//     setFormData(prev => ({
-//       ...prev,
-//       ratings: {
-//         ...prev.ratings,
-//         [category]: parseInt(value)
-//       }
-//     }));
-//   };
-
-//   const handleInputChange = (field, value) => {
-//     setFormData(prev => ({
-//       ...prev,
-//       [field]: value
-//     }));
-//   };
-
-//   const handleYesNoChange = (field, value) => {
-//     setFormData(prev => ({
-//       ...prev,
-//       [field]: value === "yes"
-//     }));
-//   };
-
-//   const nextStep = () => {
-//     if (currentStep < steps.length - 1) {
-//       setCurrentStep(currentStep + 1);
-//     }
-//   };
-
-//   const prevStep = () => {
-//     if (currentStep > 0) {
-//       setCurrentStep(currentStep - 1);
-//     }
-//   };
-
-//   const handleSubmit = async () => {
-//     // Calculate overall score
-//     const ratings = Object.values(formData.ratings).filter(r => r > 0);
-//     const averageScore = ratings.length > 0 
-//       ? ratings.reduce((a, b) => a + b, 0) / ratings.length 
-//       : 0;
-    
-//     const finalData = {
-//       ...formData,
-//       overallScore: Math.round(averageScore),
-//       submittedBy: user?.name,
-//       submittedAt: new Date().toISOString(),
-//     };
-
-//     console.log('Submitting feedback:', finalData);
-    
-//     // Here you would typically send to API
-//     // await submitFeedback(finalData);
-    
-//     // Move to confirmation
-//     setCurrentStep(currentStep + 1);
-//   };
-
-//   const getStepContent = () => {
-//     switch (currentStep) {
-//       case 0:
-//         return (
-//           <FeedbackStep
-//             title="Vessel Information"
-//             description="Please provide vessel details and timeline information"
-//           >
-//             <div className="space-y-4">
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Vessel Name
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={formData.vesselName}
-//                     onChange={(e) => handleInputChange('vesselName', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     IMO Number
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={formData.vesselIMO}
-//                     onChange={(e) => handleInputChange('vesselIMO', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     SR Number
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={formData.vesselSR}
-//                     onChange={(e) => handleInputChange('vesselSR', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Feedback Date
-//                   </label>
-//                   <input
-//                     type="date"
-//                     value={formData.feedbackDate}
-//                     onChange={(e) => handleInputChange('feedbackDate', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Arrival Date
-//                   </label>
-//                   <input
-//                     type="date"
-//                     value={formData.arrivalDate}
-//                     onChange={(e) => handleInputChange('arrivalDate', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Completion Date
-//                   </label>
-//                   <input
-//                     type="date"
-//                     value={formData.completionDate}
-//                     onChange={(e) => handleInputChange('completionDate', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Sailing Date
-//                   </label>
-//                   <input
-//                     type="date"
-//                     value={formData.sailingDate}
-//                     onChange={(e) => handleInputChange('sailingDate', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Spec Duration (Days)
-//                   </label>
-//                   <input
-//                     type="number"
-//                     value={formData.specDuration}
-//                     onChange={(e) => handleInputChange('specDuration', e.target.value)}
-//                     className="input-field"
-//                     min="0"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Agreed Duration (Days)
-//                   </label>
-//                   <input
-//                     type="number"
-//                     value={formData.agreedDuration}
-//                     onChange={(e) => handleInputChange('agreedDuration', e.target.value)}
-//                     className="input-field"
-//                     min="0"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Actual Duration (Days)
-//                   </label>
-//                   <input
-//                     type="number"
-//                     value={formData.actualDuration}
-//                     onChange={(e) => handleInputChange('actualDuration', e.target.value)}
-//                     className="input-field"
-//                     min="0"
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Owner's Representative
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={formData.ownerRep}
-//                     onChange={(e) => handleInputChange('ownerRep', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//                 <div>
-//                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                     Ship Manager
-//                   </label>
-//                   <input
-//                     type="text"
-//                     value={formData.shipManager}
-//                     onChange={(e) => handleInputChange('shipManager', e.target.value)}
-//                     className="input-field"
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 1:
-//         return (
-//           <FeedbackStep
-//             title="Responsiveness & Public Relations"
-//             description="Rate our initial communication and PR services"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="1.0 Responsiveness to initial inquiry"
-//                 value={formData.ratings.responsiveness}
-//                 onChange={(value) => handleRatingChange('responsiveness', value)}
-//               />
-              
-//               <RatingCard
-//                 title="2.0 Public Relations"
-//                 value={formData.ratings.publicRelations}
-//                 onChange={(value) => handleRatingChange('publicRelations', value)}
-//               />
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 2:
-//         return (
-//           <FeedbackStep
-//             title="Deck Department Work"
-//             description="Evaluate deck department performance"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="3.1 Planning of work"
-//                 value={formData.ratings.deckPlanning}
-//                 onChange={(value) => handleRatingChange('deckPlanning', value)}
-//               />
-              
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   3.2 Pipes and valve repairs on deck
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.deckPipesQuality}
-//                     onChange={(value) => handleRatingChange('deckPipesQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="Timely Completion"
-//                     value={formData.ratings.deckPipesTimely}
-//                     onChange={(value) => handleRatingChange('deckPipesTimely', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   3.3 Work inside ballast & cargo tank
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.deckTankQuality}
-//                     onChange={(value) => handleRatingChange('deckTankQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="Timely Completion"
-//                     value={formData.ratings.deckTankTimely}
-//                     onChange={(value) => handleRatingChange('deckTankTimely', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 3:
-//         return (
-//           <FeedbackStep
-//             title="Engine Department Work"
-//             description="Evaluate engine department performance"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="4.1 Planning of work"
-//                 value={formData.ratings.enginePlanning}
-//                 onChange={(value) => handleRatingChange('enginePlanning', value)}
-//               />
-              
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   4.2 E/R, P/R pipes and valves repair
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.enginePipesQuality}
-//                     onChange={(value) => handleRatingChange('enginePipesQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="Timely Completion"
-//                     value={formData.ratings.enginePipesTimely}
-//                     onChange={(value) => handleRatingChange('enginePipesTimely', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 4:
-//         return (
-//           <FeedbackStep
-//             title="Steel Repairs & Electrical Work"
-//             description="Evaluate steel and electrical department performance"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="5.1 Planning of work (Steel)"
-//                 value={formData.ratings.steelPlanning}
-//                 onChange={(value) => handleRatingChange('steelPlanning', value)}
-//               />
-              
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   5.2 Steel work
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.steelWorkQuality}
-//                     onChange={(value) => handleRatingChange('steelWorkQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="Timely Completion"
-//                     value={formData.ratings.steelWorkTimely}
-//                     onChange={(value) => handleRatingChange('steelWorkTimely', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-
-//               <RatingCard
-//                 title="6.1 Planning (Electrical/Electronic/Automation)"
-//                 value={formData.ratings.electricalPlanning}
-//                 onChange={(value) => handleRatingChange('electricalPlanning', value)}
-//               />
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 5:
-//         return (
-//           <FeedbackStep
-//             title="Surface Preparation & Docking"
-//             description="Evaluate surface preparation and docking operations"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="7.1 Planning of work (Surface)"
-//                 value={formData.ratings.surfacePlanning}
-//                 onChange={(value) => handleRatingChange('surfacePlanning', value)}
-//               />
-              
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   7.2 Blasting
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.blastingQuality}
-//                     onChange={(value) => handleRatingChange('blastingQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="Timely Completion"
-//                     value={formData.ratings.blastingTimely}
-//                     onChange={(value) => handleRatingChange('blastingTimely', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <RatingCard
-//                   title="8.1 Docking"
-//                   value={formData.ratings.docking}
-//                   onChange={(value) => handleRatingChange('docking', value)}
-//                 />
-//                 <RatingCard
-//                   title="8.2 Undocking"
-//                   value={formData.ratings.undocking}
-//                   onChange={(value) => handleRatingChange('undocking', value)}
-//                 />
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 6:
-//         return (
-//           <FeedbackStep
-//             title="Outfitting & General Services"
-//             description="Evaluate outfitting work and general services"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="9.1 Planning of work (Outfitting)"
-//                 value={formData.ratings.outfittingPlanning}
-//                 onChange={(value) => handleRatingChange('outfittingPlanning', value)}
-//               />
-              
-//               <RatingCard
-//                 title="10.0 General Services"
-//                 description="Fresh water supply, Shore power supply, ballasting, Cooling water, Ventilation, Fire Line, Crane Facility etc."
-//                 value={formData.ratings.generalServices}
-//                 onChange={(value) => handleRatingChange('generalServices', value)}
-//               />
-              
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   11.0 Supply of Materials
-//                 </h4>
-//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                   <RatingCard
-//                     title="Quality"
-//                     value={formData.ratings.materialsQuality}
-//                     onChange={(value) => handleRatingChange('materialsQuality', value)}
-//                     compact
-//                   />
-//                   <RatingCard
-//                     title="In time delivery"
-//                     value={formData.ratings.materialsDelivery}
-//                     onChange={(value) => handleRatingChange('materialsDelivery', value)}
-//                     compact
-//                   />
-//                 </div>
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 7:
-//         return (
-//           <FeedbackStep
-//             title="Overall Evaluation"
-//             description="Final assessment and additional comments"
-//           >
-//             <div className="space-y-6">
-//               <RatingCard
-//                 title="12.0 Overall Quality of Service"
-//                 value={formData.ratings.overallQuality}
-//                 onChange={(value) => handleRatingChange('overallQuality', value)}
-//               />
-              
-//               <RatingCard
-//                 title="13.0 Yard's Health, Safety & Environment Practice"
-//                 value={formData.ratings.safetyEnvironment}
-//                 onChange={(value) => handleRatingChange('safetyEnvironment', value)}
-//               />
-              
-//               <RatingCard
-//                 title="14.0 How do you place our performance among competitors?"
-//                 value={formData.ratings.competitorPerformance}
-//                 onChange={(value) => handleRatingChange('competitorPerformance', value)}
-//               />
-
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   15.0 In overall, has CDPLC given value for your money?
-//                 </h4>
-//                 <YesNoSelection
-//                   value={formData.valueForMoney}
-//                   onChange={(value) => handleYesNoChange('valueForMoney', value)}
-//                 />
-//               </div>
-
-//               <div className="space-y-4">
-//                 <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-//                   16.0 Would you recommend CDPLC to another Business Partner?
-//                 </h4>
-//                 <YesNoSelection
-//                   value={formData.recommend}
-//                   onChange={(value) => handleYesNoChange('recommend', value)}
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                   17.0 Other observations/recommendations/suggestions for improvements
-//                 </label>
-//                 <textarea
-//                   value={formData.observations}
-//                   onChange={(e) => handleInputChange('observations', e.target.value)}
-//                   className="input-field h-32"
-//                   placeholder="Enter your observations and suggestions..."
-//                 />
-//               </div>
-
-//               <div>
-//                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-//                   18.0 Details on Poor / Average / Undesirable Situation
-//                 </label>
-//                 <textarea
-//                   value={formData.poorAverageDetails}
-//                   onChange={(e) => handleInputChange('poorAverageDetails', e.target.value)}
-//                   className="input-field h-32"
-//                   placeholder="If you selected 'Poor' or 'Average' in any category, please provide details..."
-//                 />
-//               </div>
-//             </div>
-//           </FeedbackStep>
-//         );
-
-//       case 8:
-//         return (
-//           <FeedbackReview
-//             formData={formData}
-//             onEdit={() => setCurrentStep(0)}
-//             onSubmit={handleSubmit}
-//           />
-//         );
-
-//       case 9:
-//         return <FeedbackConfirmation formData={formData} />;
-
-//       default:
-//         return null;
-//     }
-//   };
-
-//   const progress = ((currentStep + 1) / steps.length) * 100;
-
-//   return (
-//     <div className="max-w-6xl mx-auto">
-//       {/* Progress Bar */}
-//       <div className="mb-8">
-//         <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-//           <span>Step {currentStep + 1} of {steps.length}</span>
-//           <span>{Math.round(progress)}% Complete</span>
-//         </div>
-//         <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-//           <div
-//             className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-//             style={{ width: `${progress}%` }}
-//           />
-//         </div>
-        
-//         {/* Step Indicators */}
-//         <div className="flex justify-between mt-6">
-//           {steps.map((step, index) => (
-//             <div key={step.id} className="flex flex-col items-center">
-//               <button
-//                 onClick={() => setCurrentStep(step.id)}
-//                 className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-//                   index === currentStep
-//                     ? 'bg-blue-600 text-white scale-110'
-//                     : index < currentStep
-//                     ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-//                     : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500'
-//                 }`}
-//               >
-//                 {index < currentStep ? <FiCheck /> : step.icon}
-//               </button>
-//               <span className={`mt-2 text-xs text-center ${
-//                 index === currentStep
-//                   ? 'text-blue-600 dark:text-blue-400 font-medium'
-//                   : 'text-gray-500 dark:text-gray-400'
-//               }`}>
-//                 {step.title}
-//               </span>
-//             </div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* Current Step Content */}
-//       {getStepContent()}
-
-//       {/* Navigation Buttons */}
-//       {currentStep < steps.length - 1 && currentStep !== 8 && (
-//         <div className="flex justify-between mt-8">
-//           <button
-//             onClick={prevStep}
-//             disabled={currentStep === 0}
-//             className={`px-6 py-2 rounded-lg transition-colors ${
-//               currentStep === 0
-//                 ? 'bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed'
-//                 : 'btn-secondary'
-//             }`}
-//           >
-//             Previous
-//           </button>
-//           <button
-//             onClick={nextStep}
-//             className="btn-primary px-6 py-2"
-//           >
-//             {currentStep === steps.length - 2 ? 'Review' : 'Next'}
-//           </button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// const RatingCard = ({ title, description, value, onChange, compact = false }) => {
-//   const getRatingLabel = (score) => {
-//     if (score <= 25) return { text: 'Poor', color: 'text-red-600', bg: 'bg-red-100' };
-//     if (score <= 50) return { text: 'Average', color: 'text-yellow-600', bg: 'bg-yellow-100' };
-//     if (score <= 75) return { text: 'Good', color: 'text-green-600', bg: 'bg-green-100' };
-//     return { text: 'Excellent', color: 'text-blue-600', bg: 'bg-blue-100' };
-//   };
-
-//   const label = getRatingLabel(value);
-
-//   return (
-//     <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${
-//       compact ? 'p-4' : 'p-6'
-//     }`}>
-//       <div className="mb-4">
-//         <h4 className="font-medium text-gray-900 dark:text-white">{title}</h4>
-//         {description && (
-//           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{description}</p>
-//         )}
-//       </div>
-      
-//       <div className="space-y-4">
-//         {/* Score Display */}
-//         <div className="flex items-center justify-between">
-//           <span className="text-3xl font-bold text-gray-900 dark:text-white">{value}</span>
-//           <span className={`px-3 py-1 rounded-full text-sm font-medium ${label.bg} ${label.color}`}>
-//             {label.text}
-//           </span>
-//         </div>
-        
-//         {/* Slider */}
-//         <div className="space-y-2">
-//           <input
-//             type="range"
-//             min="0"
-//             max="100"
-//             step="1"
-//             value={value}
-//             onChange={(e) => onChange(e.target.value)}
-//             className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500"
-//           />
-          
-//           {/* Labels */}
-//           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-//             <span>0 (Poor)</span>
-//             <span>25</span>
-//             <span>50 (Average)</span>
-//             <span>75</span>
-//             <span>100 (Excellent)</span>
-//           </div>
-//         </div>
-        
-//         {/* Quick Select Buttons */}
-//         <div className="flex space-x-2 pt-2">
-//           {[0, 25, 50, 75, 100].map(score => (
-//             <button
-//               key={score}
-//               onClick={() => onChange(score)}
-//               className={`flex-1 py-2 text-sm rounded-lg transition-colors ${
-//                 value === score
-//                   ? 'bg-blue-500 text-white'
-//                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-//               }`}
-//             >
-//               {score === 0 ? 'Poor' : 
-//                score === 25 ? 'Poor/Avg' : 
-//                score === 50 ? 'Avg' : 
-//                score === 75 ? 'Good' : 'Excel'}
-//             </button>
-//           ))}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// const YesNoSelection = ({ value, onChange }) => {
-//   return (
-//     <div className="flex space-x-4">
-//       <button
-//         onClick={() => onChange("yes")}
-//         className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-//           value === true
-//             ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-//             : 'border-gray-300 dark:border-gray-600 hover:border-green-500'
-//         }`}
-//       >
-//         <div className="flex flex-col items-center">
-//           <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center mb-2 ${
-//             value === true 
-//               ? 'border-green-500 bg-green-500 text-white' 
-//               : 'border-gray-400'
-//           }`}>
-//             {value === true && <FiCheck className="text-xs" />}
-//           </div>
-//           <span className="font-medium">YES</span>
-//         </div>
-//       </button>
-      
-//       <button
-//         onClick={() => onChange("no")}
-//         className={`flex-1 py-3 rounded-lg border-2 transition-all ${
-//           value === false
-//             ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400'
-//             : 'border-gray-300 dark:border-gray-600 hover:border-red-500'
-//         }`}
-//       >
-//         <div className="flex flex-col items-center">
-//           <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center mb-2 ${
-//             value === false 
-//               ? 'border-red-500 bg-red-500 text-white' 
-//               : 'border-gray-400'
-//           }`}>
-//             {value === false && <span className="text-xs">✕</span>}
-//           </div>
-//           <span className="font-medium">NO</span>
-//         </div>
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default FeedbackForm;
-
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FiCheck, FiAlertCircle, FiStar, FiMessageSquare, FiCalendar, FiChevronLeft, FiChevronRight, FiUser } from 'react-icons/fi';
@@ -873,19 +9,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({
-    // Vessel Information
-    vesselName: vessel?.name || "M.V. SSL THAMIRABARANI",
-    vesselIMO: vessel?.imoNumber || "IMO: 9312468",
-    vesselSR: "SR/4354",
-    ownerRep: "MR. KABILAN SADASIVAM - FLEET MANAGEMENT INDIA PVT LTD (INDIA)",
-    shipManager: "MR. SAMPATH WIJESINGHE",
-    feedbackDate: new Date().toISOString().split('T')[0],
-    arrivalDate: "",
-    completionDate: "",
-    sailingDate: "",
-    specDuration: "",
-    agreedDuration: "",
-    actualDuration: "",
+    // Project Information (replacing vessel information)
+    jobCategory: '',
+    projectHandleLocation: 'LOC_C',
+    startingDate: '',
+    endingDate: '',
+    jobStatus: '',
+    projectNumber: '',
+    projectName: '',
+    customerFeedbackStatus: '',
     
     // Ratings (0-100 scale)
     ratings: {
@@ -957,10 +89,37 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     
     // Feedback Reference
     feedbackRef: `FB-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
+    
+    // Removed vessel fields (vesselName, vesselIMO)
   });
 
+  // Dropdown options
+  const jobCategoryOptions = [
+    { value: '', label: 'Select Category' },
+    { value: 'SR', label: 'SR' },
+    { value: 'NC', label: 'NC' },
+    { value: 'PMC', label: 'PMC' }
+  ];
+
+  const jobStatusOptions = [
+    { value: '', label: 'Select Status' },
+    { value: 'A', label: 'OPENED' },
+    { value: 'I', label: 'CLOSED' },
+    { value: 'P', label: 'PENDING' },
+    { value: 'C', label: 'CONFIRMED' },
+    { value: 'D', label: 'CANCELLED' }
+  ];
+
+  const customerFeedbackStatusOptions = [
+    { value: '', label: 'Select Feedback Status' },
+    { value: '1', label: 'Not Received' },
+    { value: '2', label: 'Received' },
+    { value: '3', label: 'SED' },
+    { value: '4', label: 'Reluctant to Issue' }
+  ];
+
   const steps = [
-    { id: 0, title: 'Vessel Details', icon: <FiCalendar /> },
+    { id: 0, title: 'Project Details', icon: <FiCalendar /> },
     { id: 1, title: 'Responsiveness', icon: <FiMessageSquare /> },
     { id: 2, title: 'Deck Dept', icon: <FiStar /> },
     { id: 3, title: 'Engine Dept', icon: <FiStar /> },
@@ -987,6 +146,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSelectChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -1029,8 +195,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       submittedBy: user?.name || "Anonymous",
       submittedAt: new Date().toISOString(),
       overallScore,
-      vesselName: vessel?.name || formData.vesselName,
-      vesselIMO: vessel?.imoNumber || formData.vesselIMO
     };
 
     console.log('Submitting feedback:', finalData);
@@ -1331,153 +495,140 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}>
             <div className="mb-4">
               <h2 className={`font-bold text-gray-900 dark:text-white ${titleClass}`}>
-                Vessel Information
+                Project Information
               </h2>
               <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Please provide vessel details and timeline information
+                Please provide project details and management information
               </p>
             </div>
             
             <div className="space-y-3">
+              {/* Job Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Vessel Name
+                  Job Category
+                </label>
+                <select
+                  value={formData.jobCategory}
+                  onChange={(e) => handleSelectChange('jobCategory', e.target.value)}
+                  className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                >
+                  {jobCategoryOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Project Number (highlighted) */}
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Project Number (D_JM)
                 </label>
                 <input
                   type="text"
-                  value={formData.vesselName}
-                  onChange={(e) => handleInputChange('vesselName', e.target.value)}
-                  className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                  value={formData.projectNumber}
+                  onChange={(e) => handleInputChange('projectNumber', e.target.value)}
+                  className={`input-field bg-yellow-100 dark:bg-yellow-900/50 border-yellow-300 dark:border-yellow-700 ${
+                    isMobile ? 'py-2 text-sm' : ''
+                  }`}
+                  placeholder="Enter project number"
                 />
               </div>
-              
-              <div className={`grid ${isMobile ? 'grid-cols-2 gap-3' : 'grid-cols-2 md:grid-cols-2 gap-4'}`}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    IMO Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.vesselIMO}
-                    onChange={(e) => handleInputChange('vesselIMO', e.target.value)}
-                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    SR Number
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.vesselSR}
-                    onChange={(e) => handleInputChange('vesselSR', e.target.value)}
-                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-3 gap-4'}`}>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Arrival Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.arrivalDate}
-                      onChange={(e) => handleInputChange('arrivalDate', e.target.value)}
-                      className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Completion Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.completionDate}
-                      onChange={(e) => handleInputChange('completionDate', e.target.value)}
-                      className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Sailing Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.sailingDate}
-                      onChange={(e) => handleInputChange('sailingDate', e.target.value)}
-                      className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    />
-                  </div>
-                </div>
+
+              {/* Project Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Project Name (PMD_DESCRIPTION)
+                </label>
+                <input
+                  type="text"
+                  value={formData.projectName}
+                  onChange={(e) => handleInputChange('projectName', e.target.value)}
+                  className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                  placeholder="Enter project name"
+                />
               </div>
 
-              <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-1 md:grid-cols-3 gap-4'}`}>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Spec Duration (Days)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.specDuration}
-                    onChange={(e) => handleInputChange('specDuration', e.target.value)}
-                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Agreed Duration (Days)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.agreedDuration}
-                    onChange={(e) => handleInputChange('agreedDuration', e.target.value)}
-                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    min="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Actual Duration (Days)
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.actualDuration}
-                    onChange={(e) => handleInputChange('actualDuration', e.target.value)}
-                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
-                    min="0"
-                  />
-                </div>
-              </div>
-
+              {/* Dates Section */}
               <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Owner's Representative
+                    Starting Date (PD_START_DATE)
                   </label>
                   <input
-                    type="text"
-                    value={formData.ownerRep}
-                    onChange={(e) => handleInputChange('ownerRep', e.target.value)}
+                    type="date"
+                    value={formData.startingDate}
+                    onChange={(e) => handleInputChange('startingDate', e.target.value)}
                     className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
                   />
                 </div>
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Ship Manager
+                    Ending Date (PD_END_DATE)
                   </label>
                   <input
-                    type="text"
-                    value={formData.shipManager}
-                    onChange={(e) => handleInputChange('shipManager', e.target.value)}
+                    type="date"
+                    value={formData.endingDate}
+                    onChange={(e) => handleInputChange('endingDate', e.target.value)}
                     className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
                   />
                 </div>
               </div>
+
+              {/* Status Fields */}
+              <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Job Status (PMD_STATUS)
+                  </label>
+                  <select
+                    value={formData.jobStatus}
+                    onChange={(e) => handleSelectChange('jobStatus', e.target.value)}
+                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                  >
+                    {jobStatusOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Customer Feedback Status (PMD_CFB_STATUS)
+                  </label>
+                  <select
+                    value={formData.customerFeedbackStatus}
+                    onChange={(e) => handleSelectChange('customerFeedbackStatus', e.target.value)}
+                    className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                  >
+                    {customerFeedbackStatusOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Project Handle Location */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Project Handle Location (LOC_C)
+                </label>
+                <input
+                  type="text"
+                  value={formData.projectHandleLocation}
+                  onChange={(e) => handleInputChange('projectHandleLocation', e.target.value)}
+                  className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                  placeholder="Enter project location"
+                />
+              </div>
+
             </div>
           </div>
         );
@@ -1976,26 +1127,58 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             </div>
 
+            {/* Project Information Summary */}
             <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900/30 dark:to-green-900/30 rounded-lg p-4 mb-6">
-              <div className={`flex ${isMobile ? 'flex-col' : 'items-center justify-between'}`}>
-                <div className={`${isMobile ? 'mb-4' : ''}`}>
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+              <div className={`${isMobile ? '' : 'grid grid-cols-2 gap-4'}`}>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                    Project Information
+                  </h3>
+                  <div className="space-y-2">
+                    {formData.projectNumber && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Project Number:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{formData.projectNumber}</span>
+                      </div>
+                    )}
+                    {formData.projectName && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Project Name:</span>
+                        <span className="font-medium text-gray-900 dark:text-white truncate max-w-[150px]">{formData.projectName}</span>
+                      </div>
+                    )}
+                    {formData.jobCategory && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">Job Category:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {jobCategoryOptions.find(opt => opt.value === formData.jobCategory)?.label || formData.jobCategory}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className={`${isMobile ? 'mt-4' : ''}`}>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
                     Feedback Summary
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Reference: <span className="font-medium">{formData.feedbackRef}</span>
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Vessel: <span className="font-medium">{formData.vesselName}</span>
-                  </p>
-                </div>
-                <div className={`text-center ${isMobile ? '' : ''}`}>
-                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                    {calculateOverallScore()}
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Reference:</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{formData.feedbackRef}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Overall Score:</span>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {calculateOverallScore()}
+                        </div>
+                        <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
+                          /100
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="px-4 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-sm font-medium">
-                    Overall Score
-                  </span>
                 </div>
               </div>
             </div>
@@ -2115,8 +1298,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     <span className="font-medium text-gray-900 dark:text-white">{formData.feedbackRef}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Vessel:</span>
-                    <span className="font-medium text-gray-900 dark:text-white truncate max-w-[150px]">{formData.vesselName}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Project:</span>
+                    <span className="font-medium text-gray-900 dark:text-white truncate max-w-[150px]">{formData.projectName || formData.projectNumber}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Score:</span>
@@ -2135,6 +1318,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     // Reset form for new feedback
                     setFormData({
                       ...formData,
+                      jobCategory: '',
+                      projectHandleLocation: 'LOC_C',
+                      startingDate: '',
+                      endingDate: '',
+                      jobStatus: '',
+                      projectNumber: '',
+                      projectName: '',
+                      customerFeedbackStatus: '',
                       feedbackRef: `FB-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`,
                       ratings: Object.keys(formData.ratings).reduce((acc, key) => ({ ...acc, [key]: 0 }), {}),
                       valueForMoney: null,
@@ -2142,12 +1333,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       observations: "",
                       poorAverageDetails: "",
                       shipManagerComments: "",
-                      arrivalDate: "",
-                      completionDate: "",
-                      sailingDate: "",
-                      specDuration: "",
-                      agreedDuration: "",
-                      actualDuration: "",
                     });
                     setCurrentStep(0);
                   }}
