@@ -521,26 +521,27 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </select>
               </div>
 
-              {/* Project Number (highlighted) */}
-              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              {/* Project Number (dropdown) */}
+              <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Project Number (D_JM)
+                  Project Number
                 </label>
-                <input
-                  type="text"
+                <select
                   value={formData.projectNumber}
                   onChange={(e) => handleInputChange('projectNumber', e.target.value)}
-                  className={`input-field bg-yellow-100 dark:bg-yellow-900/50 border-yellow-300 dark:border-yellow-700 ${
-                    isMobile ? 'py-2 text-sm' : ''
-                  }`}
-                  placeholder="Enter project number"
-                />
+                  className={`input-field ${isMobile ? 'py-2 text-sm' : ''}`}
+                >
+                  <option value="">Select project number</option>
+                  <option value="1">1 - MV Ocean Queen - Major Repair</option>
+                  <option value="2">2 - MV Sea Voyager - Dry Docking</option>
+                  <option value="3">3 - M.V. EVER UNIQUE</option>
+                </select>
               </div>
 
               {/* Project Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Project Name (PMD_DESCRIPTION)
+                  Project Name
                 </label>
                 <input
                   type="text"
@@ -555,7 +556,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Starting Date (PD_START_DATE)
+                    Starting Date
                   </label>
                   <input
                     type="date"
@@ -567,7 +568,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Ending Date (PD_END_DATE)
+                    Ending Date
                   </label>
                   <input
                     type="date"
@@ -582,7 +583,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-1 md:grid-cols-2 gap-4'}`}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Job Status (PMD_STATUS)
+                    Job Status
                   </label>
                   <select
                     value={formData.jobStatus}
@@ -599,7 +600,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Customer Feedback Status (PMD_CFB_STATUS)
+                    Customer Feedback Status
                   </label>
                   <select
                     value={formData.customerFeedbackStatus}
@@ -618,7 +619,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               {/* Project Handle Location */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Project Handle Location (LOC_C)
+                  Project Handle Location
                 </label>
                 <input
                   type="text"
