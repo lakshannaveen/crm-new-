@@ -18,9 +18,13 @@ import {
 } from "../constants/authActionTypes";
 import { CLEAR_AUTH_ERRORS } from "../constants/uiActionTypes";
 
+const tokenFromStorage = localStorage.getItem("token");
+const tokenExpiryFromStorage = localStorage.getItem("tokenExpiry");
+const isTokenValid = tokenFromStorage && (!tokenExpiryFromStorage || Number(tokenExpiryFromStorage) > Date.now());
+
 const initialState = {
-  token: localStorage.getItem("token"),
-  isAuthenticated: false,
+  token: tokenFromStorage,
+  isAuthenticated: !!isTokenValid,
   user: JSON.parse(localStorage.getItem("user")) || null,
   loading: false,
   error: null,

@@ -276,6 +276,70 @@ class AuthService {
     return user;
   }
 
+  // Session helpers ------------------------------------------------------
+  // Try to parse a JWT token and return payload if possible
+  parseJwt(token) {
+    if (!token || typeof token !== 'string') return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = parts[1];
+      const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Save session to localStorage. If expiresInSeconds provided, save expiry timestamp.
+  setSession(token, user, expiresInSeconds = null) {
+    if (token) localStorage.setItem('token', token);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+
+    if (expiresInSeconds && Number.isFinite(Number(expiresInSeconds))) {
+      localStorage.setItem('tokenExpiry', String(Date.now() + Number(expiresInSeconds) * 1000));
+    } else {
+      // Try to infer expiry from JWT exp claim
+      const payload = this.parseJwt(token);
+      if (payload && payload.exp) {
+        localStorage.setItem('tokenExpiry', String(payload.exp * 1000));
+      } else {
+        localStorage.removeItem('tokenExpiry');
+      }
+    }
+  }
+
+  // Clear session
+  clearSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem('serviceNo');
+  }
+
+  // Is token expired?
+  isTokenExpired() {
+    const expiry = localStorage.getItem('tokenExpiry');
+    if (!expiry) return false; // no expiry recorded
+    const expiryMs = Number(expiry);
+    if (!expiryMs) return false;
+    return Date.now() > expiryMs;
+  }
+
+  // Is user logged in (has token and not expired)
+  isLoggedIn() {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    return !this.isTokenExpired();
+  }
+
+  // Get auth header for API calls
+  getAuthHeader() {
+    const token = localStorage.getItem('token');
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  }
+
   async updateProfile(userId, userData) {
     // Mock API delay
     await new Promise((resolve) => setTimeout(resolve, 1000));

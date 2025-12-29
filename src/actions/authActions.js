@@ -126,16 +126,11 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
         if (storedBackendOtp === otp) {
           // Success: use stored token/user
           localStorage.removeItem("backendOTP");
-          localStorage.removeItem("backendToken");
-          localStorage.removeItem("backendUser");
-
           const parsedUser = storedBackendUser ? JSON.parse(storedBackendUser) : null;
           const userObj = normalizeUserDetails(parsedUser);
 
-          // Persist to main storage expected by reducer
-          if (storedBackendToken) localStorage.setItem("token", storedBackendToken);
-          if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
-          if (userObj && userObj.serviceNo) localStorage.setItem("serviceNo", userObj.serviceNo);
+          // Persist via authService helper (will also attempt to infer expiry)
+          authService.setSession(storedBackendToken, userObj, 24 * 60 * 60);
 
           dispatch({
             type: VERIFY_OTP_SUCCESS,
@@ -162,9 +157,10 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
 
         const userObj = normalizeUserDetails(resp.UserDetails || null);
 
-        // Persist token and normalized user for other APIs to pick up
-        if (resp.Token) localStorage.setItem("token", resp.Token);
-        if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
+        // Persist via authService helper (attempt to infer expiry from JWT payload,
+        // otherwise default to 24 hours)
+        authService.setSession(resp.Token, userObj, 24 * 60 * 60);
+
         if (userObj && userObj.serviceNo) localStorage.setItem("serviceNo", userObj.serviceNo);
 
         dispatch({
@@ -226,19 +222,17 @@ export const register = (userData) => async (dispatch) => {
 export const loadUser = () => async (dispatch) => {
   try {
     dispatch({ type: LOAD_USER_REQUEST });
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No token found");
+    // Ensure token present and not expired
+    if (!authService.isLoggedIn()) {
+      // clear any leftovers and indicate failure
+      authService.clearSession();
+      throw new Error('No valid session found');
     }
 
-    // Mock API call to get user data
+    const token = localStorage.getItem('token');
     const user = await authService.getCurrentUser(token);
 
-    dispatch({
-      type: LOAD_USER_SUCCESS,
-      payload: user,
-    });
+    dispatch({ type: LOAD_USER_SUCCESS, payload: user });
   } catch (error) {
     dispatch({
       type: LOAD_USER_FAILURE,
@@ -249,6 +243,12 @@ export const loadUser = () => async (dispatch) => {
 
 // Logout user
 export const logout = () => (dispatch) => {
+  // Clear session storage
+  try {
+    authService.clearSession();
+  } catch (e) {
+    // ignore
+  }
   dispatch({ type: LOGOUT });
   toast.success("Logged out successfully");
 };
