@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { verifyOTP, resendOTP } from '../../actions/authActions';
+import { verifyOTP, login } from '../../actions/authActions';
 import { validateOTP } from '../../utils/validators';
 import { FiLock, FiRefreshCw, FiArrowLeft } from 'react-icons/fi';
 import toast from 'react-hot-toast';
@@ -9,7 +9,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
   const dispatch = useDispatch();
   const { loading } = useSelector(state => state.auth);
   
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '']);
   const [errors, setErrors] = useState({});
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
@@ -53,7 +53,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
     }
 
     // Auto-focus next input
-    if (value && index < 5) {
+    if (value && index < 4) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -65,7 +65,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
     } else if (e.key === 'ArrowLeft' && index > 0) {
       e.preventDefault();
       inputRefs.current[index - 1]?.focus();
-    } else if (e.key === 'ArrowRight' && index < 5) {
+    } else if (e.key === 'ArrowRight' && index < 4) {
       e.preventDefault();
       inputRefs.current[index + 1]?.focus();
     }
@@ -75,18 +75,18 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text/plain').trim();
     
-    if (/^\d{6}$/.test(pastedData)) {
+    if (/^\d{5}$/.test(pastedData)) {
       const otpArray = pastedData.split('');
       const newOtp = [...otp];
       
-      otpArray.slice(0, 6).forEach((digit, index) => {
+      otpArray.slice(0, 5).forEach((digit, index) => {
         newOtp[index] = digit;
       });
       
       setOtp(newOtp);
       
       // Focus last input
-      inputRefs.current[5]?.focus();
+      inputRefs.current[4]?.focus();
     }
   };
 
@@ -97,7 +97,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
     const otpString = otp.join('');
 
     if (!validateOTP(otpString)) {
-      setErrors({ otp: 'Please enter a valid 6-digit OTP' });
+      setErrors({ otp: 'Please enter a valid 5-digit OTP' });
       return;
     }
 
@@ -107,10 +107,10 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
   const handleResendOTP = () => {
     if (!canResend) return;
 
-    dispatch(resendOTP(phoneNumber));
+    dispatch(login(phoneNumber));
     setTimer(60);
     setCanResend(false);
-    setOtp(['', '', '', '', '', '']);
+    setOtp(['', '', '', '', '']);
     
     // Focus first input
     if (inputRefs.current[0]) {
@@ -141,7 +141,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
           Verify OTP
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
-          Enter the 6-digit OTP sent to
+          Enter the 5-digit OTP sent to
         </p>
         <p className="font-medium text-gray-900 dark:text-white mt-1">
           {formatPhoneNumber(phoneNumber)}
@@ -161,7 +161,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
         {/* OTP Inputs */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
-            Enter 6-digit OTP
+            Enter 5-digit OTP
           </label>
           <div className="flex justify-between space-x-2 md:space-x-3">
             {otp.map((digit, index) => (
@@ -185,8 +185,8 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
               />
             ))}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-            Click to paste or type the 6-digit code
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+            Click to paste or type the 5-digit code
           </p>
         </div>
 
@@ -265,9 +265,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
           <strong>Note:</strong> The OTP is valid for 5 minutes. 
           If you don't receive it, check your spam folder or request a new OTP.
         </p>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-          For demo purposes, use OTP: <strong>123456</strong>
-        </p>
+        {/* Do not expose backend OTP in the UI */}
       </div>
 
       {/* Terms */}

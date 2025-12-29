@@ -1,4 +1,5 @@
 // Mock service for authentication
+import config from '../config';
 class AuthService {
   // Mock users database
   users = [
@@ -47,25 +48,129 @@ class AuthService {
   otpStore = {};
 
   async sendOTP(phoneNumber) {
-    // Mock API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // sendOTP (mock) is deprecated in API-only mode. Use requestOTPBackend instead.
+    throw new Error('sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow');
+  }
 
-    // Generate OTP
-    const otp = "123456"; // For demo purposes, always return 123456
+  // Request OTP from remote backend
+  async requestOTPBackend(phoneNumber) {
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
 
-    // Store OTP
-    this.otpStore[phoneNumber] = {
-      otp,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+    // Try multiple possible payload field names in case backend expects different key
+    const phoneKeys = [
+      'P_PHONE_NO',
+      'PHONE',
+      'P_PHONE',
+      'P_MOBILE',
+      'MOBILE',
+      'MSISDN',
+      'P_MOB',
+    ];
+
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    let lastError = null;
+    let lastResponse = null;
+
+    for (const key of phoneKeys) {
+      const body = {};
+      body[key] = phoneNumber;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (e) {
+          data = { raw: text };
+        }
+
+        console.debug('requestOTPBackend try', { url, key, body, status: res.status, data });
+
+        lastResponse = data;
+
+        // If backend returned a successful StatusCode, return parsed data
+        if (data && (data.StatusCode === 200 || res.ok)) {
+          data._requestedPhoneKey = key;
+          data._requestedPhone = phoneNumber;
+          return data;
+        }
+
+        // If not 200, continue trying other keys
+      } catch (err) {
+        console.warn('requestOTPBackend fetch failed for key', key, err && err.message);
+        lastError = err;
+        continue;
+      }
+    }
+
+    // If we reach here, none of the payload keys produced a success response
+    if (lastResponse) return lastResponse;
+    throw lastError || new Error('Failed to request OTP from backend');
+  }
+
+  // Verify OTP with remote backend
+  async verifyOTPBackend(phoneNumber, otp) {
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+
+    // Try multiple field name combinations for phone and otp
+    const phoneKeys = ['P_PHONE_NO', 'PHONE', 'P_PHONE', 'P_MOBILE', 'MOBILE', 'MSISDN', 'P_MOB'];
+    const otpKeys = ['P_OTP', 'OTP', 'CODE', 'P_CODE'];
+
+    const headers = {
+      'Content-Type': 'application/json',
     };
 
-    console.log(`OTP sent to ${phoneNumber}: ${otp}`);
+    let lastError = null;
+    let lastResponse = null;
 
-    return {
-      success: true,
-      message: "OTP sent successfully",
-      otp, // In real app, don't return OTP
-    };
+    for (const pKey of phoneKeys) {
+      for (const oKey of otpKeys) {
+        const body = {};
+        body[pKey] = phoneNumber;
+        body[oKey] = otp;
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body),
+          });
+
+          const text = await res.text();
+          let data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {
+            data = { raw: text };
+          }
+
+          console.debug('verifyOTPBackend try', { url, pKey, oKey, body, status: res.status, data });
+
+          lastResponse = data;
+
+          if (data && (data.StatusCode === 200 || res.ok)) {
+            data._requestedPhoneKey = pKey;
+            data._requestedOtpKey = oKey;
+            return data;
+          }
+        } catch (err) {
+          console.warn('verifyOTPBackend fetch failed for', pKey, oKey, err && err.message);
+          lastError = err;
+          continue;
+        }
+      }
+    }
+
+    if (lastResponse) return lastResponse;
+    throw lastError || new Error('Verify request failed');
   }
 
   async verifyOTP(phoneNumber, otp) {
@@ -169,6 +274,70 @@ class AuthService {
     }
 
     return user;
+  }
+
+  // Session helpers ------------------------------------------------------
+  // Try to parse a JWT token and return payload if possible
+  parseJwt(token) {
+    if (!token || typeof token !== 'string') return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = parts[1];
+      const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      return JSON.parse(decodeURIComponent(escape(json)));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Save session to localStorage. If expiresInSeconds provided, save expiry timestamp.
+  setSession(token, user, expiresInSeconds = null) {
+    if (token) localStorage.setItem('token', token);
+    if (user) localStorage.setItem('user', JSON.stringify(user));
+
+    if (expiresInSeconds && Number.isFinite(Number(expiresInSeconds))) {
+      localStorage.setItem('tokenExpiry', String(Date.now() + Number(expiresInSeconds) * 1000));
+    } else {
+      // Try to infer expiry from JWT exp claim
+      const payload = this.parseJwt(token);
+      if (payload && payload.exp) {
+        localStorage.setItem('tokenExpiry', String(payload.exp * 1000));
+      } else {
+        localStorage.removeItem('tokenExpiry');
+      }
+    }
+  }
+
+  // Clear session
+  clearSession() {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem('serviceNo');
+  }
+
+  // Is token expired?
+  isTokenExpired() {
+    const expiry = localStorage.getItem('tokenExpiry');
+    if (!expiry) return false; // no expiry recorded
+    const expiryMs = Number(expiry);
+    if (!expiryMs) return false;
+    return Date.now() > expiryMs;
+  }
+
+  // Is user logged in (has token and not expired)
+  isLoggedIn() {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    return !this.isTokenExpired();
+  }
+
+  // Get auth header for API calls
+  getAuthHeader() {
+    const token = localStorage.getItem('token');
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
   }
 
   async updateProfile(userId, userData) {

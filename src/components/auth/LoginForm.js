@@ -15,18 +15,31 @@ const LoginForm = () => {
 
   const [countryCode, setCountryCode] = useState('+94');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState(['', '', '', '', '']);
   const [errors, setErrors] = useState({});
   const [otpResent, setOtpResent] = useState(false);
 
   const handlePhoneSubmit = (e) => {
     e.preventDefault();
     setErrors({});
-    const fullPhoneNumber = countryCode + phoneNumber.replace(/\D/g, '');
+    const cleaned = phoneNumber.replace(/\D/g, '');
+    let fullPhoneNumber = cleaned;
+
+    // If user entered leading 0 (local format), send as-is (backend expects 0-prefixed)
+    if (!cleaned.startsWith('0') && !cleaned.startsWith('+')) {
+      // Prepend country code if provided (remove +)
+      if (countryCode && countryCode.startsWith('+')) {
+        fullPhoneNumber = countryCode + cleaned;
+      } else {
+        fullPhoneNumber = cleaned;
+      }
+    }
+
     if (!validatePhoneNumber(fullPhoneNumber)) {
       setErrors({ phone: 'Please enter a valid phone number' });
       return;
     }
+
     dispatch(login(fullPhoneNumber));
   };
 
@@ -35,7 +48,7 @@ const LoginForm = () => {
     setErrors({});
     const otpString = otp.join('');
     if (!validateOTP(otpString)) {
-      setErrors({ otp: 'Please enter a valid 6-digit OTP' });
+      setErrors({ otp: 'Please enter a valid 5-digit OTP' });
       return;
     }
     dispatch(verifyOTP(otpString, storedPhone));
@@ -149,7 +162,7 @@ const LoginForm = () => {
       {/* OTP Form */}
       {otpSent && (
         <form onSubmit={handleOTPSubmit} className="space-y-6">
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-5 gap-2">
             {otp.map((digit, index) => (
               <input
                 key={index}

@@ -13,8 +13,8 @@ export const validatePhoneNumber = (phone) => {
 export const validateOTP = (otp) => {
   if (!otp) return false;
   
-  // OTP should be exactly 6 digits
-  const otpRegex = /^\d{6}$/;
+  // OTP should be exactly 5 digits
+  const otpRegex = /^\d{5}$/;
   return otpRegex.test(otp);
 };
 

@@ -312,10 +312,10 @@ const OwnerDashboard = () => {
 
   useEffect(() => {
     dispatch(getShips());
-    // Auto-fetch user profile data for dashboard
-    const HARDCODED_SERVICE_NO = 'O0204'; // Keep in sync with ProfilePage
-    dispatch(getUserByServiceNo(HARDCODED_SERVICE_NO));
-  }, [dispatch]);
+    // Auto-fetch user profile data for dashboard using logged-in serviceNo
+    const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+    if (svc) dispatch(getUserByServiceNo(svc));
+  }, [dispatch, user?.serviceNo]);
 
   const filteredShips = ships.filter(ship => {
     if (activeFilter === 'all') return true;

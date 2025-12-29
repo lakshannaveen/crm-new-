@@ -26,22 +26,85 @@ export const login = (phoneNumber) => async (dispatch) => {
       throw new Error("Please enter a valid phone number");
     }
 
-    // Send OTP (mock API call)
-    const response = await authService.sendOTP(phoneNumber);
+    // Call remote backend for OTP (API-only flow)
+   
+    const tried = [];
+    const tryNumbers = [phoneNumber];
+    if (phoneNumber.startsWith('+94')) {
+      tryNumbers.push('0' + phoneNumber.slice(3));
+    } else if (phoneNumber.startsWith('0')) {
+      tryNumbers.push('+94' + phoneNumber.slice(1));
+    }
 
-    dispatch({
-      type: LOGIN_SUCCESS,
-      payload: { phoneNumber },
-    });
+    let response = null;
+    for (const num of tryNumbers) {
+      tried.push(num);
+      try {
+        response = await authService.requestOTPBackend(num);
+        // attach which number succeeded for debug
+        response._requestedPhone = num;
+        break;
+      } catch (err) {
+        console.warn('requestOTPBackend failed for', num, err.message || err);
+        response = null;
+      }
+    }
 
-    toast.success(`OTP sent to ${phoneNumber}`);
+    if (response && response.StatusCode === 200) {
+      // Save backend token and user details temporarily for verification
+      if (response.Token) localStorage.setItem("backendToken", response.Token);
+      if (response.UserDetails) localStorage.setItem("backendUser", JSON.stringify(response.UserDetails));
+      // Persist service number immediately so other services can call APIs
+      const serviceNoFromResponse =
+        (response.UserDetails && (response.UserDetails.ServiceNo || response.UserDetails.serviceNo || response.UserDetails.Service_No)) || null;
+      if (serviceNoFromResponse) {
+        localStorage.setItem("serviceNo", serviceNoFromResponse);
+      }
+      // Save backend OTP (if provided) for client-side verification when backend has no verify endpoint
+      if (response.OTP) {
+        const rawOtp = String(response.OTP).replace(/"/g, "").trim();
+        localStorage.setItem("backendOTP", rawOtp);
+      }
+
+      const requestedPhone = response._requestedPhone || phoneNumber;
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: {
+          phoneNumber: requestedPhone,
+          token: response.Token,
+          userDetails: response.UserDetails,
+          serviceNo: serviceNoFromResponse,
+        },
+      });
+
+      // Notify user that OTP was sent
+      toast.success(`OTP sent to ${response._requestedPhone || phoneNumber}`);
+    } else {
+      const msg = (response && response.Message) || 'Failed to request OTP from backend';
+      const triedMsg = tried.length ? ` Tried: ${tried.join(',')}` : '';
+      throw new Error(msg + triedMsg);
+    }
   } catch (error) {
     dispatch({
       type: LOGIN_FAILURE,
       payload: error.message,
     });
-    toast.error(error.message);
+    console.error('Login action error:', error);
+    toast.error(error.message || 'Failed to request OTP from backend');
   }
+};
+
+// Normalize backend UserDetails to app-friendly shape
+const normalizeUserDetails = (user) => {
+  if (!user) return null;
+  const normalized = {
+    ...user,
+    serviceNo: user.ServiceNo || user.serviceNo || user.Service_No || null,
+    name: user.FName || user.Name || user.name || user.fname || null,
+    phone: user.PhoneNo || user.phone || user.mobile || null,
+    email: user.Email || user.email || null,
+  };
+  return normalized;
 };
 
 // Verify OTP
@@ -49,22 +112,75 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
   try {
     dispatch({ type: VERIFY_OTP_REQUEST });
 
-    if (!otp || otp.length !== 6) {
-      throw new Error("Please enter a valid 6-digit OTP");
+    if (!otp || otp.length !== 5) {
+      throw new Error("Please enter a valid 5-digit OTP");
     }
+    // Try backend verification first (POST P_PHONE_NO and P_OTP)
+    try {
+      // First, if backendOTP was stored at login, verify locally against it
+      const storedBackendOtp = localStorage.getItem("backendOTP");
+      const storedBackendToken = localStorage.getItem("backendToken");
+      const storedBackendUser = localStorage.getItem("backendUser");
 
-    // Mock OTP verification (in real app, this would be API call)
-    const response = await authService.verifyOTP(phoneNumber, otp);
+      if (storedBackendOtp) {
+        if (storedBackendOtp === otp) {
+          // Success: use stored token/user
+          localStorage.removeItem("backendOTP");
+          const parsedUser = storedBackendUser ? JSON.parse(storedBackendUser) : null;
+          const userObj = normalizeUserDetails(parsedUser);
 
-    dispatch({
-      type: VERIFY_OTP_SUCCESS,
-      payload: {
-        token: response.token,
-        user: response.user,
-      },
-    });
+          // Persist via authService helper (will also attempt to infer expiry)
+          authService.setSession(storedBackendToken, userObj, 24 * 60 * 60);
 
-    toast.success("Login successful!");
+          dispatch({
+            type: VERIFY_OTP_SUCCESS,
+            payload: {
+              token: storedBackendToken,
+              user: userObj,
+            },
+          });
+
+          toast.success("Login successful!");
+          return;
+        }
+
+        throw new Error("Invalid OTP");
+      }
+
+      // Otherwise, call backend verify endpoint (API-only)
+      const resp = await authService.verifyOTPBackend(phoneNumber, otp);
+
+      if (resp && resp.StatusCode === 200 && resp.Token) {
+        // Clear any temporary storage
+        localStorage.removeItem("backendToken");
+        localStorage.removeItem("backendUser");
+
+        const userObj = normalizeUserDetails(resp.UserDetails || null);
+
+        // Persist via authService helper (attempt to infer expiry from JWT payload,
+        // otherwise default to 24 hours)
+        authService.setSession(resp.Token, userObj, 24 * 60 * 60);
+
+        if (userObj && userObj.serviceNo) localStorage.setItem("serviceNo", userObj.serviceNo);
+
+        dispatch({
+          type: VERIFY_OTP_SUCCESS,
+          payload: {
+            token: resp.Token,
+            user: userObj,
+          },
+        });
+
+        toast.success("Login successful!");
+        return;
+      }
+
+      const msg = (resp && resp.Message) || "Invalid OTP";
+      throw new Error(msg);
+    } catch (backendErr) {
+      // API-only flow: surface backend error (no mock fallback)
+      throw backendErr instanceof Error ? backendErr : new Error('Invalid OTP');
+    }
   } catch (error) {
     dispatch({
       type: VERIFY_OTP_FAILURE,
@@ -106,19 +222,17 @@ export const register = (userData) => async (dispatch) => {
 export const loadUser = () => async (dispatch) => {
   try {
     dispatch({ type: LOAD_USER_REQUEST });
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No token found");
+    // Ensure token present and not expired
+    if (!authService.isLoggedIn()) {
+      // clear any leftovers and indicate failure
+      authService.clearSession();
+      throw new Error('No valid session found');
     }
 
-    // Mock API call to get user data
+    const token = localStorage.getItem('token');
     const user = await authService.getCurrentUser(token);
 
-    dispatch({
-      type: LOAD_USER_SUCCESS,
-      payload: user,
-    });
+    dispatch({ type: LOAD_USER_SUCCESS, payload: user });
   } catch (error) {
     dispatch({
       type: LOAD_USER_FAILURE,
@@ -129,6 +243,12 @@ export const loadUser = () => async (dispatch) => {
 
 // Logout user
 export const logout = () => (dispatch) => {
+  // Clear session storage
+  try {
+    authService.clearSession();
+  } catch (e) {
+    // ignore
+  }
   dispatch({ type: LOGOUT });
   toast.success("Logged out successfully");
 };

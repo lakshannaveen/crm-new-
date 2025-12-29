@@ -13,7 +13,8 @@ const api = axios.create({
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('cd_crm_token');
+    // Prefer the unified `token` key set by auth flow; fallback to legacy key
+    const token = localStorage.getItem('token') || localStorage.getItem('cd_crm_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

@@ -18,9 +18,13 @@ import {
 } from "../constants/authActionTypes";
 import { CLEAR_AUTH_ERRORS } from "../constants/uiActionTypes";
 
+const tokenFromStorage = localStorage.getItem("token");
+const tokenExpiryFromStorage = localStorage.getItem("tokenExpiry");
+const isTokenValid = tokenFromStorage && (!tokenExpiryFromStorage || Number(tokenExpiryFromStorage) > Date.now());
+
 const initialState = {
-  token: localStorage.getItem("token"),
-  isAuthenticated: false,
+  token: tokenFromStorage,
+  isAuthenticated: !!isTokenValid,
   user: JSON.parse(localStorage.getItem("user")) || null,
   loading: false,
   error: null,
@@ -49,6 +53,8 @@ const authReducer = (state = initialState, action) => {
         loading: false,
         otpSent: true,
         phoneNumber: action.payload.phoneNumber,
+        // If backend provided user details or at least serviceNo, keep it in state
+        user: action.payload.userDetails || (action.payload.serviceNo ? { serviceNo: action.payload.serviceNo } : state.user),
         error: null,
         otpResent: false,
       };
