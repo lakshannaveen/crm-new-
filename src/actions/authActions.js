@@ -84,6 +84,19 @@ export const login = (phoneNumber) => async (dispatch) => {
   }
 };
 
+// Normalize backend UserDetails to app-friendly shape
+const normalizeUserDetails = (user) => {
+  if (!user) return null;
+  const normalized = {
+    ...user,
+    serviceNo: user.ServiceNo || user.serviceNo || user.Service_No || null,
+    name: user.FName || user.Name || user.name || user.fname || null,
+    phone: user.PhoneNo || user.phone || user.mobile || null,
+    email: user.Email || user.email || null,
+  };
+  return normalized;
+};
+
 // Verify OTP
 export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
   try {
@@ -106,11 +119,19 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
           localStorage.removeItem("backendToken");
           localStorage.removeItem("backendUser");
 
+          const parsedUser = storedBackendUser ? JSON.parse(storedBackendUser) : null;
+          const userObj = normalizeUserDetails(parsedUser);
+
+          // Persist to main storage expected by reducer
+          if (storedBackendToken) localStorage.setItem("token", storedBackendToken);
+          if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
+          if (userObj && userObj.serviceNo) localStorage.setItem("serviceNo", userObj.serviceNo);
+
           dispatch({
             type: VERIFY_OTP_SUCCESS,
             payload: {
               token: storedBackendToken,
-              user: storedBackendUser ? JSON.parse(storedBackendUser) : null,
+              user: userObj,
             },
           });
 
@@ -129,11 +150,18 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
         localStorage.removeItem("backendToken");
         localStorage.removeItem("backendUser");
 
+        const userObj = normalizeUserDetails(resp.UserDetails || null);
+
+        // Persist token and normalized user for other APIs to pick up
+        if (resp.Token) localStorage.setItem("token", resp.Token);
+        if (userObj) localStorage.setItem("user", JSON.stringify(userObj));
+        if (userObj && userObj.serviceNo) localStorage.setItem("serviceNo", userObj.serviceNo);
+
         dispatch({
           type: VERIFY_OTP_SUCCESS,
           payload: {
             token: resp.Token,
-            user: resp.UserDetails || null,
+            user: userObj,
           },
         });
 
