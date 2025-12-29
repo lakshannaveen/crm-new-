@@ -127,9 +127,6 @@ class AuthService {
     const headers = {
       'Content-Type': 'application/json',
     };
-    if (process.env.REACT_APP_API_AUTH_KEY) {
-      headers['auth-key'] = process.env.REACT_APP_API_AUTH_KEY;
-    }
 
     let lastError = null;
     let lastResponse = null;
