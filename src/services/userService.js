@@ -1,5 +1,7 @@
 import api from './api';
-import { BACKEND_BASE_URL } from '../index';
+import axios from 'axios';
+import config from '../config';
+import { authService } from './authService';
 
 // Mock service for user management
 class UserService {
@@ -69,26 +71,37 @@ class UserService {
       throw new Error('Service number is required');
     }
     try {
-      // Use the backend base URL from index.js
-      const response = await api.get(`${BACKEND_BASE_URL}/CDLRequirmentManagement/Login/GetUserByServiceNo`, {
+      // Use direct axios request (bypass `api` instance/interceptor) to avoid sending Authorization header
+      const base = (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test';
+      const url = `${base}/CDLRequirmentManagement/Login/GetUserByServiceNo`;
+      const response = await axios.get(url, {
         params: {
           P_SERVICE_NO: serviceNo,
         },
+        // Do not include any custom headers here so the browser won't include Authorization
       });
       return response.data;
     } catch (error) {
       console.error('Error fetching user by service number:', error);
-      
-      // Check if it's a 404 error
+
+      // If server returned 404, surface helpful message
       if (error.response && error.response.status === 404) {
         throw new Error(`API endpoint not found. Please check if the endpoint '/Login/GetUserByServiceNo' exists on the backend.`);
       }
-      
-      // Check if it's a network error
-      if (error.message.includes('Network Error')) {
-        throw new Error('Unable to connect to the server. Please check your internet connection.');
+
+      // If it's a network error (no response), attempt local fallback using mock users
+      if (!error.response || (error.message && error.message.toLowerCase().includes('network'))) {
+        console.warn('Network error while fetching user; attempting local fallback');
+        try {
+          const localUser = authService.users.find(u => u.serviceNo === serviceNo);
+          if (localUser) return localUser;
+        } catch (e) {
+          // ignore
+        }
+        // If no local user, throw a clearer error for the UI
+        throw new Error('Network Error: Unable to reach server and no local user data available.');
       }
-      
+
       throw new Error(error.response?.data?.message || error.message || 'Failed to fetch user');
     }
   }

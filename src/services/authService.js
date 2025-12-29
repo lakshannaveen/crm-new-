@@ -294,7 +294,11 @@ class AuthService {
   // Save session to localStorage. If expiresInSeconds provided, save expiry timestamp.
   setSession(token, user, expiresInSeconds = null) {
     if (token) localStorage.setItem('token', token);
-    if (user) localStorage.setItem('user', JSON.stringify(user));
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+      // Persist service number separately for service-only API calls
+      if (user.serviceNo) localStorage.setItem('serviceNo', user.serviceNo);
+    }
 
     if (expiresInSeconds && Number.isFinite(Number(expiresInSeconds))) {
       localStorage.setItem('tokenExpiry', String(Date.now() + Number(expiresInSeconds) * 1000));

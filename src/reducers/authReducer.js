@@ -71,6 +71,10 @@ const authReducer = (state = initialState, action) => {
     case VERIFY_OTP_SUCCESS:
       localStorage.setItem("token", action.payload.token);
       localStorage.setItem("user", JSON.stringify(action.payload.user));
+      // Persist the service number separately so service-only flows can read it
+      if (action.payload.user && action.payload.user.serviceNo) {
+        localStorage.setItem('serviceNo', action.payload.user.serviceNo);
+      }
       return {
         ...state,
         isAuthenticated: true,
@@ -110,6 +114,7 @@ const authReducer = (state = initialState, action) => {
       if (action.type !== LOAD_USER_FAILURE) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        // keep serviceNo unless explicitly logging out
       }
       return {
         ...state,
@@ -126,6 +131,7 @@ const authReducer = (state = initialState, action) => {
     case LOGOUT:
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      localStorage.removeItem('serviceNo');
       return {
         ...state,
         token: null,
