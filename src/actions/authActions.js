@@ -54,6 +54,12 @@ export const login = (phoneNumber) => async (dispatch) => {
       // Save backend token and user details temporarily for verification
       if (response.Token) localStorage.setItem("backendToken", response.Token);
       if (response.UserDetails) localStorage.setItem("backendUser", JSON.stringify(response.UserDetails));
+      // Persist service number immediately so other services can call APIs
+      const serviceNoFromResponse =
+        (response.UserDetails && (response.UserDetails.ServiceNo || response.UserDetails.serviceNo || response.UserDetails.Service_No)) || null;
+      if (serviceNoFromResponse) {
+        localStorage.setItem("serviceNo", serviceNoFromResponse);
+      }
       // Save backend OTP (if provided) for client-side verification when backend has no verify endpoint
       if (response.OTP) {
         const rawOtp = String(response.OTP).replace(/"/g, "").trim();
@@ -63,7 +69,12 @@ export const login = (phoneNumber) => async (dispatch) => {
       const requestedPhone = response._requestedPhone || phoneNumber;
       dispatch({
         type: LOGIN_SUCCESS,
-        payload: { phoneNumber: requestedPhone, token: response.Token, userDetails: response.UserDetails },
+        payload: {
+          phoneNumber: requestedPhone,
+          token: response.Token,
+          userDetails: response.UserDetails,
+          serviceNo: serviceNoFromResponse,
+        },
       });
 
       // Notify user that OTP was sent

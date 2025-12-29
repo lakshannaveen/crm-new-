@@ -49,6 +49,8 @@ const authReducer = (state = initialState, action) => {
         loading: false,
         otpSent: true,
         phoneNumber: action.payload.phoneNumber,
+        // If backend provided user details or at least serviceNo, keep it in state
+        user: action.payload.userDetails || (action.payload.serviceNo ? { serviceNo: action.payload.serviceNo } : state.user),
         error: null,
         otpResent: false,
       };
