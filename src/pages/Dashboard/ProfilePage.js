@@ -13,13 +13,15 @@ import { formatDate } from '../../utils/formatters';
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
-  // Hardcoded service number for auto-fetch
-  const HARDCODED_SERVICE_NO = 'O0204'; // Change as needed
   const { serviceUser, serviceUserError } = useSelector(state => state.user);
 
+  // Use the logged-in user's serviceNo for profile API calls; fallback to localStorage
   React.useEffect(() => {
-    dispatch(getUserByServiceNo(HARDCODED_SERVICE_NO));
-  }, [dispatch]);
+    const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+    if (svc) {
+      dispatch(getUserByServiceNo(svc));
+    }
+  }, [dispatch, user?.serviceNo]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [isEditing, setIsEditing] = useState(false);
