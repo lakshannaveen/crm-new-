@@ -265,17 +265,7 @@ const OTPVerification = ({ phoneNumber, onBack }) => {
           <strong>Note:</strong> The OTP is valid for 5 minutes. 
           If you don't receive it, check your spam folder or request a new OTP.
         </p>
-        {(() => {
-          const devOtp = localStorage.getItem('backendOTP');
-          if (devOtp) {
-            return (
-              <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                <strong>Dev OTP:</strong> <strong>{devOtp}</strong>
-              </p>
-            );
-          }
-          return null;
-        })()}
+        {/* Do not expose backend OTP in the UI */}
       </div>
 
       {/* Terms */}

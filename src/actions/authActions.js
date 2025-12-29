@@ -66,9 +66,8 @@ export const login = (phoneNumber) => async (dispatch) => {
         payload: { phoneNumber: requestedPhone, token: response.Token, userDetails: response.UserDetails },
       });
 
-      // Show OTP if backend returned it (development only)
-      const otpShown = response.OTP ? ` (dev-OTP: ${String(response.OTP).replace(/\"/g, '')})` : "";
-      toast.success(`OTP sent to ${response._requestedPhone || phoneNumber}${otpShown}`);
+      // Notify user that OTP was sent
+      toast.success(`OTP sent to ${response._requestedPhone || phoneNumber}`);
     } else {
       const msg = (response && response.Message) || 'Failed to request OTP from backend';
       const triedMsg = tried.length ? ` Tried: ${tried.join(',')}` : '';
