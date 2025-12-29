@@ -1,4 +1,5 @@
 // Mock service for authentication
+import config from '../config';
 class AuthService {
   // Mock users database
   users = [
@@ -47,25 +48,137 @@ class AuthService {
   otpStore = {};
 
   async sendOTP(phoneNumber) {
-    // Mock API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // sendOTP (mock) is deprecated in API-only mode. Use requestOTPBackend instead.
+    throw new Error('sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow');
+  }
 
-    // Generate OTP
-    const otp = "123456"; // For demo purposes, always return 123456
+  // Request OTP from remote backend
+  async requestOTPBackend(phoneNumber) {
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
 
-    // Store OTP
-    this.otpStore[phoneNumber] = {
-      otp,
-      expiresAt: Date.now() + 5 * 60 * 1000, // 5 minutes
+    // Try multiple possible payload field names in case backend expects different key
+    const phoneKeys = [
+      'P_PHONE_NO',
+      'PHONE',
+      'P_PHONE',
+      'P_MOBILE',
+      'MOBILE',
+      'MSISDN',
+      'P_MOB',
+    ];
+
+    const headers = {
+      'Content-Type': 'application/json',
     };
+    // Optional auth-key header from env
+    if (process.env.REACT_APP_API_AUTH_KEY) {
+      headers['auth-key'] = process.env.REACT_APP_API_AUTH_KEY;
+    }
 
-    console.log(`OTP sent to ${phoneNumber}: ${otp}`);
+    let lastError = null;
+    let lastResponse = null;
 
-    return {
-      success: true,
-      message: "OTP sent successfully",
-      otp, // In real app, don't return OTP
+    for (const key of phoneKeys) {
+      const body = {};
+      body[key] = phoneNumber;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+        });
+
+        const text = await res.text();
+        let data = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch (e) {
+          data = { raw: text };
+        }
+
+        console.debug('requestOTPBackend try', { url, key, body, status: res.status, data });
+
+        lastResponse = data;
+
+        // If backend returned a successful StatusCode, return parsed data
+        if (data && (data.StatusCode === 200 || res.ok)) {
+          data._requestedPhoneKey = key;
+          data._requestedPhone = phoneNumber;
+          return data;
+        }
+
+        // If not 200, continue trying other keys
+      } catch (err) {
+        console.warn('requestOTPBackend fetch failed for key', key, err && err.message);
+        lastError = err;
+        continue;
+      }
+    }
+
+    // If we reach here, none of the payload keys produced a success response
+    if (lastResponse) return lastResponse;
+    throw lastError || new Error('Failed to request OTP from backend');
+  }
+
+  // Verify OTP with remote backend
+  async verifyOTPBackend(phoneNumber, otp) {
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+
+    // Try multiple field name combinations for phone and otp
+    const phoneKeys = ['P_PHONE_NO', 'PHONE', 'P_PHONE', 'P_MOBILE', 'MOBILE', 'MSISDN', 'P_MOB'];
+    const otpKeys = ['P_OTP', 'OTP', 'CODE', 'P_CODE'];
+
+    const headers = {
+      'Content-Type': 'application/json',
     };
+    if (process.env.REACT_APP_API_AUTH_KEY) {
+      headers['auth-key'] = process.env.REACT_APP_API_AUTH_KEY;
+    }
+
+    let lastError = null;
+    let lastResponse = null;
+
+    for (const pKey of phoneKeys) {
+      for (const oKey of otpKeys) {
+        const body = {};
+        body[pKey] = phoneNumber;
+        body[oKey] = otp;
+
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(body),
+          });
+
+          const text = await res.text();
+          let data = null;
+          try {
+            data = text ? JSON.parse(text) : null;
+          } catch (e) {
+            data = { raw: text };
+          }
+
+          console.debug('verifyOTPBackend try', { url, pKey, oKey, body, status: res.status, data });
+
+          lastResponse = data;
+
+          if (data && (data.StatusCode === 200 || res.ok)) {
+            data._requestedPhoneKey = pKey;
+            data._requestedOtpKey = oKey;
+            return data;
+          }
+        } catch (err) {
+          console.warn('verifyOTPBackend fetch failed for', pKey, oKey, err && err.message);
+          lastError = err;
+          continue;
+        }
+      }
+    }
+
+    if (lastResponse) return lastResponse;
+    throw lastError || new Error('Verify request failed');
   }
 
   async verifyOTP(phoneNumber, otp) {

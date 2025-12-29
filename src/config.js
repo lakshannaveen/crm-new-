@@ -13,7 +13,7 @@ const config = {
     tokenKey: 'cd_crm_token',
     refreshTokenKey: 'cd_crm_refresh_token',
     tokenExpiry: 24 * 60 * 60 * 1000, // 24 hours
-    otpLength: 6,
+    otpLength: 5,
     otpExpiry: 5 * 60 * 1000, // 5 minutes
   },
 
