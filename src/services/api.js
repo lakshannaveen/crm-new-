@@ -1,9 +1,11 @@
 // api.js
 import axios from 'axios';
+import config from '../config';
 
 // Create axios instance with proper configuration
+// Use configured baseURL from `config.js` as primary source to avoid circular imports
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'https://esystems.cdl.lk/backend-test',
+  baseURL: process.env.REACT_APP_API_URL || (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,8 +15,18 @@ const api = axios.create({
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config) => {
-    // Prefer the unified `token` key set by auth flow; fallback to legacy key
-    const token = localStorage.getItem('token') || localStorage.getItem('cd_crm_token');
+    // If running in a browser and offline, fail fast with a clear error
+    try {
+      if (typeof navigator !== 'undefined' && navigator && !navigator.onLine) {
+        return Promise.reject(new Error('Network Error: offline'));
+      }
+    } catch (e) {
+      // ignore
+    }
+    // Prefer the unified `token` key set by auth flow; fallback to configured legacy key
+    const tokenKey = 'token';
+    const fallbackKey = (config && config.auth && config.auth.tokenKey) || 'cd_crm_token';
+    const token = localStorage.getItem(tokenKey) || localStorage.getItem(fallbackKey);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,7 +41,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response || error.message);
+    // Distinguish network/offline errors vs server responses
+    if (!error.response) {
+      // Network or CORS error
+      const msg = (error && error.message) || 'Network Error';
+      console.warn('API Network Error:', msg, error.config && error.config.url);
+      return Promise.reject(new Error('Network Error: Unable to reach API. ' + msg));
+    }
+
+    // Server responded with a status code
+    console.error('API Error:', error.response.status, error.response.data || error.message);
     return Promise.reject(error);
   }
 );
