@@ -2,10 +2,10 @@
 import axios from 'axios';
 import config from '../config';
 
+
 // Create axios instance with proper configuration
-// Use configured baseURL from `config.js` as primary source to avoid circular imports
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test',
+  baseURL: 'https://esystems.cdl.lk/backend-test',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
