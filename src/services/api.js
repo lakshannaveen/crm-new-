@@ -28,7 +28,9 @@ api.interceptors.request.use(
     const fallbackKey = (config && config.auth && config.auth.tokenKey) || 'cd_crm_token';
     const token = localStorage.getItem(tokenKey) || localStorage.getItem(fallbackKey);
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Use custom header `auth-key` expected by backend to avoid CORS
+      // preflight issues when `Authorization` isn't allowed by the server.
+      config.headers['auth-key'] = token;
     }
     return config;
   },

@@ -341,7 +341,9 @@ class AuthService {
   getAuthHeader() {
     const token = localStorage.getItem('token');
     if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    // The backend expects the token in `auth-key` header (no Bearer prefix).
+    // Return the header object so callers can spread it into request headers.
+    return { 'auth-key': token };
   }
 
   async updateProfile(userId, userData) {

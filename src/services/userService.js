@@ -73,11 +73,18 @@ class UserService {
       // Use direct axios request (bypass `api` instance/interceptor) to avoid sending Authorization header
       const base = (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test';
       const url = `${base}/CDLRequirmentManagement/Login/GetUserByServiceNo`;
+      // Include auth header if available so backend endpoints that require
+      // authentication (like IIS-protected APIs) receive the token.
+      const headers = {
+        'Content-Type': 'application/json',
+        ...authService.getAuthHeader(),
+      };
+
       const response = await axios.get(url, {
         params: {
           P_SERVICE_NO: serviceNo,
         },
-        // Do not include any custom headers here so the browser won't include Authorization
+        headers,
       });
       return response.data;
     } catch (error) {

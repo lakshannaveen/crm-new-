@@ -117,6 +117,7 @@ import BlueWaveImage from "../assets/image/MV Blue Wave.jpg";
 import EverUniqueImage from "../assets/image/unq.jpg";
 import axios from "axios";
 import { BACKEND_BASE_URL } from "..";
+import { authService } from "./authService";
 
 class ShipService {
   // Transform API response to component-expected format
@@ -175,9 +176,10 @@ class ShipService {
   }
 
   async getShips(serviceNo) {
+    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetOwnersShip`,
-      { params: { P_SERVICE_NO: serviceNo } }
+      { params: { P_SERVICE_NO: serviceNo }, headers }
     );
 
     const list = response.data?.ResultSet || [];
@@ -185,6 +187,7 @@ class ShipService {
   }
 
   async getShipDetails(serviceNo, jmainNo) {
+    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetShipByJmainId`,
       {
@@ -192,6 +195,7 @@ class ShipService {
           p_service_no: serviceNo,
           p_jmain_no: jmainNo,
         },
+        headers,
       }
     );
 
