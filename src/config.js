@@ -1,5 +1,8 @@
 // Application configuration
 const config = {
+  api: {
+    baseURL: 'https://esystems.cdl.lk/backend-test',
+  },
   // Authentication
   auth: {
     tokenKey: 'cd_crm_token',
