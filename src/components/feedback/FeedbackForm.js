@@ -12,6 +12,7 @@ import {
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
 import { getFeedbackDates, getJmain } from "../../actions/feedbackActions";
+import { addFeedback } from "../../services/feedbackService";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -271,15 +272,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       overallScore,
     };
 
-    console.log("Submitting feedback:", finalData);
-
-    // Call the onSubmit prop with the final data
-    if (onSubmit) {
-      onSubmit(finalData);
+    try {
+      // Call backend API to add feedback
+      await addFeedback(finalData);
+      // Optionally, you can show a success message or update state here
+      setCurrentStep(9);
+    } catch (error) {
+      // Optionally, handle error (show error message, etc.)
+      console.error("Failed to submit feedback:", error);
+      // You may want to show an error notification to the user
     }
-
-    // Go to completion step
-    setCurrentStep(9);
   };
 
   // Mobile Progress Indicator

@@ -35,12 +35,16 @@ export const getJmain = async (jobCategory) => {
   }
 };
 
-// Submit feedback
-// export const submitFeedback = async (feedbackData) => {
-//   try {
-//     const response = await api.post('/CDLRequirmentManagement/Feedback/Submit', feedbackData);
-//     return response.data;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
+
+// Add feedback
+export const addFeedback = async (feedbackData) => {
+  try {
+    const response = await api.post(
+      "/CDLRequirmentManagement/Feedback/Addfeedback",
+      feedbackData
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
