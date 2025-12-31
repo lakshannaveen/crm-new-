@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   FiCheck,
@@ -27,6 +27,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const isMobile = useMobile();
 
   const [currentStep, setCurrentStep] = useState(0);
+  // Ref for question section
+  const questionSectionRef = useRef(null);
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
     jobCategory: "",
@@ -241,15 +243,30 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }));
   };
 
+  // Scroll to question section
+  const scrollToQuestionSection = () => {
+    if (questionSectionRef.current) {
+      questionSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+      setCurrentStep((prev) => {
+        const next = Math.min(prev + 1, steps.length - 1);
+        setTimeout(scrollToQuestionSection, 100);
+        return next;
+      });
     }
   };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep((prev) => Math.max(prev - 1, 0));
+      setCurrentStep((prev) => {
+        const prevStep = Math.max(prev - 1, 0);
+        setTimeout(scrollToQuestionSection, 100);
+        return prevStep;
+      });
     }
   };
 
@@ -264,12 +281,37 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Calculate overall score
     const overallScore = calculateOverallScore();
 
+    // Helper to sanitize values
+    const sanitize = (val, fallback) =>
+      val === null || val === undefined ? fallback : val;
+
+    // Sanitize ratings
+    const sanitizedRatings = Object.fromEntries(
+      Object.entries(formData.ratings || {}).map(([k, v]) => [k, sanitize(v, 0)])
+    );
+
+    // Build sanitized data
     const finalData = {
       ...formData,
       id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       submittedBy: user?.name || "Anonymous",
       submittedAt: new Date().toISOString(),
       overallScore,
+      jobCategory: sanitize(formData.jobCategory, ""),
+      projectHandleLocation: sanitize(formData.projectHandleLocation, ""),
+      startingDate: sanitize(formData.startingDate, ""),
+      endingDate: sanitize(formData.endingDate, ""),
+      jobStatus: sanitize(formData.jobStatus, ""),
+      projectNumber: sanitize(formData.projectNumber, ""),
+      projectName: sanitize(formData.projectName, ""),
+      customerFeedbackStatus: sanitize(formData.customerFeedbackStatus, ""),
+      ratings: sanitizedRatings,
+      valueForMoney: sanitize(formData.valueForMoney, false),
+      recommend: sanitize(formData.recommend, false),
+      poorAverageDetails: sanitize(formData.poorAverageDetails, ""),
+      observations: sanitize(formData.observations, ""),
+      shipManagerComments: sanitize(formData.shipManagerComments, ""),
+      feedbackRef: sanitize(formData.feedbackRef, ""),
     };
 
     try {
@@ -2017,7 +2059,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       )}
 
       {/* Main Content */}
-      <div className={`${isMobile ? "mb-16" : "mb-8"}`}>{getStepContent()}</div>
+      <div ref={questionSectionRef} className={`${isMobile ? "mb-16" : "mb-8"}`}>{getStepContent()}</div>
 
       {/* Mobile Step Buttons */}
       {isMobile &&
