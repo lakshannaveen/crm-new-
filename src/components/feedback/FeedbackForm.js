@@ -176,7 +176,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Fetch JMain (project numbers) when job category is selected
   useEffect(() => {
     if (formData.jobCategory) {
-      console.log("Fetching JMain for category:", formData.jobCategory);
       dispatch(getJmain(formData.jobCategory));
       // Reset project number when job category changes
       setFormData((prev) => ({
@@ -185,25 +184,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       }));
     }
   }, [formData.jobCategory, dispatch]);
-
-  // Debug log when jmainList changes
-  useEffect(() => {
-    console.log("JMain List Updated:", jmainList);
-    console.log("JMain Loading Status:", jmainLoading);
-  }, [jmainList, jmainLoading]);
-
-  // Debug log for units descriptions
-  useEffect(() => {
-    console.log("=== UNITS DESCRIPTIONS DEBUG ===");
-    console.log("Units Descriptions Updated:", unitsDescriptions);
-    console.log("Units Descriptions Loading:", unitsDescriptionsLoading);
-    console.log("Units Descriptions Length:", unitsDescriptions?.length);
-    if (unitsDescriptions && unitsDescriptions.length > 0) {
-      console.log("First item structure:", unitsDescriptions[0]);
-      console.log("First item keys:", Object.keys(unitsDescriptions[0]));
-    }
-    console.log("=== END DEBUG ===");
-  }, [unitsDescriptions, unitsDescriptionsLoading]);
 
   // Fetch dates when job category and project number are selected
   useEffect(() => {
@@ -214,9 +194,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    console.log("Dates from Redux:", dates); // Debug log
     if (dates.startingDate || dates.endingDate) {
-      console.log("Updating form with dates:", dates); // Debug log
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
@@ -292,16 +270,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         }
 
         if (criteriaCode && unitCode) {
-          console.log("Looking for match:", { criteriaCode, unitCode });
-          console.log("Available data:", unitsDescriptions);
-
           const matchingItem = unitsDescriptions.find(
             (item) =>
               item.FEEDBACK_CRITERIA_CODE === criteriaCode &&
               item.FEEDBACK_UNIT_CODE === unitCode
           );
-
-          console.log("Matching item found:", matchingItem);
 
           if (matchingItem) {
             newRows[index].description =
@@ -334,7 +307,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const codes = [
       ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
     ];
-    console.log("Extracted Criteria Codes:", codes);
     return codes.filter(Boolean);
   };
 
@@ -365,7 +337,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
       .map((item) => item.FEEDBACK_UNIT_CODE);
     const uniqueCodes = [...new Set(codes)].filter(Boolean);
-    console.log(`Unit codes for ${criteriaCode}:`, uniqueCodes);
 
     // Return objects with code and disabled status
     return uniqueCodes.map((code) => ({
@@ -404,8 +375,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       submittedAt: new Date().toISOString(),
       overallScore,
     };
-
-    console.log("Submitting feedback:", finalData);
 
     // Call the onSubmit prop with the final data
     if (onSubmit) {
@@ -1417,7 +1386,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-100 dark:bg-gray-600"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     readOnly
                   />
                 </div>

@@ -39,8 +39,6 @@ const feedbackReducer = (state = initialState, action) => {
       };
 
     case GET_FEEDBACK_DATES_SUCCESS:
-      console.log("API Response:", action.payload); // Debug log
-
       // Helper function to format date to YYYY-MM-DD
       const formatDate = (dateStr) => {
         if (!dateStr) return "";
@@ -79,8 +77,6 @@ const feedbackReducer = (state = initialState, action) => {
         action.payload.END_DATE ||
         "";
 
-      console.log("Formatted dates:", { startDate, endDate }); // Debug log
-
       return {
         ...state,
         loading: false,
@@ -106,9 +102,6 @@ const feedbackReducer = (state = initialState, action) => {
       };
 
     case GET_JMAIN_SUCCESS:
-      console.log("JMain API Response (Full):", action.payload);
-      console.log("JMain API Response (Type):", typeof action.payload);
-
       // Handle different possible response structures
       let jmainData = [];
 
@@ -129,9 +122,6 @@ const feedbackReducer = (state = initialState, action) => {
             [];
         }
       }
-
-      console.log("JMain Parsed Data:", jmainData);
-      console.log("JMain Data Length:", jmainData.length);
 
       return {
         ...state,
@@ -156,8 +146,6 @@ const feedbackReducer = (state = initialState, action) => {
       };
 
     case GET_UNITS_DESCRIPTIONS_SUCCESS:
-      console.log("Units Descriptions API Response:", action.payload);
-
       // Handle different possible response structures
       let unitsData = [];
 
@@ -177,8 +165,6 @@ const feedbackReducer = (state = initialState, action) => {
             [];
         }
       }
-
-      console.log("Units Descriptions Parsed Data:", unitsData);
 
       return {
         ...state,
