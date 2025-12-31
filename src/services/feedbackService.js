@@ -35,6 +35,18 @@ export const getJmain = async (jobCategory) => {
   }
 };
 
+// Get Units and Descriptions
+export const getUnitsDescriptions = async () => {
+  try {
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetUnitsDescriptions"
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Submit feedback
 // export const submitFeedback = async (feedbackData) => {
 //   try {

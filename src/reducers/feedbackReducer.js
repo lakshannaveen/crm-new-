@@ -5,6 +5,9 @@ import {
   GET_JMAIN_REQUEST,
   GET_JMAIN_SUCCESS,
   GET_JMAIN_FAILURE,
+  GET_UNITS_DESCRIPTIONS_REQUEST,
+  GET_UNITS_DESCRIPTIONS_SUCCESS,
+  GET_UNITS_DESCRIPTIONS_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -18,6 +21,8 @@ const initialState = {
   },
   jmainList: [],
   jmainLoading: false,
+  unitsDescriptions: [],
+  unitsDescriptionsLoading: false,
   loading: false,
   submitting: false,
   error: null,
@@ -140,6 +145,53 @@ const feedbackReducer = (state = initialState, action) => {
         ...state,
         jmainLoading: false,
         jmainList: [],
+        error: action.payload,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_REQUEST:
+      return {
+        ...state,
+        unitsDescriptionsLoading: true,
+        error: null,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_SUCCESS:
+      console.log("Units Descriptions API Response:", action.payload);
+
+      // Handle different possible response structures
+      let unitsData = [];
+
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          unitsData = action.payload.ResultSet;
+        } else if (Array.isArray(action.payload)) {
+          unitsData = action.payload;
+        } else if (typeof action.payload === "object") {
+          unitsData =
+            action.payload.data ||
+            action.payload.result ||
+            action.payload.items ||
+            [];
+        }
+      }
+
+      console.log("Units Descriptions Parsed Data:", unitsData);
+
+      return {
+        ...state,
+        unitsDescriptionsLoading: false,
+        unitsDescriptions: Array.isArray(unitsData) ? unitsData : [],
+        error: null,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_FAILURE:
+      return {
+        ...state,
+        unitsDescriptionsLoading: false,
+        unitsDescriptions: [],
         error: action.payload,
       };
 
