@@ -11,8 +11,12 @@ import {
   FiUser,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
-import { getFeedbackDates, getJmain } from "../../actions/feedbackActions";
 import { addFeedback } from "../../services/feedbackService";
+import {
+  getFeedbackDates,
+  getJmain,
+  getUnitsDescriptions,
+} from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -22,13 +26,26 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     loading: datesLoading = false,
     jmainList = [],
     jmainLoading = false,
+    unitsDescriptions = [],
+    unitsDescriptionsLoading = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
 
-  const [currentStep, setCurrentStep] = useState(0);
-  // Ref for question section
   const questionSectionRef = useRef(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [visibleRowsCount, setVisibleRowsCount] = useState(1);
+  const [evaluationRows, setEvaluationRows] = useState(
+    Array(11)
+      .fill(null)
+      .map(() => ({
+        criteriaCode: "",
+        unitCode: "",
+        description: "",
+        evaluation: "",
+        yesNo: "",
+      }))
+  );
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
     jobCategory: "",
@@ -144,25 +161,23 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const steps = [
     { id: 0, title: "Project Details", icon: <FiCalendar /> },
-    { id: 1, title: "Responsiveness", icon: <FiMessageSquare /> },
-    { id: 2, title: "Deck Dept", icon: <FiStar /> },
-    { id: 3, title: "Engine Dept", icon: <FiStar /> },
-    { id: 4, title: "Steel & Electrical", icon: <FiStar /> },
-    { id: 5, title: "Surface & Docking", icon: <FiStar /> },
-    { id: 6, title: "Outfitting", icon: <FiStar /> },
-    { id: 7, title: "Overall", icon: <FiAlertCircle /> },
-    { id: 8, title: "Review", icon: <FiCheck /> },
-    { id: 9, title: "Complete", icon: <FiCheck /> },
+    { id: 1, title: "Evaluation Details", icon: <FiStar /> },
+    { id: 2, title: "Review", icon: <FiCheck /> },
+    { id: 3, title: "Complete", icon: <FiCheck /> },
   ];
 
   // Ensure currentStep is within bounds
   const safeCurrentStep = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const currentStepData = steps[safeCurrentStep] || steps[0];
 
+  // Fetch units descriptions on component mount
+  useEffect(() => {
+    dispatch(getUnitsDescriptions());
+  }, [dispatch]);
+
   // Fetch JMain (project numbers) when job category is selected
   useEffect(() => {
     if (formData.jobCategory) {
-      console.log("Fetching JMain for category:", formData.jobCategory);
       dispatch(getJmain(formData.jobCategory));
       // Reset project number when job category changes
       setFormData((prev) => ({
@@ -171,12 +186,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       }));
     }
   }, [formData.jobCategory, dispatch]);
-
-  // Debug log when jmainList changes
-  useEffect(() => {
-    console.log("JMain List Updated:", jmainList);
-    console.log("JMain Loading Status:", jmainLoading);
-  }, [jmainList, jmainLoading]);
 
   // Fetch dates when job category and project number are selected
   useEffect(() => {
@@ -187,9 +196,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    console.log("Dates from Redux:", dates); // Debug log
     if (dates.startingDate || dates.endingDate) {
-      console.log("Updating form with dates:", dates); // Debug log
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
@@ -248,6 +255,103 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (questionSectionRef.current) {
       questionSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  };
+
+  // Handle evaluation row changes
+  const handleEvaluationRowChange = (index, field, value) => {
+    setEvaluationRows((prev) => {
+      const newRows = [...prev];
+      newRows[index] = {
+        ...newRows[index],
+        [field]: value,
+      };
+
+      // If criteria or unit code changes, update description
+      if (field === "criteriaCode" || field === "unitCode") {
+        const criteriaCode =
+          field === "criteriaCode" ? value : newRows[index].criteriaCode;
+        const unitCode = field === "unitCode" ? value : newRows[index].unitCode;
+
+        // Clear unit code if criteria code changes
+        if (field === "criteriaCode") {
+          newRows[index].unitCode = "";
+          newRows[index].description = "";
+        }
+
+        if (criteriaCode && unitCode) {
+          const matchingItem = unitsDescriptions.find(
+            (item) =>
+              item.FEEDBACK_CRITERIA_CODE === criteriaCode &&
+              item.FEEDBACK_UNIT_CODE === unitCode
+          );
+
+          if (matchingItem) {
+            newRows[index].description =
+              matchingItem.FEEDBACK_UNIT_DESCRIPTION ||
+              matchingItem.FEEDBACK_DESC ||
+              matchingItem.DESCRIPTION ||
+              "";
+          } else {
+            newRows[index].description = "";
+          }
+
+          // Show next row if both criteria and unit code are selected and we're on the last visible row
+          if (index === visibleRowsCount - 1 && visibleRowsCount < 11) {
+            setVisibleRowsCount((prev) => prev + 1);
+          }
+        } else {
+          // Clear description if either dropdown is empty
+          if (field === "unitCode" && !unitCode) {
+            newRows[index].description = "";
+          }
+        }
+      }
+
+      return newRows;
+    });
+  };
+
+  // Get unique criteria codes
+  const getCriteriaCodes = () => {
+    const codes = [
+      ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
+    ];
+    return codes.filter(Boolean);
+  };
+
+  // Get selected combinations excluding current row
+  const getSelectedCombinations = (excludeIndex) => {
+    return evaluationRows
+      .map((row, index) => {
+        if (index === excludeIndex) return null;
+        if (row.criteriaCode && row.unitCode) {
+          return `${row.criteriaCode}-${row.unitCode}`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+  };
+
+  // Check if a combination is already selected
+  const isCombinationSelected = (criteriaCode, unitCode, currentIndex) => {
+    const combination = `${criteriaCode}-${unitCode}`;
+    const selectedCombinations = getSelectedCombinations(currentIndex);
+    return selectedCombinations.includes(combination);
+  };
+
+  // Get unit codes for a specific criteria
+  const getUnitCodesForCriteria = (criteriaCode, currentIndex) => {
+    if (!criteriaCode) return [];
+    const codes = unitsDescriptions
+      .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
+      .map((item) => item.FEEDBACK_UNIT_CODE);
+    const uniqueCodes = [...new Set(codes)].filter(Boolean);
+
+    // Return objects with code and disabled status
+    return uniqueCodes.map((code) => ({
+      code,
+      disabled: isCombinationSelected(criteriaCode, code, currentIndex),
+    }));
   };
 
   const nextStep = () => {
@@ -324,6 +428,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       console.error("Failed to submit feedback:", error);
       // You may want to show an error notification to the user
     }
+    // Call the onSubmit prop with the final data
+    if (onSubmit) {
+      onSubmit(finalData);
+    }
+
+    // Go to completion step
+    setCurrentStep(3);
   };
 
   // Mobile Progress Indicator
@@ -941,678 +1052,402 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
           >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Responsiveness & Public Relations
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Rate our initial communication and PR services
-              </p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2
+                  className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
+                >
+                  Evaluation Details
+                </h2>
+                <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
+                  Provide detailed evaluation for each criteria
+                </p>
+              </div>
+              {unitsDescriptionsLoading && (
+                <div className="text-sm text-blue-600 dark:text-blue-400">
+                  Loading criteria...
+                </div>
+              )}
             </div>
 
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="1.0 Responsiveness to initial inquiry"
-                description="How quickly and effectively did we respond to your initial inquiry?"
-                value={formData.ratings.responsiveness}
-                onChange={(value) =>
-                  handleRatingChange("responsiveness", value)
-                }
-              />
+            {/* Debug Info */}
+            {!unitsDescriptionsLoading && unitsDescriptions.length === 0 && (
+              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  No criteria data loaded. Total items:{" "}
+                  {unitsDescriptions.length}
+                </p>
+              </div>
+            )}
 
-              <RatingCard
-                title="2.0 Public Relations"
-                description="Quality of our public relations and customer service"
-                value={formData.ratings.publicRelations}
-                onChange={(value) =>
-                  handleRatingChange("publicRelations", value)
-                }
+            {/* Evaluation Table */}
+            <div className="overflow-x-auto mb-6">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden border border-gray-300 dark:border-gray-600 rounded-lg">
+                  <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                    <thead className="bg-gray-100 dark:bg-gray-800">
+                      <tr>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                          Criteria
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                          Evaluation Type
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                          P
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                          A
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                          G
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                          E
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                          N
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-green-100 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600">
+                          YES
+                        </th>
+                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-red-100 dark:bg-red-900">
+                          NO
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                      {evaluationRows
+                        .slice(
+                          0,
+                          isMobile
+                            ? Math.min(visibleRowsCount, 5)
+                            : visibleRowsCount
+                        )
+                        .map((row, index) => (
+                          <tr
+                            key={index}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                          >
+                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600">
+                              <div className="flex gap-1">
+                                <select
+                                  value={row.criteriaCode}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "criteriaCode",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                  disabled={unitsDescriptionsLoading}
+                                >
+                                  <option value="">CRITERIA_CODE</option>
+                                  {getCriteriaCodes().map((code) => (
+                                    <option key={code} value={code}>
+                                      {code}
+                                    </option>
+                                  ))}
+                                </select>
+                                <select
+                                  value={row.unitCode}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "unitCode",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                  disabled={
+                                    !row.criteriaCode ||
+                                    unitsDescriptionsLoading
+                                  }
+                                >
+                                  <option value="">UNIT_CODE</option>
+                                  {getUnitCodesForCriteria(
+                                    row.criteriaCode,
+                                    index
+                                  ).map((item) => (
+                                    <option
+                                      key={item.code}
+                                      value={item.code}
+                                      disabled={item.disabled}
+                                      className={
+                                        item.disabled
+                                          ? "text-gray-400 dark:text-gray-600"
+                                          : ""
+                                      }
+                                    >
+                                      {item.code}{" "}
+                                      {item.disabled
+                                        ? "(Already selected)"
+                                        : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="text"
+                                value={row.description}
+                                readOnly
+                                placeholder="DESCRIPTION"
+                                className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-eval-${index}`}
+                                value="P"
+                                checked={row.evaluation === "P"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-eval-${index}`}
+                                value="A"
+                                checked={row.evaluation === "A"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-eval-${index}`}
+                                value="G"
+                                checked={row.evaluation === "G"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-eval-${index}`}
+                                value="E"
+                                checked={row.evaluation === "E"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-eval-${index}`}
+                                value="N"
+                                checked={row.evaluation === "N"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <input
+                                type="radio"
+                                name={`deck-yesno-${index}`}
+                                value="YES"
+                                checked={row.yesNo === "YES"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20">
+                              <input
+                                type="radio"
+                                name={`deck-yesno-${index}`}
+                                value="NO"
+                                checked={row.yesNo === "NO"}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Criteria Details Legend */}
+            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
+                Criteria Details
+              </h4>
+              <div
+                className={`grid ${
+                  isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
+                } gap-3`}
+              >
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                    P - POOR
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                    A - AVERAGE
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                    G - GOOD
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                    E - EXCELLENT
+                  </span>
+                </div>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                    N - NOT RELEVANT
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Taken and Remarks */}
+            <div
+              className={`grid ${
+                isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+              } gap-4 mb-6`}
+            >
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Action Taken
+                </label>
+                <textarea
+                  placeholder="PPE_ACTION_TAKEN"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  rows={isMobile ? "3" : "4"}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Remarks
+                </label>
+                <textarea
+                  placeholder="PPE_REMARKS"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  rows={isMobile ? "3" : "4"}
+                />
+              </div>
+            </div>
+
+            {/* Notes & Recommendation */}
+            <div className="mb-6">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                Notes & Recommendation
+              </label>
+              <textarea
+                placeholder="ID_NOTES"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                rows={isMobile ? "2" : "3"}
               />
+            </div>
+
+            {/* Duration Section */}
+            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
+                Duration (Days)
+              </h4>
+              <div
+                className={`grid ${
+                  isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
+                } gap-4`}
+              >
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Afloat (T_DURATION)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Indock (K_DURATION)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Total (T_DURATION)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    readOnly
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
 
       case 2:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Deck Department Work
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Evaluate deck department performance
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="3.1 Planning of work"
-                description="Quality of work planning and scheduling"
-                value={formData.ratings.deckPlanning}
-                onChange={(value) => handleRatingChange("deckPlanning", value)}
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  3.2 Pipes and valve repairs on deck
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.deckPipesQuality}
-                    onChange={(value) =>
-                      handleRatingChange("deckPipesQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.deckPipesTimely}
-                    onChange={(value) =>
-                      handleRatingChange("deckPipesTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  3.3 Tank cleaning and repairs
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.deckTankQuality}
-                    onChange={(value) =>
-                      handleRatingChange("deckTankQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.deckTankTimely}
-                    onChange={(value) =>
-                      handleRatingChange("deckTankTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Engine Department Work
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Evaluate engine department performance
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="4.1 Planning of work"
-                description="Quality of work planning and scheduling"
-                value={formData.ratings.enginePlanning}
-                onChange={(value) =>
-                  handleRatingChange("enginePlanning", value)
-                }
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  4.2 E/R, P/R pipes and valves repair
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.enginePipesQuality}
-                    onChange={(value) =>
-                      handleRatingChange("enginePipesQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.enginePipesTimely}
-                    onChange={(value) =>
-                      handleRatingChange("enginePipesTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  4.3 Rudder and propeller work
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.rudderQuality}
-                    onChange={(value) =>
-                      handleRatingChange("rudderQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.rudderTimely}
-                    onChange={(value) =>
-                      handleRatingChange("rudderTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Steel Repairs & Electrical Work
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Evaluate steel and electrical department performance
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="5.1 Planning of work (Steel)"
-                description="Quality of steel work planning and scheduling"
-                value={formData.ratings.steelPlanning}
-                onChange={(value) => handleRatingChange("steelPlanning", value)}
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  5.2 Steel work
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.steelWorkQuality}
-                    onChange={(value) =>
-                      handleRatingChange("steelWorkQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.steelWorkTimely}
-                    onChange={(value) =>
-                      handleRatingChange("steelWorkTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  6.1 Electrical work planning
-                </h4>
-                <RatingCard
-                  title="Planning of work"
-                  value={formData.ratings.electricalPlanning}
-                  onChange={(value) =>
-                    handleRatingChange("electricalPlanning", value)
-                  }
-                />
-              </div>
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  6.2 Electrical work execution
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.electricalQuality}
-                    onChange={(value) =>
-                      handleRatingChange("electricalQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.electricalTimely}
-                    onChange={(value) =>
-                      handleRatingChange("electricalTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 5:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Surface Preparation & Docking
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Evaluate surface preparation and docking operations
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="7.1 Planning of work (Surface)"
-                description="Quality of surface work planning and scheduling"
-                value={formData.ratings.surfacePlanning}
-                onChange={(value) =>
-                  handleRatingChange("surfacePlanning", value)
-                }
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  7.2 Blasting
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.blastingQuality}
-                    onChange={(value) =>
-                      handleRatingChange("blastingQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.blastingTimely}
-                    onChange={(value) =>
-                      handleRatingChange("blastingTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  7.3 Painting
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.paintingQuality}
-                    onChange={(value) =>
-                      handleRatingChange("paintingQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.paintingTimely}
-                    onChange={(value) =>
-                      handleRatingChange("paintingTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <div
-                className={`grid ${
-                  isMobile
-                    ? "grid-cols-1 gap-3"
-                    : "grid-cols-1 md:grid-cols-2 gap-4"
-                }`}
-              >
-                <RatingCard
-                  title="8.1 Docking"
-                  description="Quality of docking operations"
-                  value={formData.ratings.docking}
-                  onChange={(value) => handleRatingChange("docking", value)}
-                />
-                <RatingCard
-                  title="8.2 Undocking"
-                  description="Quality of undocking operations"
-                  value={formData.ratings.undocking}
-                  onChange={(value) => handleRatingChange("undocking", value)}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Outfitting & General Services
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Evaluate outfitting work and general services
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="9.1 Planning of work (Outfitting)"
-                description="Quality of outfitting work planning"
-                value={formData.ratings.outfittingPlanning}
-                onChange={(value) =>
-                  handleRatingChange("outfittingPlanning", value)
-                }
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  9.2 Carpentry work
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.carpentryQuality}
-                    onChange={(value) =>
-                      handleRatingChange("carpentryQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="Timely Completion"
-                    value={formData.ratings.carpentryTimely}
-                    onChange={(value) =>
-                      handleRatingChange("carpentryTimely", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-
-              <RatingCard
-                title="10.0 General Services"
-                description="Fresh water supply, Shore power supply, ballasting, Cooling water, Ventilation, Fire Line, Crane Facility etc."
-                value={formData.ratings.generalServices}
-                onChange={(value) =>
-                  handleRatingChange("generalServices", value)
-                }
-              />
-
-              <div className="space-y-3">
-                <h4
-                  className={`font-semibold text-gray-900 dark:text-white ${
-                    isMobile ? "text-sm" : "text-lg"
-                  }`}
-                >
-                  11.0 Supply of Materials
-                </h4>
-                <div
-                  className={`grid ${
-                    isMobile
-                      ? "grid-cols-1 gap-3"
-                      : "grid-cols-1 md:grid-cols-2 gap-4"
-                  }`}
-                >
-                  <RatingCard
-                    title="Quality"
-                    value={formData.ratings.materialsQuality}
-                    onChange={(value) =>
-                      handleRatingChange("materialsQuality", value)
-                    }
-                    compact
-                  />
-                  <RatingCard
-                    title="In time delivery"
-                    value={formData.ratings.materialsDelivery}
-                    onChange={(value) =>
-                      handleRatingChange("materialsDelivery", value)
-                    }
-                    compact
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 7:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Overall Evaluation
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Final assessment and additional comments
-              </p>
-            </div>
-
-            <div className={`space-y-${isMobile ? "4" : "6"}`}>
-              <RatingCard
-                title="12.0 Overall Quality of Service"
-                description="Your overall impression of our services"
-                value={formData.ratings.overallQuality}
-                onChange={(value) =>
-                  handleRatingChange("overallQuality", value)
-                }
-              />
-
-              <RatingCard
-                title="13.0 Yard's Health, Safety & Environment Practice"
-                description="Assessment of our HSE practices"
-                value={formData.ratings.safetyEnvironment}
-                onChange={(value) =>
-                  handleRatingChange("safetyEnvironment", value)
-                }
-              />
-
-              <RatingCard
-                title="14.0 How do you place our performance among competitors?"
-                description="Compared to other shipyards you have worked with"
-                value={formData.ratings.competitorPerformance}
-                onChange={(value) =>
-                  handleRatingChange("competitorPerformance", value)
-                }
-              />
-
-              <YesNoSelection
-                title="15.0 In overall, has CDPLC given value for your money?"
-                description="Did you feel you received good value for the services provided?"
-                value={formData.valueForMoney}
-                onChange={(value) => handleYesNoChange("valueForMoney", value)}
-              />
-
-              <YesNoSelection
-                title="16.0 Would you recommend CDPLC to another Business Partner?"
-                description="Would you recommend our services to other companies?"
-                value={formData.recommend}
-                onChange={(value) => handleYesNoChange("recommend", value)}
-              />
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  17.0 Other observations/recommendations/suggestions for
-                  improvements
-                </label>
-                <textarea
-                  value={formData.observations}
-                  onChange={(e) =>
-                    handleInputChange("observations", e.target.value)
-                  }
-                  className={`input-field ${
-                    isMobile ? "h-24 text-sm" : "h-32"
-                  }`}
-                  placeholder="Enter your observations and suggestions..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  18.0 Details on Poor / Average / Undesirable Situation
-                </label>
-                <textarea
-                  value={formData.poorAverageDetails}
-                  onChange={(e) =>
-                    handleInputChange("poorAverageDetails", e.target.value)
-                  }
-                  className={`input-field ${
-                    isMobile ? "h-24 text-sm" : "h-32"
-                  }`}
-                  placeholder="If you selected 'Poor' or 'Average' in any category, please provide details..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  19.0 Ship Manager's Comments (Optional)
-                </label>
-                <textarea
-                  value={formData.shipManagerComments}
-                  onChange={(e) =>
-                    handleInputChange("shipManagerComments", e.target.value)
-                  }
-                  className={`input-field ${
-                    isMobile ? "h-24 text-sm" : "h-32"
-                  }`}
-                  placeholder="Any additional comments from ship management..."
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 8:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -1844,7 +1679,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 9:
+      case 3:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2064,14 +1899,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       {/* Mobile Step Buttons */}
       {isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 8 &&
-        currentStep !== 9 && <MobileStepButtons />}
+        currentStep !== 2 &&
+        currentStep !== 3 && <MobileStepButtons />}
 
       {/* Desktop Navigation */}
       {!isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 8 &&
-        currentStep !== 9 && (
+        currentStep !== 2 &&
+        currentStep !== 3 && (
           <div className="flex justify-between mt-8">
             <button
               onClick={prevStep}

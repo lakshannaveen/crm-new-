@@ -5,6 +5,9 @@ import {
   GET_JMAIN_REQUEST,
   GET_JMAIN_SUCCESS,
   GET_JMAIN_FAILURE,
+  GET_UNITS_DESCRIPTIONS_REQUEST,
+  GET_UNITS_DESCRIPTIONS_SUCCESS,
+  GET_UNITS_DESCRIPTIONS_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -61,6 +64,31 @@ export const getJmain = (jobCategory) => async (dispatch) => {
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch project numbers",
+    });
+    throw error;
+  }
+};
+
+// Get Units and Descriptions
+export const getUnitsDescriptions = () => async (dispatch) => {
+  try {
+    dispatch({ type: GET_UNITS_DESCRIPTIONS_REQUEST });
+
+    const data = await feedbackService.getUnitsDescriptions();
+
+    dispatch({
+      type: GET_UNITS_DESCRIPTIONS_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_UNITS_DESCRIPTIONS_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch units descriptions",
     });
     throw error;
   }

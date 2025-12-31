@@ -48,3 +48,15 @@ export const addFeedback = async (feedbackData) => {
     throw error;
   }
 };
+
+// Get Units and Descriptions
+export const getUnitsDescriptions = async () => {
+  try {
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetUnitsDescriptions"
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

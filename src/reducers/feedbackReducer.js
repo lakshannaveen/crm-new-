@@ -5,6 +5,9 @@ import {
   GET_JMAIN_REQUEST,
   GET_JMAIN_SUCCESS,
   GET_JMAIN_FAILURE,
+  GET_UNITS_DESCRIPTIONS_REQUEST,
+  GET_UNITS_DESCRIPTIONS_SUCCESS,
+  GET_UNITS_DESCRIPTIONS_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -18,6 +21,8 @@ const initialState = {
   },
   jmainList: [],
   jmainLoading: false,
+  unitsDescriptions: [],
+  unitsDescriptionsLoading: false,
   loading: false,
   submitting: false,
   error: null,
@@ -34,8 +39,6 @@ const feedbackReducer = (state = initialState, action) => {
       };
 
     case GET_FEEDBACK_DATES_SUCCESS:
-      console.log("API Response:", action.payload); // Debug log
-
       // Helper function to format date to YYYY-MM-DD
       const formatDate = (dateStr) => {
         if (!dateStr) return "";
@@ -74,8 +77,6 @@ const feedbackReducer = (state = initialState, action) => {
         action.payload.END_DATE ||
         "";
 
-      console.log("Formatted dates:", { startDate, endDate }); // Debug log
-
       return {
         ...state,
         loading: false,
@@ -101,9 +102,6 @@ const feedbackReducer = (state = initialState, action) => {
       };
 
     case GET_JMAIN_SUCCESS:
-      console.log("JMain API Response (Full):", action.payload);
-      console.log("JMain API Response (Type):", typeof action.payload);
-
       // Handle different possible response structures
       let jmainData = [];
 
@@ -125,9 +123,6 @@ const feedbackReducer = (state = initialState, action) => {
         }
       }
 
-      console.log("JMain Parsed Data:", jmainData);
-      console.log("JMain Data Length:", jmainData.length);
-
       return {
         ...state,
         jmainLoading: false,
@@ -140,6 +135,49 @@ const feedbackReducer = (state = initialState, action) => {
         ...state,
         jmainLoading: false,
         jmainList: [],
+        error: action.payload,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_REQUEST:
+      return {
+        ...state,
+        unitsDescriptionsLoading: true,
+        error: null,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_SUCCESS:
+      // Handle different possible response structures
+      let unitsData = [];
+
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          unitsData = action.payload.ResultSet;
+        } else if (Array.isArray(action.payload)) {
+          unitsData = action.payload;
+        } else if (typeof action.payload === "object") {
+          unitsData =
+            action.payload.data ||
+            action.payload.result ||
+            action.payload.items ||
+            [];
+        }
+      }
+
+      return {
+        ...state,
+        unitsDescriptionsLoading: false,
+        unitsDescriptions: Array.isArray(unitsData) ? unitsData : [],
+        error: null,
+      };
+
+    case GET_UNITS_DESCRIPTIONS_FAILURE:
+      return {
+        ...state,
+        unitsDescriptionsLoading: false,
+        unitsDescriptions: [],
         error: action.payload,
       };
 
