@@ -11,7 +11,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
-import { getFeedbackDates } from "../../actions/feedbackActions";
+import { getFeedbackDates, getJmain } from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -19,6 +19,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const {
     dates = { startingDate: "", endingDate: "" },
     loading: datesLoading = false,
+    jmainList = [],
+    jmainLoading = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
@@ -154,6 +156,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const safeCurrentStep = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const currentStepData = steps[safeCurrentStep] || steps[0];
 
+  // Fetch JMain (project numbers) when job category is selected
+  useEffect(() => {
+    if (formData.jobCategory) {
+      console.log("Fetching JMain for category:", formData.jobCategory);
+      dispatch(getJmain(formData.jobCategory));
+      // Reset project number when job category changes
+      setFormData((prev) => ({
+        ...prev,
+        projectNumber: "",
+      }));
+    }
+  }, [formData.jobCategory, dispatch]);
+
+  // Debug log when jmainList changes
+  useEffect(() => {
+    console.log("JMain List Updated:", jmainList);
+    console.log("JMain Loading Status:", jmainLoading);
+  }, [jmainList, jmainLoading]);
+
   // Fetch dates when job category and project number are selected
   useEffect(() => {
     if (formData.jobCategory && formData.projectNumber) {
@@ -188,6 +209,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handleProjectNumberChange = (value) => {
+    // Find the selected project from jmainList
+    const selectedProject = jmainList.find(
+      (project) => project.FEEDBACK_JMAIN === value
+    );
+
+    // Update both project number and project name
+    setFormData((prev) => ({
+      ...prev,
+      projectNumber: value,
+      projectName: selectedProject?.FEEDBACK_DESC || "",
     }));
   };
 
@@ -681,15 +716,36 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </label>
                 <select
                   value={formData.projectNumber}
-                  onChange={(e) =>
-                    handleInputChange("projectNumber", e.target.value)
-                  }
+                  onChange={(e) => handleProjectNumberChange(e.target.value)}
                   className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  disabled={!formData.jobCategory || jmainLoading}
                 >
-                  <option value="">Select project number</option>
-                  <option value="1">1 - MV Ocean Queen - Major Repair</option>
-                  <option value="2">2 - MV Sea Voyager - Dry Docking</option>
-                  <option value="1771">3 - M.V. EVER UNIQUE</option>
+                  <option value="">
+                    {jmainLoading
+                      ? "Loading project numbers..."
+                      : !formData.jobCategory
+                      ? "Select job category first"
+                      : jmainList.length === 0
+                      ? "No projects found"
+                      : "Select project number"}
+                  </option>
+                  {jmainList &&
+                    jmainList.length > 0 &&
+                    [...jmainList]
+                      .sort((a, b) => {
+                        const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
+                        const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
+                        return aVal - bVal;
+                      })
+                      .map((project, index) => {
+                        const jmainValue = project.FEEDBACK_JMAIN;
+
+                        return (
+                          <option key={jmainValue || index} value={jmainValue}>
+                            {jmainValue}
+                          </option>
+                        );
+                      })}
                 </select>
               </div>
 

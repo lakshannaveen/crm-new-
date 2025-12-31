@@ -2,6 +2,9 @@ import {
   GET_FEEDBACK_DATES_REQUEST,
   GET_FEEDBACK_DATES_SUCCESS,
   GET_FEEDBACK_DATES_FAILURE,
+  GET_JMAIN_REQUEST,
+  GET_JMAIN_SUCCESS,
+  GET_JMAIN_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -13,6 +16,8 @@ const initialState = {
     startingDate: "",
     endingDate: "",
   },
+  jmainList: [],
+  jmainLoading: false,
   loading: false,
   submitting: false,
   error: null,
@@ -85,6 +90,56 @@ const feedbackReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        error: action.payload,
+      };
+
+    case GET_JMAIN_REQUEST:
+      return {
+        ...state,
+        jmainLoading: true,
+        error: null,
+      };
+
+    case GET_JMAIN_SUCCESS:
+      console.log("JMain API Response (Full):", action.payload);
+      console.log("JMain API Response (Type):", typeof action.payload);
+
+      // Handle different possible response structures
+      let jmainData = [];
+
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          jmainData = action.payload.ResultSet;
+        } else if (Array.isArray(action.payload)) {
+          jmainData = action.payload;
+        } else if (typeof action.payload === "object") {
+          // If it's an object with data property or similar
+          jmainData =
+            action.payload.data ||
+            action.payload.result ||
+            action.payload.items ||
+            [];
+        }
+      }
+
+      console.log("JMain Parsed Data:", jmainData);
+      console.log("JMain Data Length:", jmainData.length);
+
+      return {
+        ...state,
+        jmainLoading: false,
+        jmainList: Array.isArray(jmainData) ? jmainData : [],
+        error: null,
+      };
+
+    case GET_JMAIN_FAILURE:
+      return {
+        ...state,
+        jmainLoading: false,
+        jmainList: [],
         error: action.payload,
       };
 

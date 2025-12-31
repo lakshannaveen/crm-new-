@@ -2,6 +2,9 @@ import {
   GET_FEEDBACK_DATES_REQUEST,
   GET_FEEDBACK_DATES_SUCCESS,
   GET_FEEDBACK_DATES_FAILURE,
+  GET_JMAIN_REQUEST,
+  GET_JMAIN_SUCCESS,
+  GET_JMAIN_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -37,6 +40,31 @@ export const getFeedbackDates =
       throw error;
     }
   };
+
+// Get JMain (project numbers) by job category
+export const getJmain = (jobCategory) => async (dispatch) => {
+  try {
+    dispatch({ type: GET_JMAIN_REQUEST });
+
+    const data = await feedbackService.getJmain(jobCategory);
+
+    dispatch({
+      type: GET_JMAIN_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_JMAIN_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch project numbers",
+    });
+    throw error;
+  }
+};
 
 // Submit feedback
 // export const submitFeedback = (feedbackData) => async (dispatch) => {

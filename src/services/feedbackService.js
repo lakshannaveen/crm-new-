@@ -18,6 +18,23 @@ export const getFeedbackDates = async (jobCategory, projectNumber) => {
   }
 };
 
+// Get JMain (project numbers) by job category
+export const getJmain = async (jobCategory) => {
+  try {
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetJmain",
+      {
+        params: {
+          P_JOB_CATEGORY: jobCategory,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Submit feedback
 // export const submitFeedback = async (feedbackData) => {
 //   try {
