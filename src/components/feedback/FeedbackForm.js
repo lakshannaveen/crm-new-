@@ -35,6 +35,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const questionSectionRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
+  const [validationErrors, setValidationErrors] = useState({});
   const [evaluationRows, setEvaluationRows] = useState(
     Array(11)
       .fill(null)
@@ -224,6 +225,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       ...prev,
       [field]: value,
     }));
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleProjectNumberChange = (value) => {
@@ -238,6 +247,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       projectNumber: value,
       projectName: selectedProject?.FEEDBACK_DESC || "",
     }));
+
+    // Clear validation errors for project and dates (dates may auto-fill)
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.projectNumber;
+      delete newErrors.projectName;
+      delete newErrors.startingDate;
+      delete newErrors.endingDate;
+      return newErrors;
+    });
   };
 
   const handleSelectChange = (field, value) => {
@@ -245,6 +264,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       ...prev,
       [field]: value,
     }));
+    // Clear validation error for this field
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleYesNoChange = (field, value) => {
@@ -306,6 +333,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           if (index === visibleRowsCount - 1 && visibleRowsCount < 11) {
             setVisibleRowsCount((prev) => prev + 1);
           }
+
+          // Clear evaluation validation error when user fills a row
+          if (validationErrors.evaluationRows) {
+            setValidationErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.evaluationRows;
+              return newErrors;
+            });
+          }
         } else {
           // Clear description if either dropdown is empty
           if (field === "unitCode" && !unitCode) {
@@ -361,8 +397,59 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }));
   };
 
+  // Validation for each step
+  const validateStep = (step) => {
+    const errors = {};
+
+    switch (step) {
+      case 0: // Project Details
+        if (!formData.jobCategory)
+          errors.jobCategory = "Job Category is required";
+        if (!formData.projectNumber)
+          errors.projectNumber = "Project Number is required";
+        if (!formData.projectName)
+          errors.projectName = "Project Name is required";
+        if (!formData.startingDate)
+          errors.startingDate = "Starting Date is required";
+        if (!formData.endingDate) errors.endingDate = "Ending Date is required";
+        if (!formData.jobStatus) errors.jobStatus = "Job Status is required";
+        if (!formData.customerFeedbackStatus)
+          errors.customerFeedbackStatus =
+            "Customer Feedback Status is required";
+        break;
+      case 1: // Evaluation Details
+        // At least one evaluation row should be filled
+        const hasEvaluation = evaluationRows.some(
+          (row) =>
+            row.criteriaCode && row.unitCode && (row.evaluation || row.yesNo)
+        );
+        if (!hasEvaluation) {
+          errors.evaluationRows =
+            "At least one evaluation row must be completed";
+        }
+        break;
+      case 2: // Review
+        // No validation needed for review
+        break;
+      default:
+        break;
+    }
+
+    return errors;
+  };
+
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
+      // Validate current step before proceeding
+      const errors = validateStep(currentStep);
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        return;
+      }
+
+      // Clear validation errors if all is good
+      setValidationErrors({});
+
       setCurrentStep((prev) => {
         const next = Math.min(prev + 1, steps.length - 1);
         setTimeout(scrollToQuestionSection, 100);
@@ -384,8 +471,27 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const calculateOverallScore = () => {
     if (!formData.ratings) return 0;
     const ratings = Object.values(formData.ratings).filter((r) => r > 0);
-    return ratings.length > 0
-      ? Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length)
+
+    // Convert evaluation letter grades to numeric scores
+    const evaluationScoreMap = {
+      P: 25, // Poor
+      A: 50, // Average
+      G: 75, // Good
+      E: 100, // Excellent
+      N: 0, // Not Relevant (excluded)
+    };
+
+    // Get evaluation scores from evaluation rows
+    const evaluationScores = evaluationRows
+      .filter((row) => row.evaluation && row.evaluation !== "N")
+      .map((row) => evaluationScoreMap[row.evaluation] || 0)
+      .filter((score) => score > 0);
+
+    // Combine all scores
+    const allScores = [...ratings, ...evaluationScores];
+
+    return allScores.length > 0
+      ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
       : 0;
   };
 
@@ -834,7 +940,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   onChange={(e) =>
                     handleSelectChange("jobCategory", e.target.value)
                   }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                    validationErrors.jobCategory ? "border-red-500" : ""
+                  }`}
                 >
                   {jobCategoryOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -842,17 +950,30 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     </option>
                   ))}
                 </select>
+                {validationErrors.jobCategory && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {validationErrors.jobCategory}
+                  </p>
+                )}
               </div>
 
               {/* Project Number (dropdown) */}
-              <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div
+                className={`p-3 rounded-lg border ${
+                  validationErrors.projectNumber
+                    ? "border-red-500"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+              >
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Project Number
                 </label>
                 <select
                   value={formData.projectNumber}
                   onChange={(e) => handleProjectNumberChange(e.target.value)}
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                    validationErrors.projectNumber ? "border-red-500" : ""
+                  }`}
                   disabled={!formData.jobCategory || jmainLoading}
                 >
                   <option value="">
@@ -882,6 +1003,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         );
                       })}
                 </select>
+                {validationErrors.projectNumber && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {validationErrors.projectNumber}
+                  </p>
+                )}
               </div>
 
               {/* Project Name */}
@@ -895,9 +1021,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   onChange={(e) =>
                     handleInputChange("projectName", e.target.value)
                   }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                    validationErrors.projectName ? "border-red-500" : ""
+                  }`}
                   placeholder="Enter project name"
                 />
+                {validationErrors.projectName && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {validationErrors.projectName}
+                  </p>
+                )}
               </div>
 
               {/* Dates Section */}
@@ -923,9 +1056,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleInputChange("startingDate", e.target.value)
                     }
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.startingDate ? "border-red-500" : ""
+                    }`}
                     disabled={datesLoading}
                   />
+                  {validationErrors.startingDate && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.startingDate}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -943,9 +1083,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleInputChange("endingDate", e.target.value)
                     }
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.endingDate ? "border-red-500" : ""
+                    }`}
                     disabled={datesLoading}
                   />
+                  {validationErrors.endingDate && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.endingDate}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -975,7 +1122,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleSelectChange("jobStatus", e.target.value)
                     }
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.jobStatus ? "border-red-500" : ""
+                    }`}
                   >
                     {jobStatusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -983,6 +1132,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </option>
                     ))}
                   </select>
+                  {validationErrors.jobStatus && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.jobStatus}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -997,7 +1151,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         e.target.value
                       )
                     }
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.customerFeedbackStatus
+                        ? "border-red-500"
+                        : ""
+                    }`}
                   >
                     {customerFeedbackStatusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -1005,6 +1163,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </option>
                     ))}
                   </select>
+                  {validationErrors.customerFeedbackStatus && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.customerFeedbackStatus}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1054,8 +1217,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             {!unitsDescriptionsLoading && unitsDescriptions.length === 0 && (
               <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  No criteria data loaded. Total items: {" "}
+                  No criteria data loaded. Total items:{" "}
                   {unitsDescriptions.length}
+                </p>
+              </div>
+            )}
+
+            {/* Validation Error for Evaluation Rows */}
+            {validationErrors.evaluationRows && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {validationErrors.evaluationRows}
                 </p>
               </div>
             )}
@@ -1067,59 +1239,110 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   {evaluationRows
                     .slice(0, Math.min(visibleRowsCount, 5))
                     .map((row, index) => (
-                      <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                      <div
+                        key={index}
+                        className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
+                      >
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Criteria</label>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Criteria
+                          </label>
                           <select
                             value={row.criteriaCode}
-                            onChange={(e) => handleEvaluationRowChange(index, "criteriaCode", e.target.value)}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(
+                                index,
+                                "criteriaCode",
+                                e.target.value
+                              )
+                            }
                             className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                             disabled={unitsDescriptionsLoading}
                           >
                             <option value="">PPE_CRITERIA_CODE</option>
                             {getCriteriaCodes().map((code) => (
-                              <option key={code} value={code}>{code}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Unit</label>
-                          <select
-                            value={row.unitCode}
-                            onChange={(e) => handleEvaluationRowChange(index, "unitCode", e.target.value)}
-                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                            disabled={!row.criteriaCode || unitsDescriptionsLoading}
-                          >
-                            <option value="">UNIT_CODE</option>
-                            {getUnitCodesForCriteria(row.criteriaCode, index).map((item) => (
-                              <option key={item.code} value={item.code} disabled={item.disabled} className={item.disabled ? "text-gray-400 dark:text-gray-600" : ""}>
-                                {item.code} {item.disabled ? "(Already selected)" : ""}
+                              <option key={code} value={code}>
+                                {code}
                               </option>
                             ))}
                           </select>
                         </div>
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Unit
+                          </label>
+                          <select
+                            value={row.unitCode}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(
+                                index,
+                                "unitCode",
+                                e.target.value
+                              )
+                            }
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                            disabled={
+                              !row.criteriaCode || unitsDescriptionsLoading
+                            }
+                          >
+                            <option value="">UNIT_CODE</option>
+                            {getUnitCodesForCriteria(
+                              row.criteriaCode,
+                              index
+                            ).map((item) => (
+                              <option
+                                key={item.code}
+                                value={item.code}
+                                disabled={item.disabled}
+                                className={
+                                  item.disabled
+                                    ? "text-gray-400 dark:text-gray-600"
+                                    : ""
+                                }
+                              >
+                                {item.code}{" "}
+                                {item.disabled ? "(Already selected)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Description
+                          </label>
                           <input
                             type="text"
                             value={row.description}
                             readOnly
                             placeholder="DESCRIPTION"
-                            title={row.description || "No description available"}
+                            title={
+                              row.description || "No description available"
+                            }
                             className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                           />
                         </div>
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Evaluation</label>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Evaluation
+                          </label>
                           <div className="flex flex-wrap gap-2">
                             {["P", "A", "G", "E", "N"].map((val) => (
-                              <label key={val} className="flex items-center gap-1">
+                              <label
+                                key={val}
+                                className="flex items-center gap-1"
+                              >
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
                                   value={val}
                                   checked={row.evaluation === val}
-                                  onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
                                   className="w-4 h-4"
                                 />
                                 <span className="text-xs">{val}</span>
@@ -1128,7 +1351,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           </div>
                         </div>
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Yes/No</label>
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Yes/No
+                          </label>
                           <div className="flex gap-4">
                             <label className="flex items-center gap-1">
                               <input
@@ -1136,7 +1361,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="YES"
                                 checked={row.yesNo === "YES"}
-                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                               <span className="text-xs">YES</span>
@@ -1147,7 +1378,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="NO"
                                 checked={row.yesNo === "NO"}
-                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                               <span className="text-xs">NO</span>
@@ -1203,25 +1440,57 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <div className="flex gap-1 flex-col md:flex-row">
                                 <select
                                   value={row.criteriaCode}
-                                  onChange={(e) => handleEvaluationRowChange(index, "criteriaCode", e.target.value)}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "criteriaCode",
+                                      e.target.value
+                                    )
+                                  }
                                   className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                                   disabled={unitsDescriptionsLoading}
                                 >
                                   <option value="">PPE_CRITERIA_CODE</option>
                                   {getCriteriaCodes().map((code) => (
-                                    <option key={code} value={code}>{code}</option>
+                                    <option key={code} value={code}>
+                                      {code}
+                                    </option>
                                   ))}
                                 </select>
                                 <select
                                   value={row.unitCode}
-                                  onChange={(e) => handleEvaluationRowChange(index, "unitCode", e.target.value)}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "unitCode",
+                                      e.target.value
+                                    )
+                                  }
                                   className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs mt-1 md:mt-0"
-                                  disabled={!row.criteriaCode || unitsDescriptionsLoading}
+                                  disabled={
+                                    !row.criteriaCode ||
+                                    unitsDescriptionsLoading
+                                  }
                                 >
                                   <option value="">UNIT_CODE</option>
-                                  {getUnitCodesForCriteria(row.criteriaCode, index).map((item) => (
-                                    <option key={item.code} value={item.code} disabled={item.disabled} className={item.disabled ? "text-gray-400 dark:text-gray-600" : ""}>
-                                      {item.code} {item.disabled ? "(Already selected)" : ""}
+                                  {getUnitCodesForCriteria(
+                                    row.criteriaCode,
+                                    index
+                                  ).map((item) => (
+                                    <option
+                                      key={item.code}
+                                      value={item.code}
+                                      disabled={item.disabled}
+                                      className={
+                                        item.disabled
+                                          ? "text-gray-400 dark:text-gray-600"
+                                          : ""
+                                      }
+                                    >
+                                      {item.code}{" "}
+                                      {item.disabled
+                                        ? "(Already selected)"
+                                        : ""}
                                     </option>
                                   ))}
                                 </select>
@@ -1246,7 +1515,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="P"
                                 checked={row.evaluation === "P"}
-                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1256,7 +1531,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="A"
                                 checked={row.evaluation === "A"}
-                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1266,7 +1547,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="G"
                                 checked={row.evaluation === "G"}
-                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1276,7 +1563,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="E"
                                 checked={row.evaluation === "E"}
-                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1286,7 +1579,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="N"
                                 checked={row.evaluation === "N"}
-                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "evaluation",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1296,7 +1595,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="YES"
                                 checked={row.yesNo === "YES"}
-                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1306,7 +1611,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="NO"
                                 checked={row.yesNo === "NO"}
-                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationRowChange(
+                                    index,
+                                    "yesNo",
+                                    e.target.value
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1418,7 +1729,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={formData.afloatDuration === 0 ? "" : formData.afloatDuration}
+                    value={
+                      formData.afloatDuration === 0
+                        ? ""
+                        : formData.afloatDuration
+                    }
                     onChange={(e) =>
                       handleInputChange(
                         "afloatDuration",
@@ -1435,7 +1750,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={formData.indockDuration === 0 ? "" : formData.indockDuration}
+                    value={
+                      formData.indockDuration === 0
+                        ? ""
+                        : formData.indockDuration
+                    }
                     onChange={(e) =>
                       handleInputChange(
                         "indockDuration",
@@ -1453,8 +1772,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     type="number"
                     placeholder="0"
                     value={
-                      (Number(formData.afloatDuration) ) +
-                      (Number(formData.indockDuration) )
+                      Number(formData.afloatDuration) +
+                      Number(formData.indockDuration)
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     readOnly
