@@ -349,6 +349,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           }
         }
       }
+      
+      // Clear specific field validation errors when user selects evaluation or yes/no
+      if (field === "evaluation" && value) {
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[`evaluation_${index}`];
+          delete newErrors.evaluationRows;
+          return newErrors;
+        });
+      }
+      
+      if (field === "yesNo" && value) {
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[`yesNo_${index}`];
+          delete newErrors.evaluationRows;
+          return newErrors;
+        });
+      }
 
       return newRows;
     });
@@ -419,13 +438,24 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         break;
       case 1: // Evaluation Details
         // At least one evaluation row should be filled
-        const hasEvaluation = evaluationRows.some(
-          (row) =>
-            row.criteriaCode && row.unitCode && (row.evaluation || row.yesNo)
+        const filledRows = evaluationRows.filter(
+          (row) => row.criteriaCode && row.unitCode
         );
-        if (!hasEvaluation) {
+        
+        if (filledRows.length === 0) {
           errors.evaluationRows =
             "At least one evaluation row must be completed";
+        } else {
+          // Check each filled row has both evaluation and yes/no
+          filledRows.forEach((row, idx) => {
+            const originalIndex = evaluationRows.indexOf(row);
+            if (!row.evaluation) {
+              errors[`evaluation_${originalIndex}`] = "Evaluation rating is required";
+            }
+            if (!row.yesNo) {
+              errors[`yesNo_${originalIndex}`] = "Yes/No selection is required";
+            }
+          });
         }
         break;
       case 2: // Review
@@ -500,13 +530,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
       FeedbackList: evaluationRows
-        .filter(row => row.criteriaCode && row.unitCode)
-        .map(row => ({
+        .filter((row) => row.criteriaCode && row.unitCode)
+        .map((row) => ({
           P_CRITERIA_CODE: row.criteriaCode,
           P_CODE: row.unitCode,
           P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N",
           P_REMARKS: row.evaluation,
-          P_ACTION_TAKEN: row.actionTaken || ""
+          P_ACTION_TAKEN: row.actionTaken || "",
         })),
     };
 
@@ -1348,6 +1378,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </label>
                             ))}
                           </div>
+                          {validationErrors[`evaluation_${index}`] && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                              {validationErrors[`evaluation_${index}`]}
+                            </p>
+                          )}
                         </div>
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -1389,6 +1424,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <span className="text-xs">NO</span>
                             </label>
                           </div>
+                          {validationErrors[`yesNo_${index}`] && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                              {validationErrors[`yesNo_${index}`]}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1431,10 +1471,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       {evaluationRows
                         .slice(0, visibleRowsCount)
                         .map((row, index) => (
-                          <tr
-                            key={index}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                          >
+                          <React.Fragment key={index}>
+                            <tr
+                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                            >
                             <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
                               <div className="flex gap-1 flex-col md:flex-row">
                                 <select
@@ -1621,7 +1661,23 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               />
                             </td>
                           </tr>
-                        ))}
+                          {/* Inline error messages for desktop table */}
+                          {(validationErrors[`evaluation_${index}`] || validationErrors[`yesNo_${index}`]) && (
+                            <tr>
+                              <td colSpan="9" className="px-3 py-2 bg-red-50 dark:bg-red-900/20">
+                                <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
+                                  {validationErrors[`evaluation_${index}`] && (
+                                    <span>• {validationErrors[`evaluation_${index}`]}</span>
+                                  )}
+                                  {validationErrors[`yesNo_${index}`] && (
+                                    <span>• {validationErrors[`yesNo_${index}`]}</span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -1897,7 +1953,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </h4>
 
               {/* Evaluation Details Ratings */}
-              {evaluationRows.filter(row => row.evaluation && row.evaluation !== 'N').length > 0 && (
+              {evaluationRows.filter(
+                (row) => row.evaluation && row.evaluation !== "N"
+              ).length > 0 && (
                 <>
                   <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
                     Evaluation Details
@@ -1910,15 +1968,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     } mb-6`}
                   >
                     {evaluationRows
-                      .filter(row => row.evaluation && row.evaluation !== 'N')
+                      .filter((row) => row.evaluation && row.evaluation !== "N")
                       .map((row, index) => {
                         const evaluationScoreMap = {
-                          'P': 25,   // Poor
-                          'A': 50,   // Average
-                          'G': 75,   // Good
-                          'E': 100,  // Excellent
+                          P: 25, // Poor
+                          A: 50, // Average
+                          G: 75, // Good
+                          E: 100, // Excellent
                         };
-                        
+
                         const score = evaluationScoreMap[row.evaluation] || 0;
                         const getScoreColor = (s) => {
                           if (s >= 75)
@@ -1935,7 +1993,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           >
                             <div className="flex justify-between items-start mb-2">
                               <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                                {row.description || `${row.criteriaCode}-${row.unitCode}`}
+                                {row.description ||
+                                  `${row.criteriaCode}-${row.unitCode}`}
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
@@ -1959,11 +2018,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </div>
                             {row.yesNo && (
                               <div className="mt-2 text-xs">
-                                <span className={`px-2 py-0.5 rounded-full ${
-                                  row.yesNo === 'YES' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                                }`}>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full ${
+                                    row.yesNo === "YES"
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                  }`}
+                                >
                                   {row.yesNo}
                                 </span>
                               </div>
@@ -1976,7 +2037,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               )}
 
               {/* Standard Ratings */}
-              {Object.values(formData.ratings).filter((r) => r > 0).length > 0 && (
+              {Object.values(formData.ratings).filter((r) => r > 0).length >
+                0 && (
                 <>
                   <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
                     Standard Ratings
@@ -2040,8 +2102,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               )}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                {evaluationRows.filter(row => row.evaluation && row.evaluation !== 'N').length + 
-                 Object.values(formData.ratings).filter((r) => r > 0).length}{" "}
+                {evaluationRows.filter(
+                  (row) => row.evaluation && row.evaluation !== "N"
+                ).length +
+                  Object.values(formData.ratings).filter((r) => r > 0)
+                    .length}{" "}
                 total ratings
               </div>
             </div>
