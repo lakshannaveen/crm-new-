@@ -1040,84 +1040,78 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
 
             <div className="space-y-3">
-              {/* Job Category */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Job Category
-                </label>
-                <select
-                  value={formData.jobCategory}
-                  onChange={(e) =>
-                    handleSelectChange("jobCategory", e.target.value)
-                  }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                    validationErrors.jobCategory ? "border-red-500" : ""
-                  }`}
-                >
-                  {jobCategoryOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
+
+              {/* Job Category and Project Number on the same horizontal line */}
+              <div className={isMobile ? "flex flex-col gap-2" : "flex flex-row gap-6 items-end"}>
+                <div className={isMobile ? "w-full" : "w-1/2"}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Job Category
+                  </label>
+                  <select
+                    value={formData.jobCategory}
+                    onChange={(e) =>
+                      handleSelectChange("jobCategory", e.target.value)
+                    }
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.jobCategory ? "border-red-500" : ""
+                    }`}
+                  >
+                    {jobCategoryOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {validationErrors.jobCategory && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.jobCategory}
+                    </p>
+                  )}
+                </div>
+                <div className={isMobile ? "w-full" : "w-1/2"}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Project Number
+                  </label>
+                  <select
+                    value={formData.projectNumber}
+                    onChange={(e) => handleProjectNumberChange(e.target.value)}
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.projectNumber ? "border-red-500" : ""
+                    }`}
+                    disabled={!formData.jobCategory || jmainLoading}
+                  >
+                    <option value="">
+                      {jmainLoading
+                        ? "Loading project numbers..."
+                        : !formData.jobCategory
+                        ? "Select job category first"
+                        : jmainList.length === 0
+                        ? "No projects found"
+                        : "Select project number"}
                     </option>
-                  ))}
-                </select>
-                {validationErrors.jobCategory && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {validationErrors.jobCategory}
-                  </p>
-                )}
-              </div>
-
-              {/* Project Number (dropdown) */}
-              <div
-                className={`p-3 rounded-lg border ${
-                  validationErrors.projectNumber
-                    ? "border-red-500"
-                    : "border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Project Number
-                </label>
-                <select
-                  value={formData.projectNumber}
-                  onChange={(e) => handleProjectNumberChange(e.target.value)}
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                    validationErrors.projectNumber ? "border-red-500" : ""
-                  }`}
-                  disabled={!formData.jobCategory || jmainLoading}
-                >
-                  <option value="">
-                    {jmainLoading
-                      ? "Loading project numbers..."
-                      : !formData.jobCategory
-                      ? "Select job category first"
-                      : jmainList.length === 0
-                      ? "No projects found"
-                      : "Select project number"}
-                  </option>
-                  {jmainList &&
-                    jmainList.length > 0 &&
-                    [...jmainList]
-                      .sort((a, b) => {
-                        const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
-                        const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
-                        return aVal - bVal;
-                      })
-                      .map((project, index) => {
-                        const jmainValue = project.FEEDBACK_JMAIN;
-
-                        return (
-                          <option key={jmainValue || index} value={jmainValue}>
-                            {jmainValue}
-                          </option>
-                        );
-                      })}
-                </select>
-                {validationErrors.projectNumber && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {validationErrors.projectNumber}
-                  </p>
-                )}
+                    {jmainList &&
+                      jmainList.length > 0 &&
+                      [...jmainList]
+                        .sort((a, b) => {
+                          const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
+                          const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
+                          return aVal - bVal;
+                        })
+                        .map((project, index) => {
+                          const jmainValue = project.FEEDBACK_JMAIN;
+                          return (
+                            <option key={jmainValue || index} value={jmainValue}>
+                              {jmainValue}
+                            </option>
+                          );
+                        })}
+                  </select>
+                  {validationErrors.projectNumber && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.projectNumber}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Project Name */}
