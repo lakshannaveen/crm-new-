@@ -605,15 +605,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (currentStep >= steps.length - 1) return null;
 
     return (
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 z-10 shadow-lg">
-        <div className="flex justify-between">
+      <div className="md:hidden mt-6 pb-4">
+        <div className="flex justify-between gap-3">
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`px-4 py-3 rounded-lg flex-1 mr-2 ${
+            className={`px-4 py-3 rounded-lg flex-1 ${
               currentStep === 0
                 ? "bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
             }`}
           >
             <FiChevronLeft className="inline mr-2" />
@@ -622,7 +622,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
           <button
             onClick={nextStep}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg flex-1 ml-2"
+            className="px-4 py-3 bg-blue-600 text-white rounded-lg flex-1 hover:bg-blue-700"
           >
             {currentStep === steps.length - 2 ? "Review" : "Next"}
             <FiChevronRight className="inline ml-2" />
@@ -2379,9 +2379,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               }
               return true;
             };
-            
+
             const isClickable = canNavigate();
-            
+
             return (
               <div key={step.id} className="flex flex-col items-center">
                 <button
@@ -2426,7 +2426,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       {/* Main Content */}
       <div
         ref={questionSectionRef}
-        className={`${isMobile ? "mb-16" : "mb-8"}`}
+        className="mb-8"
       >
         {getStepContent()}
       </div>
