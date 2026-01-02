@@ -1456,7 +1456,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={formData.afloatDuration}
+                    value={formData.afloatDuration === 0 ? "" : formData.afloatDuration}
                     onChange={(e) =>
                       handleInputChange(
                         "afloatDuration",
@@ -1473,7 +1473,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
-                    value={formData.indockDuration}
+                    value={formData.indockDuration === 0 ? "" : formData.indockDuration}
                     onChange={(e) =>
                       handleInputChange(
                         "indockDuration",
@@ -1491,8 +1491,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     type="number"
                     placeholder="0"
                     value={
-                      (Number(formData.afloatDuration) || 0) +
-                      (Number(formData.indockDuration) || 0)
+                      (Number(formData.afloatDuration) ) +
+                      (Number(formData.indockDuration) )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     readOnly
