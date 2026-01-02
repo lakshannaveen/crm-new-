@@ -136,6 +136,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       .substr(2, 6)
       .toUpperCase()}`,
 
+    // Top-level remarks and action taken
+    remarks: "",
+    actionTaken: "",
     // Removed vessel fields (vesselName, vesselIMO)
   });
 
