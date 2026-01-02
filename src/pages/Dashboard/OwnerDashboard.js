@@ -507,11 +507,11 @@ const OwnerDashboard = () => {
                     <div className="mt-6 text-center">
                       <button
                         onClick={() => setShowAllShips(!showAllShips)}
-                        className="w-full text-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+                        className="w-full text-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         {showAllShips 
-                          ? 'Show Less' 
-                          : `See More (${filteredShips.length - 3} more)`}
+                          ? <span>Show Less</span>
+                          : <span>{`See More (${filteredShips.length - 3} more)`}</span>}
                       </button>
                     </div>
                   )}
