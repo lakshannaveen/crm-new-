@@ -507,8 +507,7 @@ const OwnerDashboard = () => {
                     <div className="mt-6 text-center">
                       <button
                         onClick={() => setShowAllShips(!showAllShips)}
-                        className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg 
-                                 transition-colors duration-200 font-medium"
+                        className="w-full text-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
                       >
                         {showAllShips 
                           ? 'Show Less' 
