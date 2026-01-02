@@ -125,6 +125,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     observations: "",
     shipManagerComments: "",
 
+    // Durations (days)
+    afloatDuration: 0,
+    indockDuration: 0,
+
     // Feedback Reference
     feedbackRef: `FB-${new Date().getFullYear()}-${Math.random()
       .toString(36)
@@ -421,6 +425,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       poorAverageDetails: sanitize(formData.poorAverageDetails, ""),
       observations: sanitize(formData.observations, ""),
       shipManagerComments: sanitize(formData.shipManagerComments, ""),
+      // include durations
+      afloatDuration: sanitize(formData.afloatDuration, 0),
+      indockDuration: sanitize(formData.indockDuration, 0),
+      totalDuration: sanitize(
+        (Number(formData.afloatDuration) || 0) +
+          (Number(formData.indockDuration) || 0),
+        0
+      ),
       feedbackRef: sanitize(formData.feedbackRef, ""),
     };
 
@@ -1201,7 +1213,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 value={row.description}
                                 readOnly
                                 placeholder="DESCRIPTION"
-                                title={row.description || "No description available"}
+                                title={
+                                  row.description || "No description available"
+                                }
                                 className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                               />
                             </td>
@@ -1425,6 +1439,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
+                    value={formData.afloatDuration}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "afloatDuration",
+                        e.target.value ? parseInt(e.target.value, 10) : 0
+                      )
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
@@ -1435,6 +1456,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
+                    value={formData.indockDuration}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "indockDuration",
+                        e.target.value ? parseInt(e.target.value, 10) : 0
+                      )
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                 </div>
@@ -1445,6 +1473,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="number"
                     placeholder="0"
+                    value={
+                      (Number(formData.afloatDuration) || 0) +
+                      (Number(formData.indockDuration) || 0)
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                     readOnly
                   />
