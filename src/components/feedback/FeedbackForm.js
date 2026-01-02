@@ -1896,65 +1896,153 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 Ratings Summary
               </h4>
 
-              <div
-                className={`grid ${
-                  isMobile
-                    ? "grid-cols-1 gap-3"
-                    : "grid-cols-2 md:grid-cols-3 gap-4"
-                } mb-6`}
-              >
-                {Object.entries(formData.ratings)
-                  .filter(([_, score]) => score > 0)
-                  .slice(0, isMobile ? 6 : 12)
-                  .map(([category, score]) => {
-                    const getScoreColor = (s) => {
-                      if (s >= 75)
-                        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-                      if (s >= 50)
-                        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-                      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-                    };
+              {/* Evaluation Details Ratings */}
+              {evaluationRows.filter(row => row.evaluation && row.evaluation !== 'N').length > 0 && (
+                <>
+                  <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
+                    Evaluation Details
+                  </h5>
+                  <div
+                    className={`grid ${
+                      isMobile
+                        ? "grid-cols-1 gap-3"
+                        : "grid-cols-2 md:grid-cols-3 gap-4"
+                    } mb-6`}
+                  >
+                    {evaluationRows
+                      .filter(row => row.evaluation && row.evaluation !== 'N')
+                      .map((row, index) => {
+                        const evaluationScoreMap = {
+                          'P': 25,   // Poor
+                          'A': 50,   // Average
+                          'G': 75,   // Good
+                          'E': 100,  // Excellent
+                        };
+                        
+                        const score = evaluationScoreMap[row.evaluation] || 0;
+                        const getScoreColor = (s) => {
+                          if (s >= 75)
+                            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+                          if (s >= 50)
+                            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+                          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+                        };
 
-                    return (
-                      <div
-                        key={category}
-                        className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                            {category
-                              .split(/(?=[A-Z])/)
-                              .slice(0, 2)
-                              .join(" ")}
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
-                              score
-                            )}`}
-                          >
-                            {score}
-                          </span>
-                        </div>
-                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        return (
                           <div
-                            className={`h-full ${
-                              score >= 75
-                                ? "bg-green-500"
-                                : score >= 50
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                            }`}
-                            style={{ width: `${score}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
+                            key={index}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                {row.description || `${row.criteriaCode}-${row.unitCode}`}
+                              </span>
+                              <span
+                                className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
+                                  score
+                                )}`}
+                              >
+                                {row.evaluation} ({score})
+                              </span>
+                            </div>
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${
+                                  score >= 75
+                                    ? "bg-green-500"
+                                    : score >= 50
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                            {row.yesNo && (
+                              <div className="mt-2 text-xs">
+                                <span className={`px-2 py-0.5 rounded-full ${
+                                  row.yesNo === 'YES' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                                    : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                                }`}>
+                                  {row.yesNo}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              )}
+
+              {/* Standard Ratings */}
+              {Object.values(formData.ratings).filter((r) => r > 0).length > 0 && (
+                <>
+                  <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
+                    Standard Ratings
+                  </h5>
+                  <div
+                    className={`grid ${
+                      isMobile
+                        ? "grid-cols-1 gap-3"
+                        : "grid-cols-2 md:grid-cols-3 gap-4"
+                    } mb-6`}
+                  >
+                    {Object.entries(formData.ratings)
+                      .filter(([_, score]) => score > 0)
+                      .slice(0, isMobile ? 6 : 12)
+                      .map(([category, score]) => {
+                        const getScoreColor = (s) => {
+                          if (s >= 75)
+                            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+                          if (s >= 50)
+                            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+                          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+                        };
+
+                        return (
+                          <div
+                            key={category}
+                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                                {category
+                                  .split(/(?=[A-Z])/)
+                                  .slice(0, 2)
+                                  .join(" ")}
+                              </span>
+                              <span
+                                className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
+                                  score
+                                )}`}
+                              >
+                                {score}
+                              </span>
+                            </div>
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${
+                                  score >= 75
+                                    ? "bg-green-500"
+                                    : score >= 50
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${score}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </>
+              )}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                {Object.values(formData.ratings).filter((r) => r > 0).length}{" "}
-                categories rated
+                {evaluationRows.filter(row => row.evaluation && row.evaluation !== 'N').length + 
+                 Object.values(formData.ratings).filter((r) => r > 0).length}{" "}
+                total ratings
               </div>
             </div>
 
