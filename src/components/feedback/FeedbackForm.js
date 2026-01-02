@@ -389,69 +389,30 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const handleSubmit = async () => {
-    // Calculate overall score
-    const overallScore = calculateOverallScore();
-
-    // Helper to sanitize values
-    const sanitize = (val, fallback) =>
-      val === null || val === undefined ? fallback : val;
-
-    // Sanitize ratings
-    const sanitizedRatings = Object.fromEntries(
-      Object.entries(formData.ratings || {}).map(([k, v]) => [
-        k,
-        sanitize(v, 0),
-      ])
-    );
-
-    // Build sanitized data
-    const finalData = {
-      ...formData,
-      id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      submittedBy: user?.name || "Anonymous",
-      submittedAt: new Date().toISOString(),
-      overallScore,
-      jobCategory: sanitize(formData.jobCategory, ""),
-      projectHandleLocation: sanitize(formData.projectHandleLocation, ""),
-      startingDate: sanitize(formData.startingDate, ""),
-      endingDate: sanitize(formData.endingDate, ""),
-      jobStatus: sanitize(formData.jobStatus, ""),
-      projectNumber: sanitize(formData.projectNumber, ""),
-      projectName: sanitize(formData.projectName, ""),
-      customerFeedbackStatus: sanitize(formData.customerFeedbackStatus, ""),
-      ratings: sanitizedRatings,
-      valueForMoney: sanitize(formData.valueForMoney, false),
-      recommend: sanitize(formData.recommend, false),
-      poorAverageDetails: sanitize(formData.poorAverageDetails, ""),
-      observations: sanitize(formData.observations, ""),
-      shipManagerComments: sanitize(formData.shipManagerComments, ""),
-      // include durations
-      afloatDuration: sanitize(formData.afloatDuration, 0),
-      indockDuration: sanitize(formData.indockDuration, 0),
-      totalDuration: sanitize(
-        (Number(formData.afloatDuration) || 0) +
-          (Number(formData.indockDuration) || 0),
-        0
-      ),
-      feedbackRef: sanitize(formData.feedbackRef, ""),
+    // Only send the required JSON structure for feedback
+    const feedbackPayload = {
+      P_JOB_CATEGORY: formData.jobCategory,
+      P_JMAIN: formData.projectNumber,
+      FeedbackList: evaluationRows
+        .filter(row => row.criteriaCode && row.unitCode)
+        .map(row => ({
+          P_CRITERIA_CODE: row.criteriaCode,
+          P_CODE: row.unitCode,
+          P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N",
+          P_REMARKS: row.evaluation,
+          P_ACTION_TAKEN: row.actionTaken || ""
+        })),
     };
 
     try {
-      // Call backend API to add feedback
-      await addFeedback(finalData);
-      // Optionally, you can show a success message or update state here
+      await addFeedback(feedbackPayload);
       setCurrentStep(9);
     } catch (error) {
-      // Optionally, handle error (show error message, etc.)
       console.error("Failed to submit feedback:", error);
-      // You may want to show an error notification to the user
     }
-    // Call the onSubmit prop with the final data
     if (onSubmit) {
-      onSubmit(finalData);
+      onSubmit(feedbackPayload);
     }
-
-    // Go to completion step
     setCurrentStep(3);
   };
 
