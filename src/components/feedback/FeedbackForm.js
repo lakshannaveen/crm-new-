@@ -50,7 +50,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
     jobCategory: "",
-    projectHandleLocation: "LOC_C",
+    projectHandleLocation: "",
     startingDate: "",
     endingDate: "",
     jobStatus: "",
