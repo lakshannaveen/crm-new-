@@ -1070,7 +1070,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
               <div>
                 <h2
                   className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
@@ -1082,7 +1082,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </p>
               </div>
               {unitsDescriptionsLoading && (
-                <div className="text-sm text-blue-600 dark:text-blue-400">
+                <div className="text-sm text-blue-600 dark:text-blue-400 mt-2 md:mt-0">
                   Loading criteria...
                 </div>
               )}
@@ -1092,122 +1092,180 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             {!unitsDescriptionsLoading && unitsDescriptions.length === 0 && (
               <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  No criteria data loaded. Total items:{" "}
+                  No criteria data loaded. Total items: {" "}
                   {unitsDescriptions.length}
                 </p>
               </div>
             )}
 
-            {/* Evaluation Table */}
-            <div className="overflow-x-auto mb-6">
-              <div className="inline-block min-w-full align-middle">
-                <div className="overflow-hidden border border-gray-300 dark:border-gray-600 rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+            {/* Evaluation Table - Responsive for Mobile */}
+            <div className="mb-6">
+              {isMobile ? (
+                <div className="space-y-4">
+                  {evaluationRows
+                    .slice(0, Math.min(visibleRowsCount, 5))
+                    .map((row, index) => (
+                      <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900">
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Criteria</label>
+                          <select
+                            value={row.criteriaCode}
+                            onChange={(e) => handleEvaluationRowChange(index, "criteriaCode", e.target.value)}
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                            disabled={unitsDescriptionsLoading}
+                          >
+                            <option value="">PPE_CRITERIA_CODE</option>
+                            {getCriteriaCodes().map((code) => (
+                              <option key={code} value={code}>{code}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Unit</label>
+                          <select
+                            value={row.unitCode}
+                            onChange={(e) => handleEvaluationRowChange(index, "unitCode", e.target.value)}
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                            disabled={!row.criteriaCode || unitsDescriptionsLoading}
+                          >
+                            <option value="">UNIT_CODE</option>
+                            {getUnitCodesForCriteria(row.criteriaCode, index).map((item) => (
+                              <option key={item.code} value={item.code} disabled={item.disabled} className={item.disabled ? "text-gray-400 dark:text-gray-600" : ""}>
+                                {item.code} {item.disabled ? "(Already selected)" : ""}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={row.description}
+                            readOnly
+                            placeholder="DESCRIPTION"
+                            title={row.description || "No description available"}
+                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                          />
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Evaluation</label>
+                          <div className="flex flex-wrap gap-2">
+                            {["P", "A", "G", "E", "N"].map((val) => (
+                              <label key={val} className="flex items-center gap-1">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value={val}
+                                  checked={row.evaluation === val}
+                                  onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
+                                  className="w-4 h-4"
+                                />
+                                <span className="text-xs">{val}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Yes/No</label>
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                name={`deck-yesno-${index}`}
+                                value="YES"
+                                checked={row.yesNo === "YES"}
+                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-xs">YES</span>
+                            </label>
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="radio"
+                                name={`deck-yesno-${index}`}
+                                value="NO"
+                                checked={row.yesNo === "NO"}
+                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
+                                className="w-4 h-4"
+                              />
+                              <span className="text-xs">NO</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                  <table className="min-w-[700px] md:min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-xs md:text-sm">
                     <thead className="bg-gray-100 dark:bg-gray-800">
                       <tr>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           Criteria
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           Evaluation Type
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           P
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           A
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           G
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           E
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           N
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-green-100 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-green-100 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
                           YES
                         </th>
-                        <th className="px-2 py-3 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 bg-red-100 dark:bg-red-900">
+                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-red-100 dark:bg-red-900 whitespace-nowrap">
                           NO
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
                       {evaluationRows
-                        .slice(
-                          0,
-                          isMobile
-                            ? Math.min(visibleRowsCount, 5)
-                            : visibleRowsCount
-                        )
+                        .slice(0, visibleRowsCount)
                         .map((row, index) => (
                           <tr
                             key={index}
                             className="hover:bg-gray-50 dark:hover:bg-gray-800"
                           >
-                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600">
-                              <div className="flex gap-1">
+                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <div className="flex gap-1 flex-col md:flex-row">
                                 <select
                                   value={row.criteriaCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "criteriaCode",
-                                      e.target.value
-                                    )
-                                  }
+                                  onChange={(e) => handleEvaluationRowChange(index, "criteriaCode", e.target.value)}
                                   className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                                   disabled={unitsDescriptionsLoading}
                                 >
                                   <option value="">PPE_CRITERIA_CODE</option>
                                   {getCriteriaCodes().map((code) => (
-                                    <option key={code} value={code}>
-                                      {code}
-                                    </option>
+                                    <option key={code} value={code}>{code}</option>
                                   ))}
                                 </select>
                                 <select
                                   value={row.unitCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "unitCode",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                  disabled={
-                                    !row.criteriaCode ||
-                                    unitsDescriptionsLoading
-                                  }
+                                  onChange={(e) => handleEvaluationRowChange(index, "unitCode", e.target.value)}
+                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs mt-1 md:mt-0"
+                                  disabled={!row.criteriaCode || unitsDescriptionsLoading}
                                 >
                                   <option value="">UNIT_CODE</option>
-                                  {getUnitCodesForCriteria(
-                                    row.criteriaCode,
-                                    index
-                                  ).map((item) => (
-                                    <option
-                                      key={item.code}
-                                      value={item.code}
-                                      disabled={item.disabled}
-                                      className={
-                                        item.disabled
-                                          ? "text-gray-400 dark:text-gray-600"
-                                          : ""
-                                      }
-                                    >
-                                      {item.code}{" "}
-                                      {item.disabled
-                                        ? "(Already selected)"
-                                        : ""}
+                                  {getUnitCodesForCriteria(row.criteriaCode, index).map((item) => (
+                                    <option key={item.code} value={item.code} disabled={item.disabled} className={item.disabled ? "text-gray-400 dark:text-gray-600" : ""}>
+                                      {item.code} {item.disabled ? "(Already selected)" : ""}
                                     </option>
                                   ))}
                                 </select>
                               </div>
                             </td>
-                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600">
+                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
                               <input
                                 type="text"
                                 value={row.description}
@@ -1219,19 +1277,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                               />
                             </td>
+                            {/* ...existing code for radio buttons... */}
                             <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
                               <input
                                 type="radio"
                                 name={`deck-eval-${index}`}
                                 value="P"
                                 checked={row.evaluation === "P"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1241,13 +1294,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="A"
                                 checked={row.evaluation === "A"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1257,13 +1304,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="G"
                                 checked={row.evaluation === "G"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1273,13 +1314,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="E"
                                 checked={row.evaluation === "E"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1289,13 +1324,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-eval-${index}`}
                                 value="N"
                                 checked={row.evaluation === "N"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "evaluation", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1305,13 +1334,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="YES"
                                 checked={row.yesNo === "YES"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1321,13 +1344,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 name={`deck-yesno-${index}`}
                                 value="NO"
                                 checked={row.yesNo === "NO"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => handleEvaluationRowChange(index, "yesNo", e.target.value)}
                                 className="w-4 h-4"
                               />
                             </td>
@@ -1336,7 +1353,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     </tbody>
                   </table>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Criteria Details Legend */}
