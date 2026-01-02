@@ -382,6 +382,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const calculateOverallScore = () => {
+    if (!formData.ratings) return 0;
     const ratings = Object.values(formData.ratings).filter((r) => r > 0);
     return ratings.length > 0
       ? Math.round(ratings.reduce((a, b) => a + b, 0) / ratings.length)
@@ -393,14 +394,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
+      P_REMARKS: formData.remarks || "",
+      P_ACTION_TAKEN: formData.actionTaken || "",
       FeedbackList: evaluationRows
         .filter(row => row.criteriaCode && row.unitCode)
         .map(row => ({
           P_CRITERIA_CODE: row.criteriaCode,
           P_CODE: row.unitCode,
-          P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N",
-          P_REMARKS: row.evaluation,
-          P_ACTION_TAKEN: row.actionTaken || ""
+          P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N"
         })),
     };
 
