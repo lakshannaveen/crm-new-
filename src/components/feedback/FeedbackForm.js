@@ -253,7 +253,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Scroll to question section
   const scrollToQuestionSection = () => {
     if (questionSectionRef.current) {
-      questionSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      questionSectionRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   };
 
@@ -391,7 +394,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     // Sanitize ratings
     const sanitizedRatings = Object.fromEntries(
-      Object.entries(formData.ratings || {}).map(([k, v]) => [k, sanitize(v, 0)])
+      Object.entries(formData.ratings || {}).map(([k, v]) => [
+        k,
+        sanitize(v, 0),
+      ])
     );
 
     // Build sanitized data
@@ -1143,7 +1149,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                                   disabled={unitsDescriptionsLoading}
                                 >
-                                  <option value="">CRITERIA_CODE</option>
+                                  <option value="">PPE_CRITERIA_CODE</option>
                                   {getCriteriaCodes().map((code) => (
                                     <option key={code} value={code}>
                                       {code}
@@ -1195,6 +1201,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 value={row.description}
                                 readOnly
                                 placeholder="DESCRIPTION"
+                                title={row.description || "No description available"}
                                 className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
                               />
                             </td>
@@ -1894,7 +1901,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       )}
 
       {/* Main Content */}
-      <div ref={questionSectionRef} className={`${isMobile ? "mb-16" : "mb-8"}`}>{getStepContent()}</div>
+      <div
+        ref={questionSectionRef}
+        className={`${isMobile ? "mb-16" : "mb-8"}`}
+      >
+        {getStepContent()}
+      </div>
 
       {/* Mobile Step Buttons */}
       {isMobile &&

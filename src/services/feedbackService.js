@@ -35,7 +35,6 @@ export const getJmain = async (jobCategory) => {
   }
 };
 
-
 // Add feedback
 export const addFeedback = async (feedbackData) => {
   try {
