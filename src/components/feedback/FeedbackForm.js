@@ -136,6 +136,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       .substr(2, 6)
       .toUpperCase()}`,
 
+    // Top-level remarks and action taken
+    remarks: "",
+    actionTaken: "",
     // Removed vessel fields (vesselName, vesselIMO)
   });
 
@@ -349,7 +352,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           }
         }
       }
-      
+
       // Clear specific field validation errors when user selects evaluation or yes/no
       if (field === "evaluation" && value) {
         setValidationErrors((prev) => {
@@ -359,7 +362,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           return newErrors;
         });
       }
-      
+
       if (field === "yesNo" && value) {
         setValidationErrors((prev) => {
           const newErrors = { ...prev };
@@ -441,7 +444,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         const filledRows = evaluationRows.filter(
           (row) => row.criteriaCode && row.unitCode
         );
-        
+
         if (filledRows.length === 0) {
           errors.evaluationRows =
             "At least one evaluation row must be completed";
@@ -450,7 +453,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           filledRows.forEach((row, idx) => {
             const originalIndex = evaluationRows.indexOf(row);
             if (!row.evaluation) {
-              errors[`evaluation_${originalIndex}`] = "Evaluation rating is required";
+              errors[`evaluation_${originalIndex}`] =
+                "Evaluation rating is required";
             }
             if (!row.yesNo) {
               errors[`yesNo_${originalIndex}`] = "Yes/No selection is required";
@@ -499,6 +503,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const calculateOverallScore = () => {
+    if (!formData.ratings) return 0;
     const ratings = Object.values(formData.ratings).filter((r) => r > 0);
 
     // Convert evaluation letter grades to numeric scores
@@ -529,14 +534,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
+      P_REMARKS: formData.remarks || "",
+      P_ACTION_TAKEN: formData.actionTaken || "",
       FeedbackList: evaluationRows
         .filter((row) => row.criteriaCode && row.unitCode)
         .map((row) => ({
           P_CRITERIA_CODE: row.criteriaCode,
           P_CODE: row.unitCode,
           P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N",
-          P_REMARKS: row.evaluation,
-          P_ACTION_TAKEN: row.actionTaken || "",
         })),
     };
 
@@ -1472,212 +1477,226 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         .slice(0, visibleRowsCount)
                         .map((row, index) => (
                           <React.Fragment key={index}>
-                            <tr
-                              className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                            >
-                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                              <div className="flex gap-1 flex-col md:flex-row">
-                                <select
-                                  value={row.criteriaCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "criteriaCode",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                  disabled={unitsDescriptionsLoading}
-                                >
-                                  <option value="">PPE_CRITERIA_CODE</option>
-                                  {getCriteriaCodes().map((code) => (
-                                    <option key={code} value={code}>
-                                      {code}
-                                    </option>
-                                  ))}
-                                </select>
-                                <select
-                                  value={row.unitCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "unitCode",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs mt-1 md:mt-0"
-                                  disabled={
-                                    !row.criteriaCode ||
-                                    unitsDescriptionsLoading
-                                  }
-                                >
-                                  <option value="">UNIT_CODE</option>
-                                  {getUnitCodesForCriteria(
-                                    row.criteriaCode,
-                                    index
-                                  ).map((item) => (
-                                    <option
-                                      key={item.code}
-                                      value={item.code}
-                                      disabled={item.disabled}
-                                      className={
-                                        item.disabled
-                                          ? "text-gray-400 dark:text-gray-600"
-                                          : ""
-                                      }
-                                    >
-                                      {item.code}{" "}
-                                      {item.disabled
-                                        ? "(Already selected)"
-                                        : ""}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                              <input
-                                type="text"
-                                value={row.description}
-                                readOnly
-                                placeholder="DESCRIPTION"
-                                title={
-                                  row.description || "No description available"
-                                }
-                                className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                              />
-                            </td>
-                            {/* ...existing code for radio buttons... */}
-                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-eval-${index}`}
-                                value="P"
-                                checked={row.evaluation === "P"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-eval-${index}`}
-                                value="A"
-                                checked={row.evaluation === "A"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-eval-${index}`}
-                                value="G"
-                                checked={row.evaluation === "G"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-eval-${index}`}
-                                value="E"
-                                checked={row.evaluation === "E"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-eval-${index}`}
-                                value="N"
-                                checked={row.evaluation === "N"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "evaluation",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="YES"
-                                checked={row.yesNo === "YES"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                            <td className="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="NO"
-                                checked={row.yesNo === "NO"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                            </td>
-                          </tr>
-                          {/* Inline error messages for desktop table */}
-                          {(validationErrors[`evaluation_${index}`] || validationErrors[`yesNo_${index}`]) && (
-                            <tr>
-                              <td colSpan="9" className="px-3 py-2 bg-red-50 dark:bg-red-900/20">
-                                <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
-                                  {validationErrors[`evaluation_${index}`] && (
-                                    <span>• {validationErrors[`evaluation_${index}`]}</span>
-                                  )}
-                                  {validationErrors[`yesNo_${index}`] && (
-                                    <span>• {validationErrors[`yesNo_${index}`]}</span>
-                                  )}
+                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                                <div className="flex gap-1 flex-col md:flex-row">
+                                  <select
+                                    value={row.criteriaCode}
+                                    onChange={(e) =>
+                                      handleEvaluationRowChange(
+                                        index,
+                                        "criteriaCode",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                    disabled={unitsDescriptionsLoading}
+                                  >
+                                    <option value="">PPE_CRITERIA_CODE</option>
+                                    {getCriteriaCodes().map((code) => (
+                                      <option key={code} value={code}>
+                                        {code}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <select
+                                    value={row.unitCode}
+                                    onChange={(e) =>
+                                      handleEvaluationRowChange(
+                                        index,
+                                        "unitCode",
+                                        e.target.value
+                                      )
+                                    }
+                                    className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs mt-1 md:mt-0"
+                                    disabled={
+                                      !row.criteriaCode ||
+                                      unitsDescriptionsLoading
+                                    }
+                                  >
+                                    <option value="">UNIT_CODE</option>
+                                    {getUnitCodesForCriteria(
+                                      row.criteriaCode,
+                                      index
+                                    ).map((item) => (
+                                      <option
+                                        key={item.code}
+                                        value={item.code}
+                                        disabled={item.disabled}
+                                        className={
+                                          item.disabled
+                                            ? "text-gray-400 dark:text-gray-600"
+                                            : ""
+                                        }
+                                      >
+                                        {item.code}{" "}
+                                        {item.disabled
+                                          ? "(Already selected)"
+                                          : ""}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </div>
                               </td>
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                                <input
+                                  type="text"
+                                  value={row.description}
+                                  readOnly
+                                  placeholder="DESCRIPTION"
+                                  title={
+                                    row.description ||
+                                    "No description available"
+                                  }
+                                  className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                />
+                              </td>
+                              {/* ...existing code for radio buttons... */}
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value="P"
+                                  checked={row.evaluation === "P"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value="A"
+                                  checked={row.evaluation === "A"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value="G"
+                                  checked={row.evaluation === "G"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value="E"
+                                  checked={row.evaluation === "E"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-eval-${index}`}
+                                  value="N"
+                                  checked={row.evaluation === "N"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "evaluation",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
+                                <input
+                                  type="radio"
+                                  name={`deck-yesno-${index}`}
+                                  value="YES"
+                                  checked={row.yesNo === "YES"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "yesNo",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20">
+                                <input
+                                  type="radio"
+                                  name={`deck-yesno-${index}`}
+                                  value="NO"
+                                  checked={row.yesNo === "NO"}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "yesNo",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-4 h-4"
+                                />
+                              </td>
                             </tr>
-                          )}
-                        </React.Fragment>
-                      ))}
+                            {/* Inline error messages for desktop table */}
+                            {(validationErrors[`evaluation_${index}`] ||
+                              validationErrors[`yesNo_${index}`]) && (
+                              <tr>
+                                <td
+                                  colSpan="9"
+                                  className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
+                                >
+                                  <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
+                                    {validationErrors[
+                                      `evaluation_${index}`
+                                    ] && (
+                                      <span>
+                                        •{" "}
+                                        {
+                                          validationErrors[
+                                            `evaluation_${index}`
+                                          ]
+                                        }
+                                      </span>
+                                    )}
+                                    {validationErrors[`yesNo_${index}`] && (
+                                      <span>
+                                        • {validationErrors[`yesNo_${index}`]}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))}
                     </tbody>
                   </table>
                 </div>

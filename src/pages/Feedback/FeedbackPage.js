@@ -876,6 +876,7 @@ const FeedbackPage = () => {
   };
 
   const calculateOverallScore = (ratings) => {
+    if (!ratings || typeof ratings !== 'object') return 0;
     const ratingValues = Object.values(ratings).filter(r => r > 0);
     if (ratingValues.length === 0) return 0;
     return Math.round(ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length);
