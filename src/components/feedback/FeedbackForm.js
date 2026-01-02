@@ -2368,31 +2368,53 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         </div>
 
         <div className="flex justify-between mt-6">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex flex-col items-center">
-              <button
-                onClick={() => setCurrentStep(step.id)}
-                className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                  index === currentStep
-                    ? "bg-blue-600 text-white scale-110"
-                    : index < currentStep
-                    ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
-                    : "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500"
-                }`}
-              >
-                {index < currentStep ? <FiCheck /> : step.icon}
-              </button>
-              <span
-                className={`mt-2 text-xs text-center ${
-                  index === currentStep
-                    ? "text-blue-600 dark:text-blue-400 font-medium"
-                    : "text-gray-500 dark:text-gray-400"
-                }`}
-              >
-                {step.title}
-              </span>
-            </div>
-          ))}
+          {steps.map((step, index) => {
+            // Check if all previous steps are validated
+            const canNavigate = () => {
+              if (index <= currentStep) return true; // Can always go back
+              // Check all steps from current to target are valid
+              for (let i = currentStep; i < index; i++) {
+                const errors = validateStep(i);
+                if (Object.keys(errors).length > 0) return false;
+              }
+              return true;
+            };
+            
+            const isClickable = canNavigate();
+            
+            return (
+              <div key={step.id} className="flex flex-col items-center">
+                <button
+                  onClick={() => {
+                    if (isClickable) {
+                      setCurrentStep(step.id);
+                    }
+                  }}
+                  disabled={!isClickable}
+                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
+                    index === currentStep
+                      ? "bg-blue-600 text-white scale-110"
+                      : index < currentStep
+                      ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
+                      : isClickable
+                      ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
+                      : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
+                  }`}
+                >
+                  {index < currentStep ? <FiCheck /> : step.icon}
+                </button>
+                <span
+                  className={`mt-2 text-xs text-center ${
+                    index === currentStep
+                      ? "text-blue-600 dark:text-blue-400 font-medium"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {step.title}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
