@@ -353,7 +353,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         }
       }
 
-      // Clear specific field validation errors when user selects evaluation or yes/no
+      // Clear specific field validation errors
+      if (field === "criteriaCode" && value) {
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[`criteriaCode_${index}`];
+          delete newErrors.evaluationRows;
+          return newErrors;
+        });
+      }
+
+      if (field === "unitCode" && value) {
+        setValidationErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[`unitCode_${index}`];
+          delete newErrors.evaluationRows;
+          return newErrors;
+        });
+      }
+
       if (field === "evaluation" && value) {
         setValidationErrors((prev) => {
           const newErrors = { ...prev };
@@ -440,26 +458,39 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             "Customer Feedback Status is required";
         break;
       case 1: // Evaluation Details
-        // At least one evaluation row should be filled
-        const filledRows = evaluationRows.filter(
-          (row) => row.criteriaCode && row.unitCode
-        );
+        // Check each row that has been started
+        let hasAtLeastOneCompleteRow = false;
+        evaluationRows.forEach((row, index) => {
+          const hasCriteria = !!row.criteriaCode;
+          const hasUnit = !!row.unitCode;
+          const hasAnyField = hasCriteria || hasUnit || row.evaluation || row.yesNo;
 
-        if (filledRows.length === 0) {
-          errors.evaluationRows =
-            "At least one evaluation row must be completed";
-        } else {
-          // Check each filled row has both evaluation and yes/no
-          filledRows.forEach((row, idx) => {
-            const originalIndex = evaluationRows.indexOf(row);
+          // If any field is filled, all required fields must be filled
+          if (hasAnyField) {
+            if (!row.criteriaCode) {
+              errors[`criteriaCode_${index}`] = "Criteria code is required";
+            }
+            if (!row.unitCode) {
+              errors[`unitCode_${index}`] = "Unit code is required";
+            }
             if (!row.evaluation) {
-              errors[`evaluation_${originalIndex}`] =
-                "Evaluation rating is required";
+              errors[`evaluation_${index}`] = "Evaluation rating is required";
             }
             if (!row.yesNo) {
-              errors[`yesNo_${originalIndex}`] = "Yes/No selection is required";
+              errors[`yesNo_${index}`] = "Yes/No selection is required";
             }
-          });
+
+            // Check if this row is complete
+            if (row.criteriaCode && row.unitCode && row.evaluation && row.yesNo) {
+              hasAtLeastOneCompleteRow = true;
+            }
+          }
+        });
+
+        // At least one row must be completely filled
+        if (!hasAtLeastOneCompleteRow) {
+          errors.evaluationRows =
+            "At least one evaluation row must be completed";
         }
         break;
       case 2: // Review
@@ -478,6 +509,51 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       const errors = validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
+        
+        // Scroll to first error field after a short delay to allow error to render
+        setTimeout(() => {
+          const firstErrorKey = Object.keys(errors)[0];
+          let errorElement = null;
+          
+          // Find the first error element in the DOM
+          if (firstErrorKey === 'evaluationRows') {
+            // Scroll to evaluation section
+            errorElement = document.querySelector('[class*="bg-red-50"][class*="border-red-500"]');
+          } else if (
+            firstErrorKey.startsWith('criteriaCode_') || 
+            firstErrorKey.startsWith('unitCode_') ||
+            firstErrorKey.startsWith('evaluation_') || 
+            firstErrorKey.startsWith('yesNo_')
+          ) {
+            // Scroll to specific evaluation row error
+            errorElement = document.querySelector('[class*="text-red-600"]');
+          } else {
+            // Scroll to first field with error class or by finding input with error
+            const fieldSelectors = [
+              `[name="${firstErrorKey}"]`,
+              `input[class*="border-red-500"]`,
+              `select[class*="border-red-500"]`,
+              `.text-red-600`,
+            ];
+            
+            for (const selector of fieldSelectors) {
+              errorElement = document.querySelector(selector);
+              if (errorElement) break;
+            }
+          }
+          
+          if (errorElement) {
+            errorElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center',
+              inline: 'nearest'
+            });
+          } else {
+            // Fallback to scrolling to question section
+            scrollToQuestionSection();
+          }
+        }, 100);
+        
         return;
       }
 
@@ -1300,6 +1376,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </option>
                             ))}
                           </select>
+                          {validationErrors[`criteriaCode_${index}`] && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                              {validationErrors[`criteriaCode_${index}`]}
+                            </p>
+                          )}
                         </div>
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -1339,6 +1420,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </option>
                             ))}
                           </select>
+                          {validationErrors[`unitCode_${index}`] && (
+                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                              {validationErrors[`unitCode_${index}`]}
+                            </p>
+                          )}
                         </div>
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -1666,7 +1752,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </td>
                             </tr>
                             {/* Inline error messages for desktop table */}
-                            {(validationErrors[`evaluation_${index}`] ||
+                            {(validationErrors[`criteriaCode_${index}`] ||
+                              validationErrors[`unitCode_${index}`] ||
+                              validationErrors[`evaluation_${index}`] ||
                               validationErrors[`yesNo_${index}`]) && (
                               <tr>
                                 <td
@@ -1674,6 +1762,23 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
                                 >
                                   <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
+                                    {validationErrors[
+                                      `criteriaCode_${index}`
+                                    ] && (
+                                      <span>
+                                        •{" "}
+                                        {
+                                          validationErrors[
+                                            `criteriaCode_${index}`
+                                          ]
+                                        }
+                                      </span>
+                                    )}
+                                    {validationErrors[`unitCode_${index}`] && (
+                                      <span>
+                                        • {validationErrors[`unitCode_${index}`]}
+                                      </span>
+                                    )}
                                     {validationErrors[
                                       `evaluation_${index}`
                                     ] && (
@@ -2424,10 +2529,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       )}
 
       {/* Main Content */}
-      <div
-        ref={questionSectionRef}
-        className="mb-8"
-      >
+      <div ref={questionSectionRef} className="mb-8">
         {getStepContent()}
       </div>
 
