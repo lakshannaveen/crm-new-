@@ -456,6 +456,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         if (!formData.customerFeedbackStatus)
           errors.customerFeedbackStatus =
             "Customer Feedback Status is required";
+        if (!formData.projectHandleLocation)
+          errors.projectHandleLocation = "Project Handle Location is required";
         break;
       case 1: // Evaluation Details
         // Check each row that has been started
@@ -1039,9 +1041,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
 
             <div className="space-y-3">
-
               {/* Job Category and Project Number on the same horizontal line */}
-              <div className={isMobile ? "flex flex-col gap-2" : "flex flex-row gap-6 items-end"}>
+              <div
+                className={
+                  isMobile
+                    ? "flex flex-col gap-2"
+                    : "flex flex-row gap-6 items-end"
+                }
+              >
                 <div className={isMobile ? "w-full" : "w-1/2"}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Job Category
@@ -1099,7 +1106,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         .map((project, index) => {
                           const jmainValue = project.FEEDBACK_JMAIN;
                           return (
-                            <option key={jmainValue || index} value={jmainValue}>
+                            <option
+                              key={jmainValue || index}
+                              value={jmainValue}
+                            >
                               {jmainValue}
                             </option>
                           );
@@ -1285,9 +1295,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   onChange={(e) =>
                     handleInputChange("projectHandleLocation", e.target.value)
                   }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                    validationErrors.projectHandleLocation
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   placeholder="Enter project location"
                 />
+                {validationErrors.projectHandleLocation && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {validationErrors.projectHandleLocation}
+                  </p>
+                )}
               </div>
             </div>
           </div>
