@@ -1068,11 +1068,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </option>
                     ))}
                   </select>
-                  {validationErrors.jobCategory && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.jobCategory}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.jobCategory && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.jobCategory}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className={isMobile ? "w-full" : "w-1/2"}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1115,11 +1117,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           );
                         })}
                   </select>
-                  {validationErrors.projectNumber && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.projectNumber}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.projectNumber && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.projectNumber}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1139,11 +1143,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   }`}
                   placeholder="Enter project name"
                 />
-                {validationErrors.projectName && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {validationErrors.projectName}
-                  </p>
-                )}
+                <div className="min-h-[20px]">
+                  {validationErrors.projectName && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.projectName}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Dates Section */}
@@ -1174,11 +1180,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     }`}
                     disabled={datesLoading}
                   />
-                  {validationErrors.startingDate && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.startingDate}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.startingDate && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.startingDate}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -1201,11 +1209,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     }`}
                     disabled={datesLoading}
                   />
-                  {validationErrors.endingDate && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.endingDate}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.endingDate && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.endingDate}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1245,11 +1255,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </option>
                     ))}
                   </select>
-                  {validationErrors.jobStatus && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.jobStatus}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.jobStatus && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.jobStatus}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -1276,11 +1288,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </option>
                     ))}
                   </select>
-                  {validationErrors.customerFeedbackStatus && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.customerFeedbackStatus}
-                    </p>
-                  )}
+                  <div className="min-h-[20px]">
+                    {validationErrors.customerFeedbackStatus && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.customerFeedbackStatus}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -1302,11 +1316,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   }`}
                   placeholder="Enter project location"
                 />
-                {validationErrors.projectHandleLocation && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {validationErrors.projectHandleLocation}
-                  </p>
-                )}
+                <div className="min-h-[20px]">
+                  {validationErrors.projectHandleLocation && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {validationErrors.projectHandleLocation}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
