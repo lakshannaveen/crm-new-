@@ -916,7 +916,7 @@ const ProjectManagement = () => {
             {/* Tabs - Mobile Scrollable */}
             <div className="mb-6">
               <div className="flex space-x-0 sm:space-x-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
-                {['overview', 'milestones', 'team', 'documents', 'communications', 'settings'].map((tab) => (
+                {['overview', 'milestones', /*'team', 'documents', 'communications', 'settings'*/].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
