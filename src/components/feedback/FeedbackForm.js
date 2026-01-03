@@ -456,6 +456,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         if (!formData.customerFeedbackStatus)
           errors.customerFeedbackStatus =
             "Customer Feedback Status is required";
+        if (!formData.projectHandleLocation)
+          errors.projectHandleLocation = "Project Handle Location is required";
         break;
       case 1: // Evaluation Details
         // Check each row that has been started
@@ -463,7 +465,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         evaluationRows.forEach((row, index) => {
           const hasCriteria = !!row.criteriaCode;
           const hasUnit = !!row.unitCode;
-          const hasAnyField = hasCriteria || hasUnit || row.evaluation || row.yesNo;
+          const hasAnyField = hasCriteria || hasUnit || row.evaluation;
 
           // If any field is filled, all required fields must be filled
           if (hasAnyField) {
@@ -476,12 +478,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             if (!row.evaluation) {
               errors[`evaluation_${index}`] = "Evaluation rating is required";
             }
-            if (!row.yesNo) {
-              errors[`yesNo_${index}`] = "Yes/No selection is required";
-            }
 
             // Check if this row is complete
-            if (row.criteriaCode && row.unitCode && row.evaluation && row.yesNo) {
+            if (row.criteriaCode && row.unitCode && row.evaluation) {
               hasAtLeastOneCompleteRow = true;
             }
           }
@@ -509,21 +508,23 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       const errors = validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
-        
+
         // Scroll to first error field after a short delay to allow error to render
         setTimeout(() => {
           const firstErrorKey = Object.keys(errors)[0];
           let errorElement = null;
-          
+
           // Find the first error element in the DOM
-          if (firstErrorKey === 'evaluationRows') {
+          if (firstErrorKey === "evaluationRows") {
             // Scroll to evaluation section
-            errorElement = document.querySelector('[class*="bg-red-50"][class*="border-red-500"]');
+            errorElement = document.querySelector(
+              '[class*="bg-red-50"][class*="border-red-500"]'
+            );
           } else if (
-            firstErrorKey.startsWith('criteriaCode_') || 
-            firstErrorKey.startsWith('unitCode_') ||
-            firstErrorKey.startsWith('evaluation_') || 
-            firstErrorKey.startsWith('yesNo_')
+            firstErrorKey.startsWith("criteriaCode_") ||
+            firstErrorKey.startsWith("unitCode_") ||
+            firstErrorKey.startsWith("evaluation_") ||
+            firstErrorKey.startsWith("yesNo_")
           ) {
             // Scroll to specific evaluation row error
             errorElement = document.querySelector('[class*="text-red-600"]');
@@ -535,25 +536,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               `select[class*="border-red-500"]`,
               `.text-red-600`,
             ];
-            
+
             for (const selector of fieldSelectors) {
               errorElement = document.querySelector(selector);
               if (errorElement) break;
             }
           }
-          
+
           if (errorElement) {
-            errorElement.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center',
-              inline: 'nearest'
+            errorElement.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
             });
           } else {
             // Fallback to scrolling to question section
             scrollToQuestionSection();
           }
         }, 100);
-        
+
         return;
       }
 
@@ -1040,9 +1041,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
 
             <div className="space-y-3">
-
               {/* Job Category and Project Number on the same horizontal line */}
-              <div className={isMobile ? "flex flex-col gap-2" : "flex flex-row gap-6 items-end"}>
+              <div
+                className={
+                  isMobile
+                    ? "flex flex-col gap-2"
+                    : "flex flex-row gap-6 items-end"
+                }
+              >
                 <div className={isMobile ? "w-full" : "w-1/2"}>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Job Category
@@ -1100,7 +1106,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         .map((project, index) => {
                           const jmainValue = project.FEEDBACK_JMAIN;
                           return (
-                            <option key={jmainValue || index} value={jmainValue}>
+                            <option
+                              key={jmainValue || index}
+                              value={jmainValue}
+                            >
                               {jmainValue}
                             </option>
                           );
@@ -1286,9 +1295,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   onChange={(e) =>
                     handleInputChange("projectHandleLocation", e.target.value)
                   }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""}`}
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                    validationErrors.projectHandleLocation
+                      ? "border-red-500"
+                      : ""
+                  }`}
                   placeholder="Enter project location"
                 />
+                {validationErrors.projectHandleLocation && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {validationErrors.projectHandleLocation}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1469,6 +1487,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
+                        {/*
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                             Yes/No
@@ -1515,6 +1534,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
+                        */}
                       </div>
                     ))}
                 </div>
@@ -1523,32 +1543,55 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <table className="min-w-[700px] md:min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-xs md:text-sm">
                     <thead className="bg-gray-100 dark:bg-gray-800">
                       <tr>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          colSpan="2"
+                          className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap "
+                        >
                           Criteria
                         </th>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           Evaluation Type
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           P
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-orange-600 dark:bg-orange-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           A
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-yellow-600 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           G
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-green-600 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           E
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-yellow-100 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
                           N
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-green-100 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap">
-                          YES
+                      </tr>
+                      <tr>
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
+                          Criteria Code
                         </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-700 dark:text-gray-300 bg-red-100 dark:bg-red-900 whitespace-nowrap">
-                          NO
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
+                          Unit Code
                         </th>
                       </tr>
                     </thead>
@@ -1559,64 +1602,64 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           <React.Fragment key={index}>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <div className="flex gap-1 flex-col md:flex-row">
-                                  <select
-                                    value={row.criteriaCode}
-                                    onChange={(e) =>
-                                      handleEvaluationRowChange(
-                                        index,
-                                        "criteriaCode",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                    disabled={unitsDescriptionsLoading}
-                                  >
-                                    <option value="">PPE_CRITERIA_CODE</option>
-                                    {getCriteriaCodes().map((code) => (
-                                      <option key={code} value={code}>
-                                        {code}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <select
-                                    value={row.unitCode}
-                                    onChange={(e) =>
-                                      handleEvaluationRowChange(
-                                        index,
-                                        "unitCode",
-                                        e.target.value
-                                      )
-                                    }
-                                    className="flex-1 px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs mt-1 md:mt-0"
-                                    disabled={
-                                      !row.criteriaCode ||
-                                      unitsDescriptionsLoading
-                                    }
-                                  >
-                                    <option value="">UNIT_CODE</option>
-                                    {getUnitCodesForCriteria(
-                                      row.criteriaCode,
-                                      index
-                                    ).map((item) => (
-                                      <option
-                                        key={item.code}
-                                        value={item.code}
-                                        disabled={item.disabled}
-                                        className={
-                                          item.disabled
-                                            ? "text-gray-400 dark:text-gray-600"
-                                            : ""
-                                        }
-                                      >
-                                        {item.code}{" "}
-                                        {item.disabled
-                                          ? "(Already selected)"
-                                          : ""}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+                                <select
+                                  value={row.criteriaCode}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "criteriaCode",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                  disabled={unitsDescriptionsLoading}
+                                >
+                                  <option value="">Select...</option>
+                                  {getCriteriaCodes().map((code) => (
+                                    <option key={code} value={code}>
+                                      {code}
+                                    </option>
+                                  ))}
+                                </select>
+                              </td>
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                                <select
+                                  value={row.unitCode}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(
+                                      index,
+                                      "unitCode",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
+                                  disabled={
+                                    !row.criteriaCode ||
+                                    unitsDescriptionsLoading
+                                  }
+                                >
+                                  <option value="">Select...</option>
+                                  {getUnitCodesForCriteria(
+                                    row.criteriaCode,
+                                    index
+                                  ).map((item) => (
+                                    <option
+                                      key={item.code}
+                                      value={item.code}
+                                      disabled={item.disabled}
+                                      className={
+                                        item.disabled
+                                          ? "text-gray-400 dark:text-gray-600"
+                                          : ""
+                                      }
+                                    >
+                                      {item.code}{" "}
+                                      {item.disabled
+                                        ? "(Already selected)"
+                                        : ""}
+                                    </option>
+                                  ))}
+                                </select>
                               </td>
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
                                 <input
@@ -1632,7 +1675,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 />
                               </td>
                               {/* ...existing code for radio buttons... */}
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -1648,7 +1691,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -1680,7 +1723,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -1696,7 +1739,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -1712,6 +1755,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4"
                                 />
                               </td>
+                              {/*
                               <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
@@ -1744,15 +1788,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4"
                                 />
                               </td>
+                              */}
                             </tr>
                             {/* Inline error messages for desktop table */}
                             {(validationErrors[`criteriaCode_${index}`] ||
                               validationErrors[`unitCode_${index}`] ||
-                              validationErrors[`evaluation_${index}`] ||
-                              validationErrors[`yesNo_${index}`]) && (
+                              validationErrors[`evaluation_${index}`]) && (
                               <tr>
                                 <td
-                                  colSpan="9"
+                                  colSpan="10"
                                   className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
                                 >
                                   <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
@@ -1770,7 +1814,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     )}
                                     {validationErrors[`unitCode_${index}`] && (
                                       <span>
-                                        • {validationErrors[`unitCode_${index}`]}
+                                        •{" "}
+                                        {validationErrors[`unitCode_${index}`]}
                                       </span>
                                     )}
                                     {validationErrors[
@@ -1783,11 +1828,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                             `evaluation_${index}`
                                           ]
                                         }
-                                      </span>
-                                    )}
-                                    {validationErrors[`yesNo_${index}`] && (
-                                      <span>
-                                        • {validationErrors[`yesNo_${index}`]}
                                       </span>
                                     )}
                                   </div>
@@ -1856,8 +1896,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Action Taken
                 </label>
                 <textarea
-                  placeholder="PPE_ACTION_TAKEN"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={formData.actionTaken}
+                  onChange={(e) =>
+                    handleInputChange("actionTaken", e.target.value)
+                  }
+                  placeholder="Describe the action taken (e.g., corrective steps)"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
                   rows={isMobile ? "3" : "4"}
                 />
               </div>
@@ -1866,8 +1910,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Remarks
                 </label>
                 <textarea
-                  placeholder="PPE_REMARKS"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  value={formData.remarks}
+                  onChange={(e) => handleInputChange("remarks", e.target.value)}
+                  placeholder="Add any remarks or observations"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
                   rows={isMobile ? "3" : "4"}
                 />
               </div>
@@ -1879,8 +1925,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 Notes & Recommendation
               </label>
               <textarea
-                placeholder="ID_NOTES"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                value={formData.observations}
+                onChange={(e) =>
+                  handleInputChange("observations", e.target.value)
+                }
+                placeholder="Notes & recommendations for follow-up or improvements"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
                 rows={isMobile ? "2" : "3"}
               />
             </div>
@@ -1897,11 +1947,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               >
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Afloat (T_DURATION)
+                    Afloat
                   </label>
                   <input
                     type="number"
-                    placeholder="0"
+                    placeholder="Days afloat (e.g. 5)"
                     value={
                       formData.afloatDuration === 0
                         ? ""
@@ -1918,11 +1968,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Indock (K_DURATION)
+                    Indock
                   </label>
                   <input
                     type="number"
-                    placeholder="0"
+                    placeholder="Days in dock (e.g. 2)"
                     value={
                       formData.indockDuration === 0
                         ? ""
@@ -1939,11 +1989,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Total (T_DURATION)
+                    Total
                   </label>
                   <input
                     type="number"
-                    placeholder="0"
+                    placeholder="Total days (calculated)"
                     value={
                       Number(formData.afloatDuration) +
                       Number(formData.indockDuration)
