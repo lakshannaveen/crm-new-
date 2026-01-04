@@ -298,10 +298,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const handleEvaluationRowChange = (index, field, value) => {
     setEvaluationRows((prev) => {
       const newRows = [...prev];
-      newRows[index] = {
-        ...newRows[index],
-        [field]: value,
-      };
+
+      // For evaluation field, toggle if clicking the same value
+      if (field === "evaluation" && newRows[index].evaluation === value) {
+        newRows[index] = {
+          ...newRows[index],
+          [field]: "",
+        };
+      } else if (field === "yesNo" && newRows[index].yesNo === value) {
+        // For yesNo field, toggle if clicking the same value
+        newRows[index] = {
+          ...newRows[index],
+          [field]: "",
+        };
+      } else {
+        newRows[index] = {
+          ...newRows[index],
+          [field]: value,
+        };
+      }
 
       // If criteria or unit code changes, update description
       if (field === "criteriaCode" || field === "unitCode") {
@@ -1502,14 +1517,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value={val}
                                   checked={row.evaluation === val}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                                 <span className="text-xs">{val}</span>
                               </label>
@@ -1715,14 +1730,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="P"
                                   checked={row.evaluation === "P"}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
                               <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600">
@@ -1731,14 +1746,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="A"
                                   checked={row.evaluation === "A"}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
                               <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
@@ -1747,14 +1762,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="G"
                                   checked={row.evaluation === "G"}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
                               <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
@@ -1763,14 +1778,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="E"
                                   checked={row.evaluation === "E"}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
                               <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600">
@@ -1779,14 +1794,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="N"
                                   checked={row.evaluation === "N"}
-                                  onChange={(e) =>
+                                  onClick={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
                                       e.target.value
                                     )
                                   }
-                                  className="w-4 h-4"
+                                  className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
                               {/*
