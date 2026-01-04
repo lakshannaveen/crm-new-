@@ -399,7 +399,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const codes = [
       ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
     ];
-    return codes.filter(Boolean);
+    return codes.filter(Boolean).sort((a, b) => {
+      // Convert to numbers for proper numeric sorting
+      const numA = parseInt(a, 10);
+      const numB = parseInt(b, 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      // Fallback to string comparison
+      return a.localeCompare(b);
+    });
   };
 
   // Get selected combinations excluding current row
@@ -428,7 +437,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const codes = unitsDescriptions
       .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
       .map((item) => item.FEEDBACK_UNIT_CODE);
-    const uniqueCodes = [...new Set(codes)].filter(Boolean);
+    const uniqueCodes = [...new Set(codes)].filter(Boolean).sort((a, b) => {
+      // Convert to numbers for proper numeric sorting
+      const numA = parseInt(a, 10);
+      const numB = parseInt(b, 10);
+      if (!isNaN(numA) && !isNaN(numB)) {
+        return numA - numB;
+      }
+      // Fallback to string comparison
+      return a.localeCompare(b);
+    });
 
     // Return objects with code and disabled status
     return uniqueCodes.map((code) => ({
