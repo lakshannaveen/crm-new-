@@ -704,7 +704,7 @@
 // export default FeedbackPage;
 
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
@@ -713,6 +713,7 @@ import FeedbackHistory from '../../components/feedback/FeedbackHistory';
 import FeedbackDetailModal from '../../components/feedback/FeedbackDetailModal';
 import FeedbackConfirmation from '../../components/feedback/FeedbackConfirmation';
 import { FiArrowLeft, FiFileText, FiAlertCircle, FiList, FiMessageSquare, FiBarChart2, FiStar } from 'react-icons/fi';
+import { getShips } from '../../actions/shipActions';
 
 // Sample feedback data
 const SAMPLE_FEEDBACKS = [
@@ -798,6 +799,7 @@ const FeedbackPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const dispatch = useDispatch();
   const [recentFeedback, setRecentFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
@@ -826,6 +828,14 @@ const FeedbackPage = () => {
       setFeedbacks(SAMPLE_FEEDBACKS);
     }
   }, []);
+
+  // Ensure ships are loaded so vessel selector and feedback form have data
+  useEffect(() => {
+    // only dispatch if user is present and ships not yet loaded
+    if (user && (!ships || ships.length === 0)) {
+      dispatch(getShips());
+    }
+  }, [dispatch, user, ships]);
 
   // Save feedbacks to localStorage whenever they change
   useEffect(() => {
