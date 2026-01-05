@@ -602,7 +602,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       return next;
                     });
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  className="btn-secondary text-sm"
                 >
                   Skip
                 </button>
@@ -616,7 +616,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     });
                     setTimeout(scrollToQuestionSection, 100);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                  className="btn-primary text-sm"
                 >
                   Fill Milestones
                 </button>
@@ -835,10 +835,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`px-4 py-3 rounded-lg flex-1 ${
-              currentStep === 0
-                ? "bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className={`flex-1 btn-secondary ${
+              currentStep === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <FiChevronLeft className="inline mr-2" />
@@ -847,7 +845,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
           <button
             onClick={nextStep}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg flex-1 hover:bg-blue-700"
+            className="flex-1 btn-primary"
           >
             {currentStep === steps.length - 2 ? "Review" : "Next"}
             <FiChevronRight className="inline ml-2" />
@@ -1781,7 +1779,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               <button
                 type="button"
                 onClick={addMilestone}
-                className="w-full py-3 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-400 hover:border-blue-500 hover:text-blue-600 dark:hover:border-blue-400 dark:hover:text-blue-400 transition-colors flex items-center justify-center gap-2"
+                className="btn-secondary w-full flex items-center justify-center gap-2"
               >
                 <FiTrendingUp className="w-5 h-5" />
                 Add Another Milestone
@@ -1803,10 +1801,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   type="button"
                   onClick={handleSubmitMilestones}
                   disabled={milestoneSubmitting}
-                  className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-                    milestoneSubmitting
-                      ? "bg-blue-400 cursor-not-allowed text-white"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  className={`btn-primary w-full flex items-center justify-center gap-2 ${
+                    milestoneSubmitting ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
                   {milestoneSubmitting ? (
@@ -2884,18 +2880,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             >
               <button
                 onClick={() => setCurrentStep(0)}
-                className={`${
-                  isMobile ? "w-full py-3" : "px-6 py-2"
-                } border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700`}
+                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-secondary`}
               >
                 Edit Feedback
               </button>
 
               <button
                 onClick={handleSubmit}
-                className={`${
-                  isMobile ? "w-full py-3" : "px-6 py-2"
-                } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
               >
                 Submit Feedback
               </button>
@@ -3017,9 +3009,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     );
                     setCurrentStep(0);
                   }}
-                  className={`${
-                    isMobile ? "w-full py-3" : "px-6 py-2"
-                  } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                  className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
                 >
                   Submit Another Feedback
                 </button>
@@ -3031,9 +3021,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       window.location.reload();
                     }
                   }}
-                  className={`${
-                    isMobile ? "w-full py-3" : "px-6 py-2"
-                  } border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700`}
+                  className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-secondary`}
                 >
                   View History
                 </button>
@@ -3072,9 +3060,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               <button
                 onClick={() => setCurrentStep(0)}
-                className={`${
-                  isMobile ? "w-full py-3" : "px-6 py-2"
-                } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
               >
                 Go to First Step
               </button>
@@ -3179,22 +3165,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             <button
               onClick={prevStep}
               disabled={currentStep === 0}
-              className={`px-6 py-2 rounded-lg transition-colors ${
-                currentStep === 0
-                  ? "bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed"
-                  : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-              }`}
+              className={`btn-secondary px-6 ${currentStep === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Previous
             </button>
             <button
               onClick={nextStep}
               disabled={currentStep === steps.length - 1}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                currentStep === steps.length - 1
-                  ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
+              className={`btn-primary px-6 ${currentStep === steps.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {currentStep === steps.length - 2 ? "Review" : "Next"}
             </button>
