@@ -690,11 +690,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       P_ACTION_TAKEN: formData.actionTaken || "",
       FeedbackList: evaluationRows
         .filter((row) => row.criteriaCode && row.unitCode)
-        .map((row) => ({
-          P_CRITERIA_CODE: row.criteriaCode,
-          P_CODE: row.unitCode,
-          P_ANSWER_TYPE: row.yesNo === "YES" ? "Y" : "N",
-        })),
+        .map((row) => {
+          const answer = (() => {
+            if (typeof row.yesNo === 'string') {
+              return row.yesNo.toUpperCase().startsWith('Y') ? 'Y' : 'N';
+            }
+            if (typeof row.yesNo === 'boolean') {
+              return row.yesNo ? 'Y' : 'N';
+            }
+            return 'N';
+          })();
+
+          return {
+            P_CRITERIA_CODE: row.criteriaCode,
+            P_CODE: row.unitCode,
+            P_ANSWER_TYPE: answer,
+            P_REMARKS: row.remarks || formData.remarks || "",
+            P_ACTION_TAKEN: row.actionTaken || formData.actionTaken || "",
+          };
+        }),
     };
 
     try {
