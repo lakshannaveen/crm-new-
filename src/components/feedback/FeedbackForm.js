@@ -19,6 +19,7 @@ import {
   getJmain,
   getUnitsDescriptions,
   submitMilestone,
+  clearFeedbackDates,
 } from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
@@ -195,14 +196,25 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     dispatch(getUnitsDescriptions());
   }, [dispatch]);
 
+  // Cleanup: Clear dates when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearFeedbackDates());
+    };
+  }, [dispatch]);
+
   // Fetch JMain (project numbers) when job category is selected
   useEffect(() => {
     if (formData.jobCategory) {
       dispatch(getJmain(formData.jobCategory));
-      // Reset project number when job category changes
+      // Clear dates from Redux when job category changes
+      dispatch(clearFeedbackDates());
+      // Reset project number and dates when job category changes
       setFormData((prev) => ({
         ...prev,
         projectNumber: "",
+        startingDate: "",
+        endingDate: "",
       }));
     }
   }, [formData.jobCategory, dispatch]);
