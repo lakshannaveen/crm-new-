@@ -11,6 +11,9 @@ import {
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
+  SUBMIT_MILESTONE_REQUEST,
+  SUBMIT_MILESTONE_SUCCESS,
+  SUBMIT_MILESTONE_FAILURE,
   CLEAR_FEEDBACK_ERROR,
 } from "../constants/feedbackActionTypes";
 
@@ -25,6 +28,8 @@ const initialState = {
   unitsDescriptionsLoading: false,
   loading: false,
   submitting: false,
+  milestoneSubmitting: false,
+  milestoneSubmitSuccess: false,
   error: null,
   submitSuccess: false,
 };
@@ -205,11 +210,36 @@ const feedbackReducer = (state = initialState, action) => {
         error: action.payload,
       };
 
+    case SUBMIT_MILESTONE_REQUEST:
+      return {
+        ...state,
+        milestoneSubmitting: true,
+        milestoneSubmitSuccess: false,
+        error: null,
+      };
+
+    case SUBMIT_MILESTONE_SUCCESS:
+      return {
+        ...state,
+        milestoneSubmitting: false,
+        milestoneSubmitSuccess: true,
+        error: null,
+      };
+
+    case SUBMIT_MILESTONE_FAILURE:
+      return {
+        ...state,
+        milestoneSubmitting: false,
+        milestoneSubmitSuccess: false,
+        error: action.payload,
+      };
+
     case CLEAR_FEEDBACK_ERROR:
       return {
         ...state,
         error: null,
         submitSuccess: false,
+        milestoneSubmitSuccess: false,
       };
 
     default:
