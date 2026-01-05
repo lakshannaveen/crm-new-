@@ -51,19 +51,11 @@ export const login = (phoneNumber) => async (dispatch) => {
     }
 
     if (response && response.StatusCode === 200) {
-      // Save backend token and user details temporarily for verification
-      if (response.Token) localStorage.setItem("backendToken", response.Token);
-      if (response.UserDetails) localStorage.setItem("backendUser", JSON.stringify(response.UserDetails));
       // Persist service number immediately so other services can call APIs
       const serviceNoFromResponse =
         (response.UserDetails && (response.UserDetails.ServiceNo || response.UserDetails.serviceNo || response.UserDetails.Service_No)) || null;
       if (serviceNoFromResponse) {
         localStorage.setItem("serviceNo", serviceNoFromResponse);
-      }
-      // Save backend OTP (if provided) for client-side verification when backend has no verify endpoint
-      if (response.OTP) {
-        const rawOtp = String(response.OTP).replace(/"/g, "").trim();
-        localStorage.setItem("backendOTP", rawOtp);
       }
 
       const requestedPhone = response._requestedPhone || phoneNumber;
@@ -71,7 +63,7 @@ export const login = (phoneNumber) => async (dispatch) => {
         type: LOGIN_SUCCESS,
         payload: {
           phoneNumber: requestedPhone,
-          token: response.Token,
+          token: null,
           userDetails: response.UserDetails,
           serviceNo: serviceNoFromResponse,
         },
@@ -117,44 +109,10 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
     }
     // Try backend verification first (POST P_PHONE_NO and P_OTP)
     try {
-      // First, if backendOTP was stored at login, verify locally against it
-      const storedBackendOtp = localStorage.getItem("backendOTP");
-      const storedBackendToken = localStorage.getItem("backendToken");
-      const storedBackendUser = localStorage.getItem("backendUser");
-
-      if (storedBackendOtp) {
-        if (storedBackendOtp === otp) {
-          // Success: use stored token/user
-          localStorage.removeItem("backendOTP");
-          const parsedUser = storedBackendUser ? JSON.parse(storedBackendUser) : null;
-          const userObj = normalizeUserDetails(parsedUser);
-
-          // Persist via authService helper (will also attempt to infer expiry)
-          authService.setSession(storedBackendToken, userObj, 24 * 60 * 60);
-
-          dispatch({
-            type: VERIFY_OTP_SUCCESS,
-            payload: {
-              token: storedBackendToken,
-              user: userObj,
-            },
-          });
-
-          toast.success("Login successful!");
-          return;
-        }
-
-        throw new Error("Invalid OTP");
-      }
-
-      // Otherwise, call backend verify endpoint (API-only)
+      // Call backend verify endpoint (EMPLogin) which returns Token/UserDetails
       const resp = await authService.verifyOTPBackend(phoneNumber, otp);
 
       if (resp && resp.StatusCode === 200 && resp.Token) {
-        // Clear any temporary storage
-        localStorage.removeItem("backendToken");
-        localStorage.removeItem("backendUser");
-
         const userObj = normalizeUserDetails(resp.UserDetails || null);
 
         // Persist via authService helper (attempt to infer expiry from JWT payload,
@@ -172,6 +130,12 @@ export const verifyOTP = (otp, phoneNumber) => async (dispatch) => {
         });
 
         toast.success("Login successful!");
+        // Navigate to feedback page after successful login
+        try {
+          window.location.href = '/feedback';
+        } catch (e) {
+          // ignore navigation errors
+        }
         return;
       }
 

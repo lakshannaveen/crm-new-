@@ -54,123 +54,150 @@ class AuthService {
 
   // Request OTP from remote backend
   async requestOTPBackend(phoneNumber) {
-    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/EMPLogin`;
 
-    // Try multiple possible payload field names in case backend expects different key
-    const phoneKeys = [
-      'P_PHONE_NO',
-      'PHONE',
-      'P_PHONE',
-      'P_MOBILE',
-      'MOBILE',
-      'MSISDN',
-      'P_MOB',
-    ];
-
+    // Use single expected payload key `P_PHONE_NO` when requesting OTP
     const headers = {
       'Content-Type': 'application/json',
     };
-    let lastError = null;
-    let lastResponse = null;
 
-    for (const key of phoneKeys) {
-      const body = {};
-      body[key] = phoneNumber;
+    const body = { P_PHONE_NO: phoneNumber };
 
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const text = await res.text();
+      let data = null;
       try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(body),
-        });
-
-        const text = await res.text();
-        let data = null;
-        try {
-          data = text ? JSON.parse(text) : null;
-        } catch (e) {
-          data = { raw: text };
-        }
-
-        console.debug('requestOTPBackend try', { url, key, body, status: res.status, data });
-
-        lastResponse = data;
-
-        // If backend returned a successful StatusCode, return parsed data
-        if (data && (data.StatusCode === 200 || res.ok)) {
-          data._requestedPhoneKey = key;
-          data._requestedPhone = phoneNumber;
-          return data;
-        }
-
-        // If not 200, continue trying other keys
-      } catch (err) {
-        console.warn('requestOTPBackend fetch failed for key', key, err && err.message);
-        lastError = err;
-        continue;
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        data = { raw: text };
       }
-    }
 
-    // If we reach here, none of the payload keys produced a success response
-    if (lastResponse) return lastResponse;
-    throw lastError || new Error('Failed to request OTP from backend');
+      console.debug('requestOTPBackend', { url, body, status: res.status, data });
+
+      if (data) {
+        data._requestedPhoneKey = 'P_PHONE_NO';
+        data._requestedPhone = phoneNumber;
+      }
+
+      if (data && (data.StatusCode === 200 || res.ok)) return data;
+
+      return data;
+    } catch (err) {
+      console.warn('requestOTPBackend fetch failed', err && err.message);
+      throw err;
+    }
   }
 
-  // Verify OTP with remote backend
+  // Verify OTP by calling EMPLogin (final login). Use only `P_PHONE_NO` and `P_OTP`.
   async verifyOTPBackend(phoneNumber, otp) {
-    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/EMPLogin`;
 
-    // Try multiple field name combinations for phone and otp
-    const phoneKeys = ['P_PHONE_NO', 'PHONE', 'P_PHONE', 'P_MOBILE', 'MOBILE', 'MSISDN', 'P_MOB'];
-    const otpKeys = ['P_OTP', 'OTP', 'CODE', 'P_CODE'];
+    const headers = { 'Content-Type': 'application/json' };
+
+    const body = {
+      P_PHONE_NO: phoneNumber,
+      P_OTP: otp,
+    };
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        data = { raw: text };
+      }
+
+      console.debug('verifyOTPBackend', { url, body, status: res.status, data });
+
+      // Persist session if Token present
+      if (data && (data.StatusCode === 200 || res.ok)) {
+        if (data.Token) {
+          const user = data.UserDetails || null;
+          try {
+            this.setSession(data.Token, user);
+          } catch (e) {
+            console.warn('setSession failed', e && e.message);
+          }
+        }
+        if (data) {
+          data._requestedPhoneKey = 'P_PHONE_NO';
+          data._requestedOtpKey = 'P_OTP';
+        }
+        return data;
+      }
+
+      return data;
+    } catch (err) {
+      console.warn('verifyOTPBackend fetch failed', err && err.message);
+      throw err;
+    }
+  }
+
+  // Login using remote EMPLogin endpoint. Use the single expected payload
+  // keys `P_PHONE_NO` and `P_OTP` exclusively (no fallback keys).
+  async login(username, password) {
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/EMPLogin`;
 
     const headers = {
       'Content-Type': 'application/json',
     };
 
-    let lastError = null;
-    let lastResponse = null;
+    const body = {
+      P_PHONE_NO: username,
+      P_OTP: password,
+    };
 
-    for (const pKey of phoneKeys) {
-      for (const oKey of otpKeys) {
-        const body = {};
-        body[pKey] = phoneNumber;
-        body[oKey] = otp;
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
 
-        try {
-          const res = await fetch(url, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify(body),
-          });
-
-          const text = await res.text();
-          let data = null;
-          try {
-            data = text ? JSON.parse(text) : null;
-          } catch (e) {
-            data = { raw: text };
-          }
-
-          console.debug('verifyOTPBackend try', { url, pKey, oKey, body, status: res.status, data });
-
-          lastResponse = data;
-
-          if (data && (data.StatusCode === 200 || res.ok)) {
-            data._requestedPhoneKey = pKey;
-            data._requestedOtpKey = oKey;
-            return data;
-          }
-        } catch (err) {
-          console.warn('verifyOTPBackend fetch failed for', pKey, oKey, err && err.message);
-          lastError = err;
-          continue;
-        }
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch (e) {
+        data = { raw: text };
       }
-    }
 
-    if (lastResponse) return lastResponse;
-    throw lastError || new Error('Verify request failed');
+      console.debug('login', { url, body, status: res.status, data });
+
+      // If backend indicates success, optionally save session
+      if (data && (data.StatusCode === 200 || res.ok)) {
+        // If backend returns Token and UserDetails, persist them
+        if (data.Token) {
+          // attempt to set session; UserDetails may vary in shape
+          const user = data.UserDetails || null;
+          try {
+            this.setSession(data.Token, user);
+          } catch (e) {
+            console.warn('setSession failed', e && e.message);
+          }
+        }
+        return data;
+      }
+
+      // Return parsed response even if not success for callers to handle
+      return data;
+    } catch (err) {
+      console.warn('login fetch failed', err && err.message);
+      throw err;
+    }
   }
 
   async verifyOTP(phoneNumber, otp) {

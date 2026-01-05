@@ -831,8 +831,9 @@ const FeedbackPage = () => {
   }, []);
 
   // Ensure ships are loaded when visiting feedback page directly
+  // Only load ships when we have the logged-in user's service number
   useEffect(() => {
-    if (dispatch) {
+    if (user?.serviceNo) {
       dispatch(getShips());
     }
   }, [dispatch, user?.serviceNo]);
