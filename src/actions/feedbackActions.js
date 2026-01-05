@@ -15,6 +15,7 @@ import {
   SUBMIT_MILESTONE_SUCCESS,
   SUBMIT_MILESTONE_FAILURE,
   CLEAR_FEEDBACK_ERROR,
+  CLEAR_FEEDBACK_DATES,
 } from "../constants/feedbackActionTypes";
 import * as feedbackService from "../services/feedbackService";
 
@@ -147,4 +148,9 @@ export const submitMilestone = (milestoneData) => async (dispatch) => {
 // Clear feedback error
 export const clearFeedbackError = () => ({
   type: CLEAR_FEEDBACK_ERROR,
+});
+
+// Clear feedback dates
+export const clearFeedbackDates = () => ({
+  type: CLEAR_FEEDBACK_DATES,
 });

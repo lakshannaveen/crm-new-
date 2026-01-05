@@ -15,6 +15,7 @@ import {
   SUBMIT_MILESTONE_SUCCESS,
   SUBMIT_MILESTONE_FAILURE,
   CLEAR_FEEDBACK_ERROR,
+  CLEAR_FEEDBACK_DATES,
 } from "../constants/feedbackActionTypes";
 
 const initialState = {
@@ -240,6 +241,15 @@ const feedbackReducer = (state = initialState, action) => {
         error: null,
         submitSuccess: false,
         milestoneSubmitSuccess: false,
+      };
+
+    case CLEAR_FEEDBACK_DATES:
+      return {
+        ...state,
+        dates: {
+          startingDate: "",
+          endingDate: "",
+        },
       };
 
     default:
