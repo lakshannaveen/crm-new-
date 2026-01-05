@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiStar, FiCalendar, FiEye, FiDownload, FiTrash2, FiFilter, FiSearch } from 'react-icons/fi';
 
-const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails }) => {
+const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = false }) => {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('date');
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
+  const [visibleCount, setVisibleCount] = useState(3);
 
   // Sort and filter feedbacks
   useEffect(() => {
@@ -95,6 +96,21 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails }) => {
     linkElement.click();
   };
 
+  if (isLoading) {
+    return (
+      <div className="card text-center py-12">
+        <div className="flex items-center justify-center mb-4">
+          <svg className="animate-spin h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Loading feedbacks...</h3>
+        <p className="text-gray-600 dark:text-gray-400">Fetching latest feedbacks — please wait.</p>
+      </div>
+    );
+  }
+
   if (feedbacks.length === 0) {
     return (
       <div className="card text-center py-12">
@@ -167,7 +183,7 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails }) => {
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {sortedFeedbacks.map((feedback, index) => (
+        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => (
           <div
             key={feedback.id || index}
             className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800"
@@ -306,6 +322,27 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails }) => {
           </div>
         ))}
       </div>
+
+      {/* Load more / Show less */}
+      {sortedFeedbacks.length > 3 && (
+        <div className="mt-6 text-center">
+          {visibleCount < sortedFeedbacks.length ? (
+            <button
+              onClick={() => setVisibleCount((v) => Math.min(v + 3, sortedFeedbacks.length))}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Load more
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisibleCount(3)}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Empty State */}
       {sortedFeedbacks.length === 0 && (

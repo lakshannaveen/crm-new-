@@ -72,3 +72,16 @@ export const addMilestone = async (milestoneData) => {
     throw error;
   }
 };
+
+// Get all feedback entries
+export const getAllFeedback = async (params = {}) => {
+  try {
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetAllFeedback",
+      { params }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

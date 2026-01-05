@@ -715,81 +715,7 @@ import FeedbackConfirmation from '../../components/feedback/FeedbackConfirmation
 import { FiArrowLeft, FiFileText, FiAlertCircle, FiList, FiMessageSquare, FiBarChart2, FiStar } from 'react-icons/fi';
 import { getShips } from '../../actions/shipActions';
 
-// Sample feedback data
-const SAMPLE_FEEDBACKS = [
-  {
-    id: 'fb-2024-001',
-    vesselName: 'M.V. SSL THAMIRABARANI',
-    vesselIMO: 'IMO: 9312468',
-    vesselSR: 'SR/4354',
-    ownerRep: 'MR. KABILAN SADASIVAM - FLEET MANAGEMENT INDIA PVT LTD (INDIA)',
-    shipManager: 'MR. SAMPATH WIJESINGHE',
-    feedbackRef: 'FB-2024-001ABC',
-    submittedBy: 'Captain EVERGREEN MARINE CORP. (TAIWAN) LTD',
-    submittedAt: '2024-01-15T10:30:00',
-    overallScore: 85,
-    valueForMoney: true,
-    recommend: true,
-    observations: 'Excellent service throughout the repair period. Team was very professional and completed work ahead of schedule. Special thanks to the engine department for their expertise.',
-    poorAverageDetails: '',
-    shipManagerComments: 'Customer was very satisfied with the turnaround time.',
-    ratings: {
-      responsiveness: 90,
-      publicRelations: 85,
-      deckPlanning: 80,
-      deckPipesQuality: 85,
-      deckPipesTimely: 90,
-      enginePlanning: 75,
-      enginePipesQuality: 80,
-      enginePipesTimely: 85,
-      steelPlanning: 70,
-      steelWorkQuality: 75,
-      steelWorkTimely: 80,
-      generalServices: 90,
-      materialsQuality: 85,
-      materialsDelivery: 80,
-      overallQuality: 85,
-      safetyEnvironment: 90,
-      competitorPerformance: 80
-    }
-  },
-  {
-    id: 'fb-2024-002',
-    vesselName: 'M.V. OCEAN SPIRIT',
-    vesselIMO: 'IMO: 9456789',
-    vesselSR: 'SR/5678',
-    ownerRep: 'MS. LISA WANG - PACIFIC SHIPPING CO.',
-    shipManager: 'MR. DAVID JOHNSON',
-    feedbackRef: 'FB-2024-002DEF',
-    submittedBy: 'Maria Rodriguez',
-    submittedAt: '2024-01-10T14:45:00',
-    overallScore: 65,
-    valueForMoney: true,
-    recommend: true,
-    observations: 'Good overall service but some delays in material delivery affected the schedule. Communication was good throughout.',
-    poorAverageDetails: 'Material delivery was delayed by 2 days which caused schedule adjustments. Painting quality could be improved.',
-    shipManagerComments: 'Working on improving material supply chain.',
-    ratings: {
-      responsiveness: 70,
-      publicRelations: 75,
-      deckPlanning: 65,
-      deckPipesQuality: 70,
-      deckPipesTimely: 60,
-      enginePlanning: 65,
-      enginePipesQuality: 70,
-      enginePipesTimely: 65,
-      steelPlanning: 60,
-      steelWorkQuality: 65,
-      steelWorkTimely: 60,
-      generalServices: 70,
-      materialsQuality: 65,
-      materialsDelivery: 50,
-      overallQuality: 65,
-      safetyEnvironment: 80,
-      competitorPerformance: 70
-    }
-  }
-];
+// Feedbacks are loaded from the API. No hardcoded sample data.
 
 const FeedbackPage = () => {
   const { shipId } = useParams();
@@ -802,32 +728,119 @@ const FeedbackPage = () => {
   const dispatch = useDispatch();
   const [recentFeedback, setRecentFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
+  const [isLoadingFeedbacks, setIsLoadingFeedbacks] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Load feedbacks from localStorage on component mount
+  // Load feedbacks from API on component mount (fallback to local sample data)
   useEffect(() => {
-    const savedFeedbacks = localStorage.getItem('cdplc_feedbacks');
-    if (savedFeedbacks) {
+    let mounted = true;
+    const fetchFeedbacks = async () => {
+      setIsLoadingFeedbacks(true);
+      setApiError(null);
       try {
-        const parsedFeedbacks = JSON.parse(savedFeedbacks);
-        // Combine sample feedbacks with saved ones (remove duplicates by id)
-        const allFeedbacks = [...SAMPLE_FEEDBACKS];
-        parsedFeedbacks.forEach(fb => {
-          if (!allFeedbacks.find(existing => existing.id === fb.id)) {
-            allFeedbacks.push(fb);
+        const svc = await import('../../services/feedbackService');
+        const serviceNo = localStorage.getItem('serviceNo') || undefined;
+        const params = serviceNo ? { P_SERVICE_NO: serviceNo } : {};
+        const res = await svc.getAllFeedback(params);
+        const rows = res?.ResultSet || res?.Result || [];
+
+        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
+          id: `${r.FEEDBACK_JMAIN || 'fb'}_${r.FEEDBACK_CODE || i}_${i}`,
+          vesselName: r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+          feedbackRef: r.FEEDBACK_CODE || '',
+          submittedBy: r.FEEDBACK_ANSWER || 'API',
+          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
+          overallScore: 0,
+          observations: r.FEEDBACK_REMARKS || '',
+          raw: r,
+        }));
+
+        // persist API cache for offline/fallback use
+        try {
+          localStorage.setItem('cdplc_feedbacks_api_cache', JSON.stringify(apiFeedbacks));
+        } catch (e) {
+          /* ignore storage errors */
+        }
+
+        if (mounted) {
+          const saved = localStorage.getItem('cdplc_feedbacks');
+          let savedFeedbacks = [];
+          if (saved) {
+            try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
           }
-        });
-        setFeedbacks(allFeedbacks);
+          setFeedbacks([...savedFeedbacks, ...apiFeedbacks]);
+        }
       } catch (error) {
-        console.error('Error loading feedbacks:', error);
-        setFeedbacks(SAMPLE_FEEDBACKS);
+        console.error('Failed to load feedbacks from API', error);
+        setApiError(error.message || 'Failed to fetch feedbacks');
+
+        // fallback to cached API response if available
+        const cached = localStorage.getItem('cdplc_feedbacks_api_cache');
+        if (cached) {
+          try {
+            const cachedApi = JSON.parse(cached);
+            const saved = localStorage.getItem('cdplc_feedbacks');
+            let savedFeedbacks = [];
+            if (saved) {
+              try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
+            }
+            if (mounted) setFeedbacks([...savedFeedbacks, ...cachedApi]);
+            return;
+          } catch (e) {
+            // ignore parse errors
+          }
+        }
+
+        // otherwise show only saved user feedbacks
+        const saved = localStorage.getItem('cdplc_feedbacks');
+        let savedFeedbacks = [];
+        if (saved) {
+          try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
+        }
+        if (mounted) setFeedbacks(savedFeedbacks);
+      } finally {
+        if (mounted) setIsLoadingFeedbacks(false);
       }
-    } else {
-      setFeedbacks(SAMPLE_FEEDBACKS);
-    }
+    };
+
+    fetchFeedbacks();
+    return () => { mounted = false; };
   }, []);
+
+  const retryFetchFeedbacks = () => {
+    (async () => {
+      setIsLoadingFeedbacks(true);
+      setApiError(null);
+      try {
+        const svc = await import('../../services/feedbackService');
+        const serviceNo = localStorage.getItem('serviceNo') || undefined;
+        const params = serviceNo ? { P_SERVICE_NO: serviceNo } : {};
+        const res = await svc.getAllFeedback(params);
+        const rows = res?.ResultSet || res?.Result || [];
+        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
+          id: `${r.FEEDBACK_JMAIN || 'fb'}_${r.FEEDBACK_CODE || i}_${i}`,
+          vesselName: r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+          feedbackRef: r.FEEDBACK_CODE || '',
+          submittedBy: r.FEEDBACK_ANSWER || 'API',
+          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
+          overallScore: 0,
+          observations: r.FEEDBACK_REMARKS || '',
+          raw: r,
+        }));
+        try { localStorage.setItem('cdplc_feedbacks_api_cache', JSON.stringify(apiFeedbacks)); } catch (e) {}
+        const saved = localStorage.getItem('cdplc_feedbacks');
+        let savedFeedbacks = [];
+        if (saved) { try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; } }
+        setFeedbacks([...savedFeedbacks, ...apiFeedbacks]);
+      } catch (error) {
+        console.error('Retry failed', error);
+        setApiError(error.message || 'Retry failed');
+      } finally { setIsLoadingFeedbacks(false); }
+    })();
+  };
 
   // Ensure ships are loaded so vessel selector and feedback form have data
   useEffect(() => {
@@ -837,10 +850,9 @@ const FeedbackPage = () => {
     }
   }, [dispatch, user, ships]);
 
-  // Save feedbacks to localStorage whenever they change
+  // Save only user-submitted feedbacks to localStorage whenever they change
   useEffect(() => {
-    // Filter out sample feedbacks (they have id starting with 'fb-2024-')
-    const userFeedbacks = feedbacks.filter(fb => !fb.id.startsWith('fb-2024-'));
+    const userFeedbacks = feedbacks.filter(fb => typeof fb.id === 'string' && fb.id.startsWith('feedback_'));
     localStorage.setItem('cdplc_feedbacks', JSON.stringify(userFeedbacks));
   }, [feedbacks]);
 
@@ -1012,6 +1024,23 @@ const FeedbackPage = () => {
               </div>
             </div>
 
+            {/* API Error Banner */}
+            {apiError && (
+              <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-sm text-red-700 dark:text-red-300 flex items-center justify-between">
+                <div>
+                  <strong>Feedback API:</strong> Failed to load latest feedbacks ({apiError}). Showing cached or saved entries.
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={retryFetchFeedbacks}
+                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="card">
@@ -1099,6 +1128,7 @@ const FeedbackPage = () => {
                   feedbacks={feedbacks}
                   onDelete={handleDeleteFeedback}
                   onViewDetails={handleViewDetails}
+                  isLoading={isLoadingFeedbacks}
                 />
                 
                 <div className="mt-6 flex justify-center">
@@ -1112,25 +1142,7 @@ const FeedbackPage = () => {
               </div>
             ) : !showConfirmation && (
               <>
-                {/* Info Banner */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-8">
-                  <div className="flex items-start">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg mr-4">
-                      <FiAlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        Important Information
-                      </h3>
-                      <ul className="text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>• All feedback is saved locally in your browser (localStorage)</li>
-                        <li>• You can view, delete, or download your feedback anytime</li>
-                        <li>• Sample feedbacks are pre-loaded for demonstration</li>
-                        <li>• Your data is private and only visible to you</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+                {/* Info banner removed per request */}
 
                 {/* Vessel Selection */}
                 {ships.length > 1 && (
@@ -1257,33 +1269,7 @@ const FeedbackPage = () => {
                   </div>
                 )}
 
-                {/* Local Storage Info */}
-                <div className="card">
-                  <div className="flex items-start">
-                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg mr-4">
-                      <FiFileText className="w-6 h-6 text-green-600 dark:text-green-300" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        About Local Storage
-                      </h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                        Your feedback is stored locally in your browser. This means:
-                      </p>
-                      <ul className="text-gray-600 dark:text-gray-400 text-sm space-y-1">
-                        <li>• Data persists even when you close the browser</li>
-                        <li>• Only you can see your feedback on this device</li>
-                        <li>• You can export your feedback as JSON files</li>
-                        <li>• Clear browser data to remove all saved feedback</li>
-                      </ul>
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Storage used: {JSON.stringify(feedbacks).length} bytes
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Local storage info removed per request */}
               </>
             )}
           </main>
