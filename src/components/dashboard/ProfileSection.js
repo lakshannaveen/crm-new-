@@ -3,6 +3,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { FiMapPin, FiPhone, FiMail, FiGlobe, FiCalendar, FiStar, FiUser } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
+import { generateAvatar } from '../../utils/helpers';
 
 const ProfileSection = () => {
   const { serviceUser } = useSelector(state => state.user);
@@ -29,13 +30,14 @@ const ProfileSection = () => {
       contactPerson: showValue(pod.contactperson),
     };
   }
+  const avatar = generateAvatar(userData.name !== 'N/A' ? userData.name : 'User');
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3 flex-shrink-0">
+          <div className={`h-10 w-10 rounded-full ${avatar.color} flex items-center justify-center mr-3 flex-shrink-0`}>
             <span className="text-white font-bold text-lg">
-              {userData.name !== 'N/A' ? userData.name.charAt(0) : 'N/A'}
+              {avatar.initials}
             </span>
           </div>
           <div>

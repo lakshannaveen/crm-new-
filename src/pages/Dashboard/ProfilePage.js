@@ -9,6 +9,7 @@ import {
   FiCamera, FiUpload, FiCheckCircle
 } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
+import { generateAvatar } from '../../utils/helpers';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
@@ -81,6 +82,8 @@ const ProfilePage = () => {
     setFormData(safeFormData);
   }, [profileData.personal]);
 
+  const avatar = generateAvatar(profileData.personal.name || 'User');
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -150,10 +153,9 @@ const ProfilePage = () => {
                   {/* Profile Photo */}
                   <div className="text-center mb-6">
                     <div className="relative inline-block">
-                      <div className="h-32 w-32 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 
-                                    flex items-center justify-center mx-auto mb-4">
+                      <div className={`h-32 w-32 rounded-full ${avatar.color} flex items-center justify-center mx-auto mb-4`}>
                         <span className="text-white text-4xl font-bold">
-                          {profileData.personal.name ? profileData.personal.name.charAt(0) : ''}
+                          {avatar.initials}
                         </span>
                       </div>
                       <button className="absolute bottom-4 right-4 h-10 w-10 bg-white dark:bg-gray-800 
