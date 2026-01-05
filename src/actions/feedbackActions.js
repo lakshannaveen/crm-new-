@@ -11,6 +11,9 @@ import {
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
+  SUBMIT_MILESTONE_REQUEST,
+  SUBMIT_MILESTONE_SUCCESS,
+  SUBMIT_MILESTONE_FAILURE,
   CLEAR_FEEDBACK_ERROR,
 } from "../constants/feedbackActionTypes";
 import * as feedbackService from "../services/feedbackService";
@@ -115,6 +118,31 @@ export const getUnitsDescriptions = () => async (dispatch) => {
 //     throw error;
 //   }
 // };
+
+// Submit milestone
+export const submitMilestone = (milestoneData) => async (dispatch) => {
+  try {
+    dispatch({ type: SUBMIT_MILESTONE_REQUEST });
+
+    const data = await feedbackService.addMilestone(milestoneData);
+
+    dispatch({
+      type: SUBMIT_MILESTONE_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: SUBMIT_MILESTONE_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to submit milestone",
+    });
+    throw error;
+  }
+};
 
 // Clear feedback error
 export const clearFeedbackError = () => ({

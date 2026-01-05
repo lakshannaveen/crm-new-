@@ -59,3 +59,16 @@ export const getUnitsDescriptions = async () => {
     throw error;
   }
 };
+
+// Add Milestone
+export const addMilestone = async (milestoneData) => {
+  try {
+    const response = await api.post(
+      "/CDLRequirmentManagement/Milestone/AddMilestone",
+      milestoneData
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 import {
   FiCheck,
   FiAlertCircle,
@@ -17,6 +18,7 @@ import {
   getFeedbackDates,
   getJmain,
   getUnitsDescriptions,
+  submitMilestone,
 } from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
@@ -29,6 +31,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    milestoneSubmitting = false,
+    milestoneSubmitSuccess = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
@@ -571,12 +575,67 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (currentStep < steps.length - 1) {
       // Check if on milestone step and milestones not submitted
       if (currentStep === 2 && !milestonesSubmitted) {
-        setValidationErrors({ milestones: "Please submit milestones before proceeding to the next step" });
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <FiAlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Submit Milestones?
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    You haven't submitted any milestones yet. Do you want to
+                    submit milestones?
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    // User chose to skip, clear any errors and proceed
+                    setValidationErrors({});
+                    setCurrentStep((prev) => {
+                      const next = Math.min(prev + 1, steps.length - 1);
+                      setTimeout(scrollToQuestionSection, 100);
+                      return next;
+                    });
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    // User wants to submit milestones, stay on current step
+                    setValidationErrors({
+                      milestones:
+                        "Please fill out the milestone form and click 'Submit Milestones' button",
+                    });
+                    setTimeout(scrollToQuestionSection, 100);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+                >
+                  Fill Milestones
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            duration: Infinity,
+            position: "top-center",
+            style: {
+              maxWidth: "500px",
+            },
+          }
+        );
         return;
       }
 
-      // Validate current step before proceeding
-      const errors = validateStep(currentStep);
+      // Validate current step before proceeding (skip milestone validation)
+      const errors = currentStep === 2 ? {} : validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
 
@@ -692,13 +751,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         .filter((row) => row.criteriaCode && row.unitCode)
         .map((row) => {
           const answer = (() => {
-            if (typeof row.yesNo === 'string') {
-              return row.yesNo.toUpperCase().startsWith('Y') ? 'Y' : 'N';
+            if (typeof row.yesNo === "string") {
+              return row.yesNo.toUpperCase().startsWith("Y") ? "Y" : "N";
             }
-            if (typeof row.yesNo === 'boolean') {
-              return row.yesNo ? 'Y' : 'N';
+            if (typeof row.yesNo === "boolean") {
+              return row.yesNo ? "Y" : "N";
             }
-            return 'N';
+            return "N";
           })();
 
           return {
@@ -1482,14 +1541,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           }
         };
 
-        const handleSubmitMilestones = () => {
+        const handleSubmitMilestones = async () => {
           // Validate milestones before submitting
           const errors = validateStep(2);
           if (Object.keys(errors).length > 0) {
             setValidationErrors(errors);
             // Scroll to first error
             setTimeout(() => {
-              const errorElement = document.querySelector('[class*="text-red-600"]');
+              const errorElement = document.querySelector(
+                '[class*="text-red-600"]'
+              );
               if (errorElement) {
                 errorElement.scrollIntoView({
                   behavior: "smooth",
@@ -1499,9 +1560,37 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             }, 100);
             return;
           }
-          // Mark milestones as submitted
-          setMilestonesSubmitted(true);
-          setValidationErrors({});
+
+          // Prepare the milestone payload
+          const milestonePayload = {
+            p_job_category: formData.jobCategory,
+            p_jmain: formData.projectNumber,
+            MilestoneList: formData.milestones
+              .filter(
+                (milestone) =>
+                  milestone.milestone && milestone.milestone.trim() !== ""
+              )
+              .map((milestone) => ({
+                p_milestone_code: milestone.code,
+                p_milestone_date: milestone.date,
+                p_remarks: milestone.remarks || "",
+                p_milestone_location: milestone.location || "",
+              })),
+          };
+
+          try {
+            await dispatch(submitMilestone(milestonePayload));
+            // Mark milestones as submitted on success
+            setMilestonesSubmitted(true);
+            setValidationErrors({});
+          } catch (error) {
+            console.error("Failed to submit milestones:", error);
+            setValidationErrors({
+              milestones:
+                error.message ||
+                "Failed to submit milestones. Please try again.",
+            });
+          }
         };
 
         return (
@@ -1705,17 +1794,51 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg flex items-center gap-3">
                   <FiCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-                    Milestones submitted successfully! You can now proceed to the next step.
+                    Milestones submitted successfully! You can now proceed to
+                    the next step.
                   </span>
                 </div>
               ) : (
                 <button
                   type="button"
                   onClick={handleSubmitMilestones}
-                  className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                  disabled={milestoneSubmitting}
+                  className={`w-full py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                    milestoneSubmitting
+                      ? "bg-blue-400 cursor-not-allowed text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
                 >
-                  <FiCheck className="w-5 h-5" />
-                  Submit Milestones
+                  {milestoneSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="w-5 h-5" />
+                      Submit Milestones
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -1823,24 +1946,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             }
                           >
                             <option value="">UNIT_CODE</option>
-                            {getUnitCodesForCriteria(
-                              row.criteriaCode,
-                              index
-                            ).map((item) => (
-                              <option
-                                key={item.code}
-                                value={item.code}
-                                disabled={item.disabled}
-                                className={
-                                  item.disabled
-                                    ? "text-gray-400 dark:text-gray-600"
-                                    : ""
-                                }
-                              >
-                                {item.code}{" "}
-                                {item.disabled ? "(Already selected)" : ""}
-                              </option>
-                            ))}
+                            {getUnitCodesForCriteria(row.criteriaCode, index)
+                              .filter((item) => !item.disabled)
+                              .map((item) => (
+                                <option key={item.code} value={item.code}>
+                                  {item.code}
+                                </option>
+                              ))}
                           </select>
                           {validationErrors[`unitCode_${index}`] && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
@@ -2052,23 +2164,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   {getUnitCodesForCriteria(
                                     row.criteriaCode,
                                     index
-                                  ).map((item) => (
-                                    <option
-                                      key={item.code}
-                                      value={item.code}
-                                      disabled={item.disabled}
-                                      className={
-                                        item.disabled
-                                          ? "text-gray-400 dark:text-gray-600"
-                                          : ""
-                                      }
-                                    >
-                                      {item.code}{" "}
-                                      {item.disabled
-                                        ? "(Already selected)"
-                                        : ""}
-                                    </option>
-                                  ))}
+                                  )
+                                    .filter((item) => !item.disabled)
+                                    .map((item) => (
+                                      <option key={item.code} value={item.code}>
+                                        {item.code}
+                                      </option>
+                                    ))}
                                 </select>
                               </td>
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
@@ -3087,9 +3189,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </button>
             <button
               onClick={nextStep}
-              disabled={currentStep === 2 && !milestonesSubmitted}
+              disabled={currentStep === steps.length - 1}
               className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                currentStep === 2 && !milestonesSubmitted
+                currentStep === steps.length - 1
                   ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
                   : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
