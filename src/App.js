@@ -242,63 +242,14 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { loadUser } from './actions/authActions';
-import { SidebarProvider } from './context/SidebarContext';
 import LoginPage from './pages/Auth/LoginPage';
-import RegisterPage from './pages/Auth/RegisterPage';
-import TermsPage from './pages/Legal/TermsPage';
-import PrivacyPage from './pages/Legal/PrivacyPage';
-import ContactPage from './pages/Contact/ContactPage';
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import OwnerDashboard from './pages/Dashboard/OwnerDashboard';
-import ShipDetailsPage from './pages/Dashboard/ShipDetailsPage';
-import TenderManagement from './pages/Dashboard/TenderManagement';
-import ProjectManagement from './pages/Dashboard/ProjectManagement';
-import ProfilePage from './pages/Dashboard/ProfilePage';
-import VesselManagement from './pages/Vessel/VesselManagement';
-import CompanyManagement from './pages/Company/CompanyManagement';
-import SettingsPage from './pages/Settings/SettingsPage';
 import FeedbackPage from './pages/Feedback/FeedbackPage';
-import Header from './components/common/Header';
-import Sidebar from './components/common/Sidebar';
 import LoadingScreen from './components/common/LoadingScreen';
-
-
-const AuthenticatedLayout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      <Sidebar />
-      <div className="pt-16">
-        <div className="md:ml-6">
-          <main className="p-2 sm:p-2 lg:p-2">
-            {children}
-          </main>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Layout for admin pages
-const AdminLayout = ({ children }) => {
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      <Sidebar />
-      <div className="pt-6">
-        <div className="md:ml-6">
-          <main className="p-4 sm:p-2 lg:p-2">
-            {children}
-          </main>
-        </div>
-      </div>
-    </div>
-  );
-};
+import { SidebarProvider } from './context/SidebarContext';
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, loading } = useSelector(state => state.auth);
+  const { isAuthenticated, loading } = useSelector(state => state.auth);
   const theme = useSelector(state => state.theme);
 
   useEffect(() => {
@@ -320,105 +271,11 @@ function App() {
   return (
     <SidebarProvider>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        
-        {/* Protected Routes with Layout */}
-        <Route path="/dashboard" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <OwnerDashboard />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/ships/:id" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <ShipDetailsPage />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/projects/:id" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <ProjectManagement />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/tenders" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <TenderManagement />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/profile" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <ProfilePage />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/vessels" element={
-          isAuthenticated && user?.role === 'admin' ? (
-            <AuthenticatedLayout>
-              <VesselManagement />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/dashboard" />
-        } />
-        
-        <Route path="/companies" element={
-          isAuthenticated && user?.role === 'admin' ? (
-            <AuthenticatedLayout>
-              <CompanyManagement />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/dashboard" />
-        } />
-        
-        <Route path="/settings" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <SettingsPage />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/feedback" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <FeedbackPage />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        <Route path="/feedback/:shipId" element={
-          isAuthenticated ? (
-            <AuthenticatedLayout>
-              <FeedbackPage />
-            </AuthenticatedLayout>
-          ) : <Navigate to="/login" />
-        } />
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={
-          isAuthenticated && user?.role === 'admin' ? (
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
-          ) : <Navigate to="/dashboard" />
-        } />
-        
-        {/* Default Route */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+      {/* Keep the app minimal: only login and feedback routes */}
+      <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/feedback" />} />
+      <Route path="/feedback" element={<FeedbackPage />} />
+      <Route path="/feedback/:shipId" element={<FeedbackPage />} />
+      <Route path="/" element={<Navigate to="/feedback" />} />
       </Routes>
     </SidebarProvider>
   );

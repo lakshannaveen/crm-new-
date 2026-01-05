@@ -704,11 +704,13 @@
 // export default FeedbackPage;
 
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '../../components/common/Header';
+import { getShips } from '../../actions/shipActions';
 import Sidebar from '../../components/common/Sidebar';
 import FeedbackForm from '../../components/feedback/FeedbackForm';
+import LoginForm from '../../components/auth/LoginForm';
 import FeedbackHistory from '../../components/feedback/FeedbackHistory';
 import FeedbackDetailModal from '../../components/feedback/FeedbackDetailModal';
 import FeedbackConfirmation from '../../components/feedback/FeedbackConfirmation';
@@ -793,6 +795,7 @@ const SAMPLE_FEEDBACKS = [
 const FeedbackPage = () => {
   const { shipId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
   const { ships } = useSelector(state => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -827,6 +830,13 @@ const FeedbackPage = () => {
     }
   }, []);
 
+  // Ensure ships are loaded when visiting feedback page directly
+  useEffect(() => {
+    if (dispatch) {
+      dispatch(getShips());
+    }
+  }, [dispatch, user?.serviceNo]);
+
   // Save feedbacks to localStorage whenever they change
   useEffect(() => {
     // Filter out sample feedbacks (they have id starting with 'fb-2024-')
@@ -844,8 +854,11 @@ const FeedbackPage = () => {
   }, [shipId, ships]);
 
   if (!user) {
-    navigate('/login');
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <LoginForm />
+      </div>
+    );
   }
 
   const handleFeedbackSubmit = (feedbackData) => {
