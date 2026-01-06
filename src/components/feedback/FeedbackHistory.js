@@ -243,20 +243,7 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
               {/* Left Section */}
               <div className="mb-4 md:mb-0 md:flex-1">
                 <div className="flex items-start">
-                  {/* Score Circle */}
-                  <div className={`h-12 w-12 rounded-lg flex items-center justify-center mr-4 ${
-                    feedback.overallScore >= 75 ? 'bg-green-100 dark:bg-green-900' :
-                    feedback.overallScore >= 50 ? 'bg-yellow-100 dark:bg-yellow-900' :
-                    'bg-red-100 dark:bg-red-900'
-                  }`}>
-                    <span className={`text-lg font-bold ${
-                      feedback.overallScore >= 75 ? 'text-green-600 dark:text-green-300' :
-                      feedback.overallScore >= 50 ? 'text-yellow-600 dark:text-yellow-300' :
-                      'text-red-600 dark:text-red-300'
-                    }`}>
-                      {feedback.overallScore}
-                    </span>
-                  </div>
+                  {/* Score removed per request */}
                   
                   {/* Details */}
                   <div className="flex-1">
