@@ -1492,10 +1492,7 @@ const FeedbackPage = () => {
                                   {feedback.vesselName}
                                 </h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {new Date(
-                                    feedback.submittedAt
-                                  ).toLocaleDateString()}{" "}
-                                  • Score: {feedback.overallScore}/100
+                                  {new Date(feedback.submittedAt).toLocaleDateString()}
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2">
