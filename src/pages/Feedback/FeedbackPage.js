@@ -734,6 +734,9 @@ const FeedbackPage = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [baseShipVisibleCount, setBaseShipVisibleCount] = useState(3);
+  const [shipVisibleCount, setShipVisibleCount] = useState(3);
+  const [showAllShips, setShowAllShips] = useState(false);
   const dispatch = useDispatch();
   const [recentFeedback, setRecentFeedback] = useState(null);
   const [feedbacks, setFeedbacks] = useState([]);
@@ -763,6 +766,28 @@ const FeedbackPage = () => {
       if (shipJmain) setSelectedProjectNumber(shipJmain);
     }
   }, [selectedVessel]);
+
+  // Compute how many ships to show (3 rows) based on current breakpoint
+  useEffect(() => {
+    const getCols = () => {
+      if (typeof window === 'undefined') return 3;
+      const w = window.innerWidth;
+      if (w >= 1024) return 3; // lg
+      if (w >= 768) return 2; // md
+      return 1; // sm
+    };
+
+    const updateCounts = () => {
+      const cols = getCols();
+      const base = cols * 3; // 3 rows
+      setBaseShipVisibleCount(base);
+      if (!showAllShips) setShipVisibleCount(base);
+    };
+
+    updateCounts();
+    window.addEventListener('resize', updateCounts);
+    return () => window.removeEventListener('resize', updateCounts);
+  }, [showAllShips]);
 
   // Load feedbacks from API on component mount (fallback to local sample data)
   useEffect(() => {
@@ -1390,7 +1415,7 @@ const FeedbackPage = () => {
                           Select Vessel for Feedback
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {ships.map((ship) => (
+                          {ships.slice(0, shipVisibleCount).map((ship) => (
                             <button
                               key={ship.id}
                               onClick={() => setSelectedVessel(ship)}
@@ -1416,6 +1441,31 @@ const FeedbackPage = () => {
                             </button>
                           ))}
                         </div>
+                        {ships.length > baseShipVisibleCount && (
+                          <div className="mt-4 flex justify-center">
+                            {!showAllShips ? (
+                              <button
+                                onClick={() => {
+                                  setShowAllShips(true);
+                                  setShipVisibleCount(ships.length);
+                                }}
+                                className="text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Load more
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setShowAllShips(false);
+                                  setShipVisibleCount(baseShipVisibleCount);
+                                }}
+                                className="text-gray-600 hover:text-gray-800 font-medium"
+                              >
+                                Show less
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )
                   )}
