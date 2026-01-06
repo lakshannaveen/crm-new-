@@ -2,6 +2,9 @@ import {
   GET_FEEDBACK_DATES_REQUEST,
   GET_FEEDBACK_DATES_SUCCESS,
   GET_FEEDBACK_DATES_FAILURE,
+  GET_DURATION_REQUEST,
+  GET_DURATION_SUCCESS,
+  GET_DURATION_FAILURE,
   GET_JMAIN_REQUEST,
   GET_JMAIN_SUCCESS,
   GET_JMAIN_FAILURE,
@@ -29,6 +32,11 @@ const initialState = {
     startingDate: "",
     endingDate: "",
   },
+  duration: {
+    afloatDays: 0,
+    indockDays: 0,
+  },
+  durationLoading: false,
   jmainList: [],
   jmainLoading: false,
   unitsDescriptions: [],
@@ -107,6 +115,80 @@ const feedbackReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        error: action.payload,
+      };
+
+    case GET_DURATION_REQUEST:
+      return {
+        ...state,
+        durationLoading: true,
+        error: null,
+      };
+
+    case GET_DURATION_SUCCESS:
+      // Handle different possible response structures
+      let durationData = {};
+
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          durationData = action.payload.ResultSet[0] || {};
+        } else if (Array.isArray(action.payload)) {
+          durationData = action.payload[0] || {};
+        } else if (typeof action.payload === "object") {
+          durationData = action.payload;
+        }
+      }
+
+      console.log("Duration API Response:", action.payload);
+      console.log("Extracted durationData:", durationData);
+
+      const afloatDays =
+        durationData.FEEDBACK_AFLOT_DURATION ||
+        durationData.FEEDBACK_AFLOAT_DURATION ||
+        durationData.AFLOAT_DAYS ||
+        durationData.P_AFLOAT_DAYS ||
+        durationData.afloatDays ||
+        durationData.afloat_days ||
+        durationData.AFLOAT_DURATION ||
+        durationData.P_AFLOAT_DURATION ||
+        durationData.afloatDuration ||
+        0;
+
+      const indockDays =
+        durationData.FEEDBACK_INDOCK_DURATION ||
+        durationData.INDOCK_DAYS ||
+        durationData.P_INDOCK_DAYS ||
+        durationData.indockDays ||
+        durationData.indock_days ||
+        durationData.INDOCK_DURATION ||
+        durationData.P_INDOCK_DURATION ||
+        durationData.indockDuration ||
+        0;
+
+      console.log(
+        "Parsed durations - Afloat:",
+        afloatDays,
+        "Indock:",
+        indockDays
+      );
+
+      return {
+        ...state,
+        durationLoading: false,
+        duration: {
+          afloatDays: parseInt(afloatDays) || 0,
+          indockDays: parseInt(indockDays) || 0,
+        },
+        error: null,
+      };
+
+    case GET_DURATION_FAILURE:
+      return {
+        ...state,
+        durationLoading: false,
         error: action.payload,
       };
 

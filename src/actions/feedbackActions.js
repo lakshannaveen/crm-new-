@@ -2,6 +2,9 @@ import {
   GET_FEEDBACK_DATES_REQUEST,
   GET_FEEDBACK_DATES_SUCCESS,
   GET_FEEDBACK_DATES_FAILURE,
+  GET_DURATION_REQUEST,
+  GET_DURATION_SUCCESS,
+  GET_DURATION_FAILURE,
   GET_JMAIN_REQUEST,
   GET_JMAIN_SUCCESS,
   GET_JMAIN_FAILURE,
@@ -53,6 +56,35 @@ export const getFeedbackDates =
       throw error;
     }
   };
+
+// Get Duration (Afloat and Indock days)
+export const getDuration = (jobCategory, jmain) => async (dispatch) => {
+  try {
+    console.log("getDuration action called with:", { jobCategory, jmain });
+    dispatch({ type: GET_DURATION_REQUEST });
+
+    const data = await feedbackService.getDuration(jobCategory, jmain);
+
+    console.log("getDuration response received:", data);
+
+    dispatch({
+      type: GET_DURATION_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    console.error("getDuration error:", error);
+    dispatch({
+      type: GET_DURATION_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch duration data",
+    });
+    throw error;
+  }
+};
 
 // Get JMain (project numbers) by job category
 export const getJmain = (jobCategory) => async (dispatch) => {
