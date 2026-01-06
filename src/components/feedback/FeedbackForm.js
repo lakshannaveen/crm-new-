@@ -830,14 +830,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       FeedbackList: evaluationRows
         .filter((row) => row.criteriaCode && row.unitCode)
         .map((row) => {
+          // Use only evaluation letters P, A, G, E, N. If evaluation missing or invalid, send 'N'.
           const answer = (() => {
-            if (typeof row.yesNo === "string") {
-              return row.yesNo.toUpperCase().startsWith("Y") ? "Y" : "N";
-            }
-            if (typeof row.yesNo === "boolean") {
-              return row.yesNo ? "Y" : "N";
-            }
-            return "N";
+            const val = (row.evaluation || "").toString().toUpperCase();
+            return ["P", "A", "G", "E", "N"].includes(val) ? val : "N";
           })();
 
           return {
