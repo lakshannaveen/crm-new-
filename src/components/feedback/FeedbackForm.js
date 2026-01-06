@@ -2744,7 +2744,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     placeholder="Days afloat (e.g. 5)"
                     value={
                       formData.afloatDuration === 0
-                        ? ""
+                        ? "0"
                         : formData.afloatDuration
                     }
                     onChange={(e) =>
@@ -2767,7 +2767,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     placeholder="Days in dock (e.g. 2)"
                     value={
                       formData.indockDuration === 0
-                        ? ""
+                        ? "0"
                         : formData.indockDuration
                     }
                     onChange={(e) =>
