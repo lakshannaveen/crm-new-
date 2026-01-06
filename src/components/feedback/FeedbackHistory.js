@@ -250,9 +250,12 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                     <div className="flex flex-col md:flex-row md:items-center justify-between">
                       <div className="w-full">
                         {vesselName && (
-                          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                            {vesselName}
-                          </h3>
+                          <>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Vessel</div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                              {vesselName}
+                            </h3>
+                          </>
                         )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -304,6 +307,7 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                     {/* Observations Preview */}
                     {observationsVal && (
                       <div className="mt-3">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Observations</div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                           {observationsVal}
                         </p>
