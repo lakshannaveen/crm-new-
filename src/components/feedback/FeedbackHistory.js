@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiStar, FiCalendar, FiEye, FiDownload, FiTrash2, FiFilter, FiSearch } from 'react-icons/fi';
+import { FiStar, FiCalendar, FiDownload, FiSearch } from 'react-icons/fi';
 
 const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = false }) => {
   const [filter, setFilter] = useState('all');
@@ -85,15 +85,54 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
     }
   };
 
+  const getFieldValue = (feedback, ...names) => {
+    for (const name of names) {
+      const val = feedback?.[name];
+      if (val !== undefined && val !== null && String(val).trim() !== "") return String(val);
+    }
+    return 'NA';
+  };
+
+  const formatYesNo = (feedback, ...names) => {
+    const raw = getFieldValue(feedback, ...names);
+    if (raw === 'NA') return 'NA';
+    const lowered = String(raw).toLowerCase();
+    if (['true', 'yes', 'y', '1'].includes(lowered)) return 'Yes';
+    if (['false', 'no', 'n', '0'].includes(lowered)) return 'No';
+    return raw;
+  };
+
   const handleDownload = (feedback) => {
-    const dataStr = JSON.stringify(feedback, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileName = `feedback_${feedback.feedbackRef}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileName);
-    linkElement.click();
+    // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
+    const rows = [
+      ['JMAIN', getFieldValue(feedback, 'FEEDBACK_JMAIN', 'P_JMAIN')],
+      ['Description', getFieldValue(feedback, 'FEEDBACK_DESC')],
+      ['Code', getFieldValue(feedback, 'FEEDBACK_CODE', 'P_CODE')],
+      ['Evaluation', getFieldValue(feedback, 'FEEDBACK_EVAL')],
+      ['Answer', getFieldValue(feedback, 'FEEDBACK_ANSWER', 'P_ANSWER_TYPE')],
+      ['Remarks', getFieldValue(feedback, 'FEEDBACK_REMARKS', 'P_REMARKS')],
+      ['Action Taken', getFieldValue(feedback, 'FEEDBACK_ACTION_TAKEN', 'P_ACTION_TAKEN')],
+      ['Completion Date', getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE')],
+    ];
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Feedback ${feedback.feedbackRef || ''}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:20px;color:#111}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin-top:10px}td,th{border:1px solid #ddd;padding:8px;text-align:left}th{background:#f4f4f4}</style></head><body>` +
+      `<h1>Feedback ${feedback.feedbackRef || ''}</h1>` +
+      `<table><tbody>` + rows.map(r => `<tr><th>${r[0]}</th><td>${r[1]}</td></tr>`).join('') + `</tbody></table>` +
+      `</body></html>`;
+
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    // Give the window a moment to render then call print
+    setTimeout(() => {
+      try {
+        w.print();
+      } catch (e) {
+        // ignore
+      }
+    }, 500);
   };
 
   if (isLoading) {
@@ -210,39 +249,40 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                   {/* Details */}
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-center justify-between">
-                      <div>
+                      <div className="w-full">
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                          {feedback.vesselName}
+                          {feedback.vesselName || 'NA'}
                         </h3>
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <span className="flex items-center">
-                            <FiStar className="mr-1" />
-                            {getScoreLabel(feedback.overallScore)}
-                          </span>
-                          <span>•</span>
-                          <span className="flex items-center">
-                            <FiCalendar className="mr-1" />
-                            {formatDate(feedback.submittedAt)}
-                          </span>
-                          <span>•</span>
-                          <span>Ref: {feedback.feedbackRef}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Quick Stats */}
-                      <div className="mt-2 md:mt-0">
-                        <div className="flex space-x-3">
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Value</div>
-                            <div className={`text-sm font-medium ${feedback.valueForMoney ? 'text-green-600' : 'text-red-600'}`}>
-                              {feedback.valueForMoney ? 'Yes' : 'No'}
-                            </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">JMAIN</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_JMAIN', 'P_JMAIN')}</div>
                           </div>
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Recommend</div>
-                            <div className={`text-sm font-medium ${feedback.recommend ? 'text-green-600' : 'text-red-600'}`}>
-                              {feedback.recommend ? 'Yes' : 'No'}
-                            </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Description</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_DESC')}</div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_CODE', 'P_CODE')}</div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_EVAL')}</div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_ANSWER', 'P_ANSWER_TYPE')}</div>
+                          </div>
+
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
+                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE') === 'NA' ? 'NA' : formatDate(getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE'))}</div>
                           </div>
                         </div>
                       </div>
@@ -263,30 +303,12 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
               {/* Right Section - Actions */}
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => onViewDetails && onViewDetails(feedback)}
-                  className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
-                  title="View Details"
-                >
-                  <FiEye className="w-5 h-5" />
-                </button>
-                
-                <button
                   onClick={() => handleDownload(feedback)}
                   className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                  title="Download JSON"
+                  title="Print / Save as PDF"
                 >
                   <FiDownload className="w-5 h-5" />
                 </button>
-                
-                {onDelete && (
-                  <button
-                    onClick={() => onDelete(feedback)}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                    title="Delete Feedback"
-                  >
-                    <FiTrash2 className="w-5 h-5" />
-                  </button>
-                )}
               </div>
             </div>
 
@@ -296,25 +318,27 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Submitted By</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {feedback.submittedBy || 'Anonymous'}
+                    {getFieldValue(feedback, 'submittedBy', 'submitted_by')}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Submitted Time</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {formatTime(feedback.submittedAt)}
+                    {formatTime(feedback.submittedAt) || 'NA'}
                   </p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Categories Rated</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {Object.values(feedback.ratings || {}).filter(r => r > 0).length}
-                  </p>
-                </div>
+                {Object.values(feedback.ratings || {}).filter(r => r > 0).length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Categories Rated</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {Object.values(feedback.ratings || {}).filter(r => r > 0).length}
+                    </p>
+                  </div>
+                )}
                 <div>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Vessel IMO</p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {feedback.vesselIMO || 'N/A'}
+                    {getFieldValue(feedback, 'vesselIMO', 'vessel_imo')}
                   </p>
                 </div>
               </div>
