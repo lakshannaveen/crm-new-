@@ -194,7 +194,7 @@
 //                         </span>
 //                       </div>
 //                       <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-//                         <div 
+//                         <div
 //                           className={`h-full ${project.spent / project.budget > 0.9 ? 'bg-red-500' : 'bg-green-500'}`}
 //                           style={{ width: `${(project.spent / project.budget) * 100}%` }}
 //                         />
@@ -647,74 +647,165 @@
 
 // export default ProjectManagement;
 
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useParams, Link } from 'react-router-dom';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams, Link } from "react-router-dom";
+import Header from "../../components/common/Header";
+import Sidebar from "../../components/common/Sidebar";
 import {
-  FiArrowLeft, FiCalendar, FiUsers, FiDollarSign, FiFileText,
-  FiCheckCircle, FiClock, FiAlertCircle, FiTrendingUp, FiBarChart2,
-  FiDownload, FiShare2, FiMessageSquare, FiSettings,
-  FiMenu, FiX, FiChevronRight, FiMoreVertical
-} from 'react-icons/fi';
-import { formatDate, formatCurrency } from '../../utils/formatters';
-import { getStatusColor, getStatusText } from '../../utils/helpers';
+  FiArrowLeft,
+  FiCalendar,
+  FiUsers,
+  FiDollarSign,
+  FiFileText,
+  FiCheckCircle,
+  FiClock,
+  FiAlertCircle,
+  FiTrendingUp,
+  FiBarChart2,
+  FiDownload,
+  FiShare2,
+  FiMessageSquare,
+  FiSettings,
+  FiMenu,
+  FiX,
+  FiChevronRight,
+  FiMoreVertical,
+  FiFlag,
+} from "react-icons/fi";
+import { formatDate, formatCurrency } from "../../utils/formatters";
+import { getStatusColor, getStatusText } from "../../utils/helpers";
 
 const ProjectManagement = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { currentProject, loading } = useSelector(state => state.projects);
+  const { currentProject, loading, milestones, milestonesLoading } =
+    useSelector((state) => state.projects);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [showMoreActions, setShowMoreActions] = useState(false);
 
   const project = currentProject || {
     id: id,
-    name: 'MV Ocean Queen - Major Repair',
-    description: 'Complete hull repair and engine overhaul with system upgrades',
-    status: 'on_track',
+    name: "MV Ocean Queen - Major Repair",
+    description:
+      "Complete hull repair and engine overhaul with system upgrades",
+    status: "on_track",
     progress: 75,
-    startDate: '2024-01-10',
-    deadline: '2024-03-15',
-    budget: '2500000',
-    spent: '1875000',
-    coordinator: 'Raj Patel',
-    teamLeader: 'Anil Kumar',
+    startDate: "2024-01-10",
+    deadline: "2024-03-15",
+    budget: "2500000",
+    spent: "1875000",
+    coordinator: "Raj Patel",
+    teamLeader: "Anil Kumar",
     teamSize: 45,
     tasks: {
       total: 20,
       completed: 15,
-      open: 5
+      open: 5,
     },
     documents: [
-      { name: 'Engineering Drawings', type: 'pdf', size: '2.4 MB' },
-      { name: 'Class Approval', type: 'pdf', size: '1.1 MB' },
-      { name: 'Safety Plan', type: 'doc', size: '3.2 MB' },
-    ]
+      { name: "Engineering Drawings", type: "pdf", size: "2.4 MB" },
+      { name: "Class Approval", type: "pdf", size: "1.1 MB" },
+      { name: "Safety Plan", type: "doc", size: "3.2 MB" },
+    ],
   };
 
   const statusColor = getStatusColor(project.status);
   const statusText = getStatusText(project.status);
 
-  const milestones = [
-    { title: 'Project Kickoff', date: '2024-01-10', status: 'completed', progress: 100 },
-    { title: 'Hull Assessment', date: '2024-01-25', status: 'completed', progress: 100 },
-    { title: 'Engine Dismantling', date: '2024-02-10', status: 'completed', progress: 100 },
-    { title: 'Hull Repair', date: '2024-02-25', status: 'in_progress', progress: 85 },
-    { title: 'Engine Reassembly', date: '2024-03-05', status: 'pending', progress: 30 },
-    { title: 'System Testing', date: '2024-03-10', status: 'pending', progress: 0 },
-    { title: 'Final Inspection', date: '2024-03-12', status: 'pending', progress: 0 },
-    { title: 'Project Completion', date: '2024-03-15', status: 'pending', progress: 0 },
-  ];
+  // Use milestones from Redux, fallback to mock data if empty
+  const displayMilestones =
+    milestones.length > 0
+      ? milestones
+      : [
+          {
+            title: "Project Kickoff",
+            date: "2024-01-10",
+            status: "completed",
+            progress: 100,
+          },
+          {
+            title: "Hull Assessment",
+            date: "2024-01-25",
+            status: "completed",
+            progress: 100,
+          },
+          {
+            title: "Engine Dismantling",
+            date: "2024-02-10",
+            status: "completed",
+            progress: 100,
+          },
+          {
+            title: "Hull Repair",
+            date: "2024-02-25",
+            status: "in_progress",
+            progress: 85,
+          },
+          {
+            title: "Engine Reassembly",
+            date: "2024-03-05",
+            status: "pending",
+            progress: 30,
+          },
+          {
+            title: "System Testing",
+            date: "2024-03-10",
+            status: "pending",
+            progress: 0,
+          },
+          {
+            title: "Final Inspection",
+            date: "2024-03-12",
+            status: "pending",
+            progress: 0,
+          },
+          {
+            title: "Project Completion",
+            date: "2024-03-15",
+            status: "pending",
+            progress: 0,
+          },
+        ];
 
   const teamMembers = [
-    { name: 'Raj Patel', role: 'Project Coordinator', department: 'Management', avatar: 'RP' },
-    { name: 'Anil Kumar', role: 'Team Leader', department: 'Engineering', avatar: 'AK' },
-    { name: 'Maria Silva', role: 'Safety Officer', department: 'Safety', avatar: 'MS' },
-    { name: 'David Chen', role: 'Quality Inspector', department: 'QC', avatar: 'DC' },
-    { name: 'Sarah Johnson', role: 'Electrical Engineer', department: 'Engineering', avatar: 'SJ' },
-    { name: 'Michael Brown', role: 'Mechanical Engineer', department: 'Engineering', avatar: 'MB' },
+    {
+      name: "Raj Patel",
+      role: "Project Coordinator",
+      department: "Management",
+      avatar: "RP",
+    },
+    {
+      name: "Anil Kumar",
+      role: "Team Leader",
+      department: "Engineering",
+      avatar: "AK",
+    },
+    {
+      name: "Maria Silva",
+      role: "Safety Officer",
+      department: "Safety",
+      avatar: "MS",
+    },
+    {
+      name: "David Chen",
+      role: "Quality Inspector",
+      department: "QC",
+      avatar: "DC",
+    },
+    {
+      name: "Sarah Johnson",
+      role: "Electrical Engineer",
+      department: "Engineering",
+      avatar: "SJ",
+    },
+    {
+      name: "Michael Brown",
+      role: "Mechanical Engineer",
+      department: "Engineering",
+      avatar: "MB",
+    },
   ];
 
   if (loading) {
@@ -726,7 +817,7 @@ const ProjectManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900"> 
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
         <div className="flex items-center justify-between p-4">
           <button
@@ -768,22 +859,30 @@ const ProjectManagement = () => {
           </div>
         </div>
         <div className="px-4 pb-4">
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}>
+          <span
+            className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+          >
             {statusText}
           </span>
         </div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
-      <div className={`fixed inset-0 z-40 transition-transform duration-300 ease-in-out ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div 
-          className="absolute inset-0 bg-black bg-opacity-50" 
+      <div
+        className={`fixed inset-0 z-40 transition-transform duration-300 ease-in-out ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div
+          className="absolute inset-0 bg-black bg-opacity-50"
           onClick={() => setMobileMenuOpen(false)}
         />
         <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
           <div className="p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Menu</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Menu
+              </h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -812,8 +911,8 @@ const ProjectManagement = () => {
             {/* Back Button & Breadcrumb */}
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center">
-                <Link 
-                  to="/dashboard" 
+                <Link
+                  to="/dashboard"
                   className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm sm:text-base"
                 >
                   <FiArrowLeft className="mr-2 flex-shrink-0" />
@@ -826,7 +925,9 @@ const ProjectManagement = () => {
                 </span>
               </div>
               <div className="hidden sm:flex items-center space-x-3">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
+                >
                   {statusText}
                 </span>
                 <button className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -848,21 +949,27 @@ const ProjectManagement = () => {
                   <div className="flex flex-wrap gap-3 sm:gap-4">
                     <div className="flex items-center text-sm">
                       <FiCalendar className="text-gray-400 mr-2 flex-shrink-0" />
-                      <span className="text-gray-600 dark:text-gray-400">Start: </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Start:{" "}
+                      </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.startDate, 'short')}
+                        {formatDate(project.startDate, "short")}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
                       <FiClock className="text-gray-400 mr-2 flex-shrink-0" />
-                      <span className="text-gray-600 dark:text-gray-400">Deadline: </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Deadline:{" "}
+                      </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.deadline, 'short')}
+                        {formatDate(project.deadline, "short")}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
                       <FiUsers className="text-gray-400 mr-2 flex-shrink-0" />
-                      <span className="text-gray-600 dark:text-gray-400">Team: </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Team:{" "}
+                      </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white">
                         {project.teamSize} members
                       </span>
@@ -879,13 +986,16 @@ const ProjectManagement = () => {
                         <span className="font-medium">{project.progress}%</span>
                       </div>
                       <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 transition-all duration-300" 
-                          style={{ width: `${project.progress}%` }} 
+                        <div
+                          className="h-full bg-blue-500 transition-all duration-300"
+                          style={{ width: `${project.progress}%` }}
                         />
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-500">
-                        <span>{project.tasks.completed} of {project.tasks.total} tasks</span>
+                        <span>
+                          {project.tasks.completed} of {project.tasks.total}{" "}
+                          tasks
+                        </span>
                         <span>{project.tasks.open} remaining</span>
                       </div>
                     </div>
@@ -894,18 +1004,27 @@ const ProjectManagement = () => {
                       <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
                         <span>Budget Utilization</span>
                         <span className="font-medium">
-                          {formatCurrency(project.spent)} / {formatCurrency(project.budget)}
+                          {formatCurrency(project.spent)} /{" "}
+                          {formatCurrency(project.budget)}
                         </span>
                       </div>
                       <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full transition-all duration-300 ${project.spent / project.budget > 0.9 ? 'bg-red-500' : 'bg-green-500'}`}
-                          style={{ width: `${(project.spent / project.budget) * 100}%` }}
+                        <div
+                          className={`h-full transition-all duration-300 ${
+                            project.spent / project.budget > 0.9
+                              ? "bg-red-500"
+                              : "bg-green-500"
+                          }`}
+                          style={{
+                            width: `${(project.spent / project.budget) * 100}%`,
+                          }}
                         />
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-500">
                         <span>Spent: {formatCurrency(project.spent)}</span>
-                        <span>Left: {formatCurrency(project.budget - project.spent)}</span>
+                        <span>
+                          Left: {formatCurrency(project.budget - project.spent)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -916,14 +1035,17 @@ const ProjectManagement = () => {
             {/* Tabs - Mobile Scrollable */}
             <div className="mb-6">
               <div className="flex space-x-0 sm:space-x-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
-                {['overview', 'milestones', /*'team', 'documents', 'communications', 'settings'*/].map((tab) => (
+                {[
+                  "overview",
+                  "milestones" /*'team', 'documents', 'communications', 'settings'*/,
+                ].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-3 sm:px-4 py-2 font-medium text-sm whitespace-nowrap border-b-2 -mb-px transition-colors flex-shrink-0 ${
                       activeTab === tab
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                        ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                        : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                     }`}
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -934,48 +1056,58 @@ const ProjectManagement = () => {
 
             {/* Tab Content */}
             <div className="card">
-              {activeTab === 'overview' && (
+              {activeTab === "overview" && (
                 <div className="space-y-6 sm:space-y-8">
                   {/* Key Metrics */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Key Metrics</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Key Metrics
+                    </h3>
                     <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                       {[
                         {
                           icon: FiCheckCircle,
-                          color: 'blue',
-                          label: 'Completed Tasks',
+                          color: "blue",
+                          label: "Completed Tasks",
                           value: project.tasks.completed,
-                          subtext: `Out of ${project.tasks.total} total tasks`
+                          subtext: `Out of ${project.tasks.total} total tasks`,
                         },
                         {
                           icon: FiTrendingUp,
-                          color: 'green',
-                          label: 'Progress Rate',
-                          value: `${Math.round(project.progress / ((new Date(project.deadline) - new Date(project.startDate)) / (1000 * 60 * 60 * 24)) * 100)}%`,
-                          subtext: 'Average daily progress'
+                          color: "green",
+                          label: "Progress Rate",
+                          value: `${Math.round(
+                            (project.progress /
+                              ((new Date(project.deadline) -
+                                new Date(project.startDate)) /
+                                (1000 * 60 * 60 * 24))) *
+                              100
+                          )}%`,
+                          subtext: "Average daily progress",
                         },
                         {
                           icon: FiUsers,
-                          color: 'purple',
-                          label: 'Team Utilization',
-                          value: '92%',
-                          subtext: `${project.teamSize} active team members`
+                          color: "purple",
+                          label: "Team Utilization",
+                          value: "92%",
+                          subtext: `${project.teamSize} active team members`,
                         },
                         {
                           icon: FiAlertCircle,
-                          color: 'yellow',
-                          label: 'Risk Level',
-                          value: 'Low',
-                          subtext: '2 minor risks identified'
-                        }
+                          color: "yellow",
+                          label: "Risk Level",
+                          value: "Low",
+                          subtext: "2 minor risks identified",
+                        },
                       ].map((metric, index) => (
-                        <div 
-                          key={index} 
+                        <div
+                          key={index}
                           className={`p-3 sm:p-4 bg-${metric.color}-50 dark:bg-${metric.color}-900/30 rounded-lg`}
                         >
                           <div className="flex items-center mb-2">
-                            <metric.icon className={`text-${metric.color}-500 mr-3 flex-shrink-0`} />
+                            <metric.icon
+                              className={`text-${metric.color}-500 mr-3 flex-shrink-0`}
+                            />
                             <div className="min-w-0">
                               <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                                 {metric.label}
@@ -995,36 +1127,57 @@ const ProjectManagement = () => {
 
                   {/* Project Leads */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Project Leadership</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Project Leadership
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {[
                         {
                           person: project.coordinator,
-                          role: 'Project Coordinator',
-                          initials: project.coordinator.split(' ').map(n => n[0]).join(''),
-                          color: 'blue',
+                          role: "Project Coordinator",
+                          initials: project.coordinator
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join(""),
+                          color: "blue",
                           details: [
-                            { icon: FiCalendar, text: 'Overall project supervision' },
-                            { icon: FiMessageSquare, text: 'Primary point of contact' },
-                            { icon: FiBarChart2, text: 'Progress reporting' }
-                          ]
+                            {
+                              icon: FiCalendar,
+                              text: "Overall project supervision",
+                            },
+                            {
+                              icon: FiMessageSquare,
+                              text: "Primary point of contact",
+                            },
+                            { icon: FiBarChart2, text: "Progress reporting" },
+                          ],
                         },
                         {
                           person: project.teamLeader,
-                          role: 'Team Leader',
-                          initials: project.teamLeader.split(' ').map(n => n[0]).join(''),
-                          color: 'green',
+                          role: "Team Leader",
+                          initials: project.teamLeader
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join(""),
+                          color: "green",
                           details: [
-                            { icon: FiSettings, text: 'Technical supervision' },
-                            { icon: FiUsers, text: 'Team management' },
-                            { icon: FiCheckCircle, text: 'Quality assurance' }
-                          ]
-                        }
+                            { icon: FiSettings, text: "Technical supervision" },
+                            { icon: FiUsers, text: "Team management" },
+                            { icon: FiCheckCircle, text: "Quality assurance" },
+                          ],
+                        },
                       ].map((lead, index) => (
-                        <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                        <div
+                          key={index}
+                          className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                        >
                           <div className="flex items-center mb-4">
-                            <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-${lead.color}-100 dark:bg-${lead.color}-900 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0`}>
-                              <span className={`text-${lead.color}-600 dark:text-${lead.color}-300 font-medium text-sm sm:text-base`}>
+                            <div
+                              className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-${lead.color}-100 dark:bg-${lead.color}-900 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0`}
+                            >
+                              <span
+                                className={`text-${lead.color}-600 dark:text-${lead.color}-300 font-medium text-sm sm:text-base`}
+                              >
                                 {lead.initials}
                               </span>
                             </div>
@@ -1032,12 +1185,17 @@ const ProjectManagement = () => {
                               <p className="font-medium text-gray-900 dark:text-white truncate">
                                 {lead.person}
                               </p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">{lead.role}</p>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {lead.role}
+                              </p>
                             </div>
                           </div>
                           <div className="space-y-2">
                             {lead.details.map((detail, idx) => (
-                              <div key={idx} className="flex items-center text-sm">
+                              <div
+                                key={idx}
+                                className="flex items-center text-sm"
+                              >
                                 <detail.icon className="text-gray-400 mr-2 flex-shrink-0" />
                                 <span className="text-gray-600 dark:text-gray-400 truncate">
                                   {detail.text}
@@ -1052,15 +1210,37 @@ const ProjectManagement = () => {
 
                   {/* Recent Updates */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Updates</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                      Recent Updates
+                    </h3>
                     <div className="space-y-3">
                       {[
-                        { update: 'Hull repair phase completed ahead of schedule', time: '2 hours ago', user: 'Anil Kumar' },
-                        { update: 'New safety equipment installed and tested', time: '1 day ago', user: 'Maria Silva' },
-                        { update: 'Engine parts received from supplier', time: '2 days ago', user: 'David Chen' },
-                        { update: 'Weekly progress meeting conducted', time: '3 days ago', user: 'Raj Patel' },
+                        {
+                          update:
+                            "Hull repair phase completed ahead of schedule",
+                          time: "2 hours ago",
+                          user: "Anil Kumar",
+                        },
+                        {
+                          update: "New safety equipment installed and tested",
+                          time: "1 day ago",
+                          user: "Maria Silva",
+                        },
+                        {
+                          update: "Engine parts received from supplier",
+                          time: "2 days ago",
+                          user: "David Chen",
+                        },
+                        {
+                          update: "Weekly progress meeting conducted",
+                          time: "3 days ago",
+                          user: "Raj Patel",
+                        },
                       ].map((update, index) => (
-                        <div key={index} className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+                        <div
+                          key={index}
+                          className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+                        >
                           <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
                             <FiMessageSquare className="text-blue-600 dark:text-blue-300" />
                           </div>
@@ -1071,7 +1251,9 @@ const ProjectManagement = () => {
                             <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 flex-wrap">
                               <span>{update.time}</span>
                               <span className="mx-2 hidden sm:inline">•</span>
-                              <span className="sm:ml-0 ml-2">By {update.user}</span>
+                              <span className="sm:ml-0 ml-2">
+                                By {update.user}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -1081,71 +1263,166 @@ const ProjectManagement = () => {
                 </div>
               )}
 
-  
-              {activeTab === 'milestones' && (
+              {activeTab === "milestones" && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">Project Milestones</h3>
-                  <div className="space-y-4">
-                    {milestones.map((milestone, index) => (
-                      <div key={index} className="flex items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                        <div className="mr-3 sm:mr-4 flex-shrink-0">
-                          <div className={`h-8 w-8 sm:h-10 sm:w-10 rounded-full flex items-center justify-center ${
-                            milestone.status === 'completed' ? 'bg-green-100 dark:bg-green-900' :
-                            milestone.status === 'in_progress' ? 'bg-blue-100 dark:bg-blue-900' :
-                            'bg-gray-100 dark:bg-gray-700'
-                          }`}>
-                            {milestone.status === 'completed' ? (
-                              <FiCheckCircle className={`text-green-600 dark:text-green-300 text-sm sm:text-base`} />
-                            ) : milestone.status === 'in_progress' ? (
-                              <FiClock className={`text-blue-600 dark:text-blue-300 text-sm sm:text-base`} />
-                            ) : (
-                              <FiCalendar className={`text-gray-600 dark:text-gray-300 text-sm sm:text-base`} />
-                            )}
-                          </div>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-2 gap-1">
-                            <p className="font-medium text-gray-900 dark:text-white truncate">
-                              {milestone.title}
-                            </p>
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
-                              {formatDate(milestone.date, 'short')}
-                            </span>
-                          </div>
-                          <div className="flex items-center">
-                            <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mr-3 sm:mr-4">
-                              <div className={`h-full ${
-                                milestone.status === 'completed' ? 'bg-green-500' :
-                                milestone.status === 'in_progress' ? 'bg-blue-500' :
-                                'bg-gray-400'
-                              }`} style={{ width: `${milestone.progress}%` }} />
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                    Project Milestones
+                  </h3>
+
+                  {milestonesLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-gray-600 dark:text-gray-400">
+                        Loading milestones...
+                      </span>
+                    </div>
+                  ) : displayMilestones.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FiCalendar className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                      <p className="text-gray-600 dark:text-gray-400">
+                        No milestones found for this project
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {displayMilestones.map((milestone, index) => (
+                        <div
+                          key={milestone.id || index}
+                          className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start p-4 bg-white dark:bg-gray-800">
+                            <div className="mr-3 sm:mr-4 flex-shrink-0">
+                              <div
+                                className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center ${
+                                  milestone.status === "completed"
+                                    ? "bg-green-100 dark:bg-green-900"
+                                    : milestone.status === "in_progress"
+                                    ? "bg-blue-100 dark:bg-blue-900"
+                                    : "bg-gray-100 dark:bg-gray-700"
+                                }`}
+                              >
+                                {milestone.status === "completed" ? (
+                                  <FiCheckCircle
+                                    className={`text-green-600 dark:text-green-300 text-lg sm:text-xl`}
+                                  />
+                                ) : milestone.status === "in_progress" ? (
+                                  <FiClock
+                                    className={`text-blue-600 dark:text-blue-300 text-lg sm:text-xl`}
+                                  />
+                                ) : (
+                                  <FiCalendar
+                                    className={`text-gray-600 dark:text-gray-300 text-lg sm:text-xl`}
+                                  />
+                                )}
+                              </div>
                             </div>
-                            <span className={`text-sm font-medium whitespace-nowrap ${
-                              milestone.status === 'completed' ? 'text-green-600 dark:text-green-400' :
-                              milestone.status === 'in_progress' ? 'text-blue-600 dark:text-blue-400' :
-                              'text-gray-600 dark:text-gray-400'
-                            }`}>
-                              {milestone.progress}%
-                            </span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+                                <h4 className="font-semibold text-lg text-gray-900 dark:text-white">
+                                  {milestone.title}
+                                </h4>
+                                <span
+                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                    milestone.status === "completed"
+                                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                      : milestone.status === "in_progress"
+                                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                                  }`}
+                                >
+                                  {milestone.status === "completed"
+                                    ? "Completed"
+                                    : milestone.status === "in_progress"
+                                    ? "In Progress"
+                                    : "Pending"}
+                                </span>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                <div className="flex items-start">
+                                  <FiCalendar className="text-blue-500 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                                      Date
+                                    </p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                      {formatDate(milestone.date, "short")}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {milestone.location && (
+                                  <div className="flex items-start">
+                                    <FiFlag className="text-purple-500 dark:text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
+                                    <div className="min-w-0">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
+                                        Location
+                                      </p>
+                                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        {milestone.location}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {milestone.remarks && (
+                                <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                  <div className="flex items-start">
+                                    <FiMessageSquare className="text-gray-500 dark:text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
+                                    <div className="min-w-0">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                        Remarks
+                                      </p>
+                                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        {milestone.remarks}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* <div className="flex items-center">
+                                <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mr-3">
+                                  <div className={`h-full transition-all duration-300 ${
+                                    milestone.status === 'completed' ? 'bg-green-500' :
+                                    milestone.status === 'in_progress' ? 'bg-blue-500' :
+                                    'bg-gray-400'
+                                  }`} style={{ width: `${milestone.progress}%` }} />
+                                </div>
+                                <span className={`text-sm font-semibold whitespace-nowrap ${
+                                  milestone.status === 'completed' ? 'text-green-600 dark:text-green-400' :
+                                  milestone.status === 'in_progress' ? 'text-blue-600 dark:text-blue-400' :
+                                  'text-gray-600 dark:text-gray-400'
+                                }`}>
+                                  {milestone.progress}%
+                                </span>
+                              </div> */}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {activeTab === 'team' && (
+              {activeTab === "team" && (
                 <div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Project Team</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Project Team
+                    </h3>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
                       {teamMembers.length} team members
                     </div>
                   </div>
                   <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     {teamMembers.map((member, index) => (
-                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div
+                        key={index}
+                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                      >
                         <div className="flex items-start mb-4">
                           <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
                             <span className="text-blue-600 dark:text-blue-300 font-medium text-sm sm:text-base">
@@ -1192,10 +1469,12 @@ const ProjectManagement = () => {
                 </div>
               )}
 
-              {activeTab === 'documents' && (
+              {activeTab === "documents" && (
                 <div>
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Project Documents</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Project Documents
+                    </h3>
                     <button className="btn-primary flex items-center justify-center text-sm py-2 px-4 w-full sm:w-auto">
                       <FiDownload className="mr-2" />
                       Download All
@@ -1203,7 +1482,10 @@ const ProjectManagement = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {project.documents.map((doc, index) => (
-                      <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div
+                        key={index}
+                        className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                      >
                         <div className="flex items-start justify-between mb-3">
                           <div className="min-w-0 mr-3">
                             <p className="font-medium text-gray-900 dark:text-white truncate">
@@ -1228,7 +1510,6 @@ const ProjectManagement = () => {
                   </div>
                 </div>
               )}
-
             </div>
           </main>
         </div>
