@@ -1166,54 +1166,6 @@ const FeedbackPage = () => {
                   </div>
                 </div>
               </div>
-
-              <div className="card">
-                <div className="flex items-center">
-                  <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                    <FiBarChart2 className="w-6 h-6 text-green-600 dark:text-green-300" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Avg. Rating
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.averageRating}/100
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="flex items-center">
-                  <div className="p-3 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <FiList className="w-6 h-6 text-purple-600 dark:text-purple-300" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Your Submissions
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.userResponses}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="flex items-center">
-                  <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                    <FiStar className="w-6 h-6 text-yellow-600 dark:text-yellow-300" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Your Avg. Score
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.userAverageRating}/100
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Confirmation Message */}
