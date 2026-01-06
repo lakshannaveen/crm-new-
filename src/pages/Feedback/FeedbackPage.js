@@ -1488,12 +1488,16 @@ const FeedbackPage = () => {
                           >
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex-1">
-                                <h4 className="font-medium text-gray-900 dark:text-white">
-                                  {feedback.vesselName}
-                                </h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {new Date(feedback.submittedAt).toLocaleDateString()}
-                                </p>
+                                <div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">Vessel</div>
+                                  <h4 className="font-medium text-gray-900 dark:text-white">
+                                    {feedback.vesselName}
+                                  </h4>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Date</div>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {new Date(feedback.submittedAt).toLocaleDateString()}
+                                  </p>
+                                </div>
                               </div>
                               <div className="flex items-center space-x-2">
                                 <button
@@ -1506,9 +1510,12 @@ const FeedbackPage = () => {
                               </div>
                             </div>
                             {feedback.observations && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                {feedback.observations}
-                              </p>
+                              <div className="mt-2">
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Observations</div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                  {feedback.observations}
+                                </p>
+                              </div>
                             )}
                           </div>
                         ))}
