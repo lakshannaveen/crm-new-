@@ -1496,21 +1496,6 @@ const FeedbackPage = () => {
                                 </p>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <div
-                                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                    feedback.overallScore >= 75
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                      : feedback.overallScore >= 50
-                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                  }`}
-                                >
-                                  {feedback.overallScore >= 75
-                                    ? "Excellent"
-                                    : feedback.overallScore >= 50
-                                    ? "Good"
-                                    : ""}
-                                </div>
                                 <button
                                   onClick={() => downloadFeedbackPDF(feedback)}
                                   className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
