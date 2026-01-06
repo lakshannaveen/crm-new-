@@ -8,12 +8,17 @@ import {
   UPDATE_PROJECT_PROGRESS_REQUEST,
   UPDATE_PROJECT_PROGRESS_SUCCESS,
   UPDATE_PROJECT_PROGRESS_FAILURE,
+  GET_MILESTONES_REQUEST,
+  GET_MILESTONES_SUCCESS,
+  GET_MILESTONES_FAILURE,
 } from "../constants/projectActionTypes";
 
 const initialState = {
   projects: [],
   currentProject: null,
+  milestones: [],
   loading: false,
+  milestonesLoading: false,
   error: null,
 };
 
@@ -25,6 +30,13 @@ const projectReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: true,
+        error: null,
+      };
+
+    case GET_MILESTONES_REQUEST:
+      return {
+        ...state,
+        milestonesLoading: true,
         error: null,
       };
 
@@ -52,12 +64,26 @@ const projectReducer = (state = initialState, action) => {
         currentProject: action.payload,
       };
 
+    case GET_MILESTONES_SUCCESS:
+      return {
+        ...state,
+        milestonesLoading: false,
+        milestones: action.payload,
+      };
+
     case GET_PROJECTS_FAILURE:
     case GET_PROJECT_DETAILS_FAILURE:
     case UPDATE_PROJECT_PROGRESS_FAILURE:
       return {
         ...state,
         loading: false,
+        error: action.payload,
+      };
+
+    case GET_MILESTONES_FAILURE:
+      return {
+        ...state,
+        milestonesLoading: false,
         error: action.payload,
       };
 

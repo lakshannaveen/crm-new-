@@ -5,6 +5,7 @@ import { FiCalendar, FiAnchor, FiFlag } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { setSelectedShipJmain } from "../../actions/shipActions";
+import { getMilestonesByShip } from "../../actions/projectActions";
 import ShipDetailsModal from "./ShipDetailsModal";
 
 const ShipCard = ({ ship }) => {
@@ -20,6 +21,22 @@ const ShipCard = ({ ship }) => {
       dispatch(setSelectedShipJmain(ship.jmainNo || ship.SHIP_JMAIN));
     }
     setShowDetails(true);
+  };
+
+  const handleProjectDetailsClick = () => {
+    // determine job category and jmain values from the ship object
+    const jobCategory =
+      ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
+    const jmain =
+      ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+
+    if (jmain) {
+      dispatch(setSelectedShipJmain(jmain));
+    }
+
+    if (jobCategory && jmain) {
+      dispatch(getMilestonesByShip(jobCategory, jmain));
+    }
   };
 
   const getProgressColor = (progress) => {
@@ -126,6 +143,7 @@ const ShipCard = ({ ship }) => {
             <div className="flex flex-wrap gap-2">
               <Link
                 to={`/projects/${ship.id}`}
+                onClick={handleProjectDetailsClick}
                 className="flex-1 min-w-[120px] btn-primary text-center py-2 text-sm"
               >
                 Project Details
