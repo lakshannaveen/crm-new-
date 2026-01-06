@@ -665,7 +665,6 @@ import {
   FiTrendingUp,
   FiBarChart2,
   FiDownload,
-  FiShare2,
   FiMessageSquare,
   FiSettings,
   FiMenu,
@@ -858,10 +857,7 @@ const ProjectManagement = () => {
             </button>
             {showMoreActions && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                <button className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
-                  <FiShare2 className="mr-3" />
-                  Share Project
-                </button>
+                {/* Share Project removed per request */}
                 <button className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
                   <FiDownload className="mr-3" />
                   Export Data
@@ -946,9 +942,7 @@ const ProjectManagement = () => {
                 >
                   {statusText}
                 </span>
-                <button className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <FiShare2 className="text-gray-400" />
-                </button>
+                {/* Share button removed per request */}
               </div>
             </div>
 
@@ -1073,143 +1067,185 @@ const ProjectManagement = () => {
             <div className="card">
               {activeTab === "milestones" && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                    Project Milestones
-                  </h3>
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                      Project Milestones
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Track the progress and completion of key project phases
+                    </p>
+                  </div>
 
                   {milestonesLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      <span className="ml-3 text-gray-600 dark:text-gray-400">
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <div className="animate-spin rounded-full h-12 w-12 border-3 border-blue-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400 mb-4"></div>
+                      <span className="text-gray-600 dark:text-gray-400 font-medium">
                         Loading milestones...
                       </span>
                     </div>
                   ) : displayMilestones.length === 0 ? (
-                    <div className="text-center py-12">
-                      <FiCalendar className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                      <p className="text-gray-600 dark:text-gray-400">
-                        No milestones found for this project
+                    <div className="flex flex-col items-center justify-center py-16 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <FiCalendar className="h-14 w-14 text-gray-300 dark:text-gray-600 mb-4" />
+                      <p className="text-gray-600 dark:text-gray-400 font-medium">
+                        No milestones yet
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        Milestones will appear here once added
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      {displayMilestones.map((milestone, index) => (
-                        <div
-                          key={milestone.id || index}
-                          className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex items-start p-4 bg-white dark:bg-gray-800">
-                            <div className="mr-3 sm:mr-4 flex-shrink-0">
-                              <div
-                                className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center ${
-                                  milestone.status === "completed"
-                                    ? "bg-green-100 dark:bg-green-900"
-                                    : milestone.status === "in_progress"
-                                    ? "bg-blue-100 dark:bg-blue-900"
-                                    : "bg-gray-100 dark:bg-gray-700"
-                                }`}
-                              >
-                                {milestone.status === "completed" ? (
-                                  <FiCheckCircle
-                                    className={`text-green-600 dark:text-green-300 text-lg sm:text-xl`}
-                                  />
-                                ) : milestone.status === "in_progress" ? (
-                                  <FiClock
-                                    className={`text-blue-600 dark:text-blue-300 text-lg sm:text-xl`}
-                                  />
-                                ) : (
-                                  <FiCalendar
-                                    className={`text-gray-600 dark:text-gray-300 text-lg sm:text-xl`}
-                                  />
-                                )}
-                              </div>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
-                                <h4 className="font-semibold text-lg text-gray-900 dark:text-white">
-                                  {milestone.title}
-                                </h4>
-                                <span
-                                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                                    milestone.status === "completed"
-                                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                      : milestone.status === "in_progress"
-                                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                                      : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                    <div className="space-y-3">
+                      {displayMilestones.map((milestone, index) => {
+                        const isCompleted = milestone.status === "completed";
+                        const isInProgress = milestone.status === "in_progress";
+                        const isPending = milestone.status === "pending";
+                        const isLast = index === displayMilestones.length - 1;
+
+                        return (
+                          <div
+                            key={milestone.id || index}
+                            className="group relative"
+                          >
+                            {/* Timeline connector */}
+                            {!isLast && (
+                              <div className="absolute left-6 top-20 bottom-0 w-0.5 bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-800" />
+                            )}
+
+                            {/* Milestone card */}
+                            <div className="relative flex gap-4 p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600">
+                              {/* Status indicator */}
+                              <div className="relative flex-shrink-0">
+                                <div
+                                  className={`h-12 w-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
+                                    isCompleted
+                                      ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                                      : isInProgress
+                                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                                   }`}
                                 >
-                                  {milestone.status === "completed"
-                                    ? "Completed"
-                                    : milestone.status === "in_progress"
-                                    ? "In Progress"
-                                    : "Pending"}
-                                </span>
+                                  {isCompleted ? (
+                                    <FiCheckCircle className="h-6 w-6" />
+                                  ) : isInProgress ? (
+                                    <FiClock className="h-6 w-6 animate-pulse" />
+                                  ) : (
+                                    <span className="text-sm">{index + 1}</span>
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                                <div className="flex items-start">
-                                  <FiCalendar className="text-blue-500 dark:text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
-                                  <div className="min-w-0">
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                                      Date
-                                    </p>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {formatDate(milestone.date, "short")}
-                                    </p>
-                                  </div>
+                              {/* Content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {milestone.title}
+                                  </h4>
+                                  {/* <div className="flex items-center gap-2">
+                                    <span
+                                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
+                                        isCompleted
+                                          ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+                                          : isInProgress
+                                          ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                                      }`}
+                                    >
+                                      <span
+                                        className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                                          isCompleted
+                                            ? "bg-green-600"
+                                            : isInProgress
+                                            ? "bg-blue-600 animate-pulse"
+                                            : "bg-gray-400"
+                                        }`}
+                                      />
+                                      {isCompleted
+                                        ? "Completed"
+                                        : isInProgress
+                                        ? "In Progress"
+                                        : "Pending"}
+                                    </span>
+                                  </div> */}
                                 </div>
 
-                                {milestone.location && (
-                                  <div className="flex items-start">
-                                    <FiFlag className="text-purple-500 dark:text-purple-400 mr-2 mt-0.5 flex-shrink-0" />
+                                {/* Info grid */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                  <div className="flex items-center gap-2.5">
+                                    <FiCalendar className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
                                     <div className="min-w-0">
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-0.5">
-                                        Location
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
+                                        Date
                                       </p>
-                                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                                        {milestone.location}
+                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                        {formatDate(milestone.date, "short")}
                                       </p>
+                                    </div>
+                                  </div>
+
+                                  {milestone.location && (
+                                    <div className="flex items-center gap-2.5">
+                                      <FiFlag className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                                      <div className="min-w-0">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
+                                          Location
+                                        </p>
+                                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                                          {milestone.location}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Progress bar */}
+                                {(isInProgress || milestone.progress > 0) && (
+                                  <div className="mb-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">
+                                        Progress
+                                      </span>
+                                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                                        {milestone.progress}%
+                                      </span>
+                                    </div>
+                                    <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                          isCompleted
+                                            ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                                            : isInProgress
+                                            ? "bg-gradient-to-r from-blue-500 to-cyan-500"
+                                            : "bg-gradient-to-r from-gray-400 to-gray-300"
+                                        }`}
+                                        style={{
+                                          width: `${milestone.progress}%`,
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Remarks section */}
+                                {milestone.remarks && (
+                                  <div className="mt-3 p-3.5 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+                                    <div className="flex items-start gap-2.5">
+                                      <FiMessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                      <div className="min-w-0">
+                                        <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 uppercase tracking-tight mb-1">
+                                          Notes
+                                        </p>
+                                        <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                                          {milestone.remarks}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
                                 )}
                               </div>
-
-                              {milestone.remarks && (
-                                <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                                  <div className="flex items-start">
-                                    <FiMessageSquare className="text-gray-500 dark:text-gray-400 mr-2 mt-0.5 flex-shrink-0" />
-                                    <div className="min-w-0">
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                        Remarks
-                                      </p>
-                                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                                        {milestone.remarks}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* <div className="flex items-center">
-                                <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mr-3">
-                                  <div className={`h-full transition-all duration-300 ${
-                                    milestone.status === 'completed' ? 'bg-green-500' :
-                                    milestone.status === 'in_progress' ? 'bg-blue-500' :
-                                    'bg-gray-400'
-                                  }`} style={{ width: `${milestone.progress}%` }} />
-                                </div>
-                                <span className={`text-sm font-semibold whitespace-nowrap ${
-                                  milestone.status === 'completed' ? 'text-green-600 dark:text-green-400' :
-                                  milestone.status === 'in_progress' ? 'text-blue-600 dark:text-blue-400' :
-                                  'text-gray-600 dark:text-gray-400'
-                                }`}>
-                                  {milestone.progress}%
-                                </span>
-                              </div> */}
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
