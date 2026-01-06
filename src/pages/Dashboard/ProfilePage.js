@@ -194,9 +194,9 @@ const ProfilePage = () => {
                   <nav className="space-y-1">
                     {[
                       { id: 'personal', label: 'Personal Information', icon: FiUser },
-                      { id: 'security', label: 'Security', icon: FiShield },
-                      { id: 'notifications', label: 'Notifications', icon: FiBell },
-                      { id: 'preferences', label: 'Preferences', icon: FiCheckCircle },
+                      // { id: 'security', label: 'Security', icon: FiShield },
+                      // { id: 'notifications', label: 'Notifications', icon: FiBell },
+                      // { id: 'preferences', label: 'Preferences', icon: FiCheckCircle },
                     ].map((item) => (
                       <button
                         key={item.id}
@@ -328,7 +328,7 @@ const ProfilePage = () => {
                     </div>
                   )}
 
-                  {activeTab === 'security' && (
+                  {/* {activeTab === 'security' && (
                     <div className="space-y-6">
                       <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
                         <h4 className="font-medium text-gray-900 dark:text-white mb-4">Password</h4>
@@ -541,7 +541,7 @@ const ProfilePage = () => {
                         </button>
                       </div>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
             </div>

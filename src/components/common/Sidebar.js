@@ -206,12 +206,12 @@ const Sidebar = () => {
       icon: <FiHome className="w-5 h-5" />,
       allowedRoles: ['owner', 'admin'],
     },
-    {
-      title: 'Tenders',
-      path: '/tenders',
-      icon: <FiCalendar className="w-5 h-5" />,
-      allowedRoles: ['owner', 'admin'],
-    },
+    // {
+    //   title: 'Tenders',
+    //   path: '/tenders',
+    //   icon: <FiCalendar className="w-5 h-5" />,
+    //   allowedRoles: ['owner', 'admin'],
+    // },
     {
       title: 'Vessels',
       path: '/vessels',

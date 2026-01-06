@@ -1883,7 +1883,7 @@ const ShipDetailsPage = () => {
                     "management",
                     "project",
                     "status",
-                    "documents",
+                    // "documents",
                   ].map((tab) => (
                     <button
                       key={tab}

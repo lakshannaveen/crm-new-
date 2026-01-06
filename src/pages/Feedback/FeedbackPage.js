@@ -58,7 +58,7 @@
 
 //         <div className="flex-1">
 //           <Header />
-          
+
 //           <main className="p-4 sm:p-6 lg:p-8">
 //             {/* Breadcrumb */}
 //             <div className="mb-6 flex items-center">
@@ -152,7 +152,7 @@
 //                       </span>
 //                     </div>
 //                   </div>
-                  
+
 //                   <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
 //                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
 //                       <strong>Note:</strong> This feedback will be associated with your recent repair project on this vessel.
@@ -179,14 +179,14 @@
 //                     <li>• 76-100: Excellent (Exceeded expectations)</li>
 //                   </ul>
 //                 </div>
-                
+
 //                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Confidentiality</h4>
 //                   <p className="text-sm text-gray-600 dark:text-gray-400">
 //                     All feedback is treated confidentially and used only for service improvement purposes.
 //                   </p>
 //                 </div>
-                
+
 //                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Contact Support</h4>
 //                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -258,7 +258,7 @@
 //           </div>
 //           <FiChevronDown className={`text-gray-400 transition-transform ${showVesselDropdown ? 'rotate-180' : ''}`} />
 //         </button>
-        
+
 //         {showVesselDropdown && (
 //           <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
 //             {ships.map(ship => (
@@ -335,7 +335,7 @@
 //               )}
 //             </div>
 //           </div>
-          
+
 //           <button
 //             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
 //             className="p-2"
@@ -368,7 +368,7 @@
 //         <div className="hidden md:block">
 //           <Header />
 //         </div>
-        
+
 //         <main className="p-4 md:p-6 lg:p-8">
 //           {/* Desktop Breadcrumb */}
 //           <div className="hidden md:flex items-center mb-6">
@@ -435,7 +435,7 @@
 //                   </span>
 //                 </div>
 //               </div>
-              
+
 //               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
 //                 <p className="text-sm text-gray-600 dark:text-gray-400">
 //                   <strong>Note:</strong> This feedback will be associated with your recent repair project on this vessel.
@@ -466,14 +466,14 @@
 //                   <li>• 76-100: Excellent (Exceeded expectations)</li>
 //                 </ul>
 //               </div>
-              
+
 //               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">Confidentiality</h4>
 //                 <p className="text-sm text-gray-600 dark:text-gray-400">
 //                   All feedback is treated confidentially and used only for service improvement.
 //                 </p>
 //               </div>
-              
+
 //               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                 <h4 className="font-medium text-gray-900 dark:text-white mb-2">Contact Support</h4>
 //                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -492,7 +492,6 @@
 // };
 
 // export default FeedbackPage;
-
 
 // import React, { useEffect, useState } from 'react';
 // import { useSelector } from 'react-redux';
@@ -554,7 +553,7 @@
 
 //         <div className="flex-1">
 //           <Header />
-          
+
 //           <main className="p-4 sm:p-6 lg:p-8">
 //             {/* Breadcrumb */}
 //             <div className="mb-6 flex items-center">
@@ -647,7 +646,7 @@
 //                     </span>
 //                   </div>
 //                 </div>
-                
+
 //                 <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
 //                   <p className="text-sm text-gray-600 dark:text-gray-400">
 //                     <strong>Note:</strong> This feedback will be associated with your recent repair project on this vessel.
@@ -678,14 +677,14 @@
 //                     <li>• 76-100: Excellent (Exceeded expectations)</li>
 //                   </ul>
 //                 </div>
-                
+
 //                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Confidentiality</h4>
 //                   <p className="text-sm text-gray-600 dark:text-gray-400">
 //                     All feedback is treated confidentially and used only for service improvement purposes.
 //                   </p>
 //                 </div>
-                
+
 //                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
 //                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Contact Support</h4>
 //                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -703,25 +702,34 @@
 
 // export default FeedbackPage;
 
-import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
-import FeedbackForm from '../../components/feedback/FeedbackForm';
-import FeedbackHistory from '../../components/feedback/FeedbackHistory';
-import FeedbackDetailModal from '../../components/feedback/FeedbackDetailModal';
-import FeedbackConfirmation from '../../components/feedback/FeedbackConfirmation';
-import { FiArrowLeft, FiFileText, FiAlertCircle, FiList, FiMessageSquare, FiBarChart2, FiStar } from 'react-icons/fi';
-import { getShips } from '../../actions/shipActions';
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import Header from "../../components/common/Header";
+import Sidebar from "../../components/common/Sidebar";
+import FeedbackForm from "../../components/feedback/FeedbackForm";
+import FeedbackHistory from "../../components/feedback/FeedbackHistory";
+import FeedbackDetailModal from "../../components/feedback/FeedbackDetailModal";
+import FeedbackConfirmation from "../../components/feedback/FeedbackConfirmation";
+import {
+  FiArrowLeft,
+  FiFileText,
+  FiAlertCircle,
+  FiList,
+  FiMessageSquare,
+  FiBarChart2,
+  FiStar,
+} from "react-icons/fi";
+import { getShips } from "../../actions/shipActions";
+import { getAllFeedbacks } from "../../actions/feedbackActions";
 
 // Feedbacks are loaded from the API. No hardcoded sample data.
 
 const FeedbackPage = () => {
   const { shipId } = useParams();
   const navigate = useNavigate();
-  const { user } = useSelector(state => state.auth);
-  const { ships } = useSelector(state => state.ships);
+  const { user } = useSelector((state) => state.auth);
+  const { ships } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -734,58 +742,92 @@ const FeedbackPage = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Filter state for View History - Auto-loaded from selected vessel
+  const [selectedJobCategory, setSelectedJobCategory] = useState();
+  const [selectedProjectNumber, setSelectedProjectNumber] = useState();
+  const [jmainList, setJmainList] = useState([]);
+  const [jmainLoading, setJmainLoading] = useState(false);
+
+  // Auto-set job category and project number from selected vessel
+  useEffect(() => {
+    if (selectedVessel && selectedVessel.raw) {
+      const shipJcat = selectedVessel.raw.SHIP_JCAT || selectedVessel.raw.SHIP_JOB_CATEGORY;
+      const shipJmain = selectedVessel.raw.SHIP_JMAIN || selectedVessel.jmainNo || selectedVessel.id;
+      
+      if (shipJcat) setSelectedJobCategory(shipJcat);
+      if (shipJmain) setSelectedProjectNumber(shipJmain);
+    }
+  }, [selectedVessel]);
+
   // Load feedbacks from API on component mount (fallback to local sample data)
   useEffect(() => {
     let mounted = true;
     const fetchFeedbacks = async () => {
+      // Only fetch if we have both category and project number
+      if (!selectedJobCategory || !selectedProjectNumber) {
+        return;
+      }
+      
       setIsLoadingFeedbacks(true);
       setApiError(null);
       try {
-        const svc = await import('../../services/feedbackService');
-        const serviceNo = localStorage.getItem('serviceNo') || undefined;
-        const params = serviceNo ? { P_SERVICE_NO: serviceNo } : {};
-        const res = await svc.getAllFeedback(params);
+        // Use Redux action to fetch feedbacks with selected parameters
+        const res = await dispatch(
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+        );
         const rows = res?.ResultSet || res?.Result || [];
 
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || 'fb'}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName: r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || '',
-          submittedBy: r.FEEDBACK_ANSWER || 'API',
+          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
+          vesselName:
+            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+          feedbackRef: r.FEEDBACK_CODE || "",
+          submittedBy: r.FEEDBACK_ANSWER || "API",
           submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
           overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || '',
+          observations: r.FEEDBACK_REMARKS || "",
           raw: r,
         }));
 
         // persist API cache for offline/fallback use
         try {
-          localStorage.setItem('cdplc_feedbacks_api_cache', JSON.stringify(apiFeedbacks));
+          localStorage.setItem(
+            "cdplc_feedbacks_api_cache",
+            JSON.stringify(apiFeedbacks)
+          );
         } catch (e) {
           /* ignore storage errors */
         }
 
         if (mounted) {
-          const saved = localStorage.getItem('cdplc_feedbacks');
+          const saved = localStorage.getItem("cdplc_feedbacks");
           let savedFeedbacks = [];
           if (saved) {
-            try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
+            try {
+              savedFeedbacks = JSON.parse(saved);
+            } catch (e) {
+              savedFeedbacks = [];
+            }
           }
           setFeedbacks([...savedFeedbacks, ...apiFeedbacks]);
         }
       } catch (error) {
-        console.error('Failed to load feedbacks from API', error);
-        setApiError(error.message || 'Failed to fetch feedbacks');
+        console.error("Failed to load feedbacks from API", error);
+        setApiError(error.message || "Failed to fetch feedbacks");
 
         // fallback to cached API response if available
-        const cached = localStorage.getItem('cdplc_feedbacks_api_cache');
+        const cached = localStorage.getItem("cdplc_feedbacks_api_cache");
         if (cached) {
           try {
             const cachedApi = JSON.parse(cached);
-            const saved = localStorage.getItem('cdplc_feedbacks');
+            const saved = localStorage.getItem("cdplc_feedbacks");
             let savedFeedbacks = [];
             if (saved) {
-              try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
+              try {
+                savedFeedbacks = JSON.parse(saved);
+              } catch (e) {
+                savedFeedbacks = [];
+              }
             }
             if (mounted) setFeedbacks([...savedFeedbacks, ...cachedApi]);
             return;
@@ -795,10 +837,14 @@ const FeedbackPage = () => {
         }
 
         // otherwise show only saved user feedbacks
-        const saved = localStorage.getItem('cdplc_feedbacks');
+        const saved = localStorage.getItem("cdplc_feedbacks");
         let savedFeedbacks = [];
         if (saved) {
-          try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; }
+          try {
+            savedFeedbacks = JSON.parse(saved);
+          } catch (e) {
+            savedFeedbacks = [];
+          }
         }
         if (mounted) setFeedbacks(savedFeedbacks);
       } finally {
@@ -807,38 +853,54 @@ const FeedbackPage = () => {
     };
 
     fetchFeedbacks();
-    return () => { mounted = false; };
-  }, []);
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, selectedJobCategory, selectedProjectNumber]);
 
   const retryFetchFeedbacks = () => {
     (async () => {
       setIsLoadingFeedbacks(true);
       setApiError(null);
       try {
-        const svc = await import('../../services/feedbackService');
-        const serviceNo = localStorage.getItem('serviceNo') || undefined;
-        const params = serviceNo ? { P_SERVICE_NO: serviceNo } : {};
-        const res = await svc.getAllFeedback(params);
+        // Use Redux action to fetch feedbacks with selected parameters
+        const res = await dispatch(
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+        );
         const rows = res?.ResultSet || res?.Result || [];
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || 'fb'}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName: r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || '',
-          submittedBy: r.FEEDBACK_ANSWER || 'API',
+          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
+          vesselName:
+            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+          feedbackRef: r.FEEDBACK_CODE || "",
+          submittedBy: r.FEEDBACK_ANSWER || "API",
           submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
           overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || '',
+          observations: r.FEEDBACK_REMARKS || "",
           raw: r,
         }));
-        try { localStorage.setItem('cdplc_feedbacks_api_cache', JSON.stringify(apiFeedbacks)); } catch (e) {}
-        const saved = localStorage.getItem('cdplc_feedbacks');
+        try {
+          localStorage.setItem(
+            "cdplc_feedbacks_api_cache",
+            JSON.stringify(apiFeedbacks)
+          );
+        } catch (e) {}
+        const saved = localStorage.getItem("cdplc_feedbacks");
         let savedFeedbacks = [];
-        if (saved) { try { savedFeedbacks = JSON.parse(saved); } catch (e) { savedFeedbacks = []; } }
+        if (saved) {
+          try {
+            savedFeedbacks = JSON.parse(saved);
+          } catch (e) {
+            savedFeedbacks = [];
+          }
+        }
         setFeedbacks([...savedFeedbacks, ...apiFeedbacks]);
       } catch (error) {
-        console.error('Retry failed', error);
-        setApiError(error.message || 'Retry failed');
-      } finally { setIsLoadingFeedbacks(false); }
+        console.error("Retry failed", error);
+        setApiError(error.message || "Retry failed");
+      } finally {
+        setIsLoadingFeedbacks(false);
+      }
     })();
   };
 
@@ -852,13 +914,15 @@ const FeedbackPage = () => {
 
   // Save only user-submitted feedbacks to localStorage whenever they change
   useEffect(() => {
-    const userFeedbacks = feedbacks.filter(fb => typeof fb.id === 'string' && fb.id.startsWith('feedback_'));
-    localStorage.setItem('cdplc_feedbacks', JSON.stringify(userFeedbacks));
+    const userFeedbacks = feedbacks.filter(
+      (fb) => typeof fb.id === "string" && fb.id.startsWith("feedback_")
+    );
+    localStorage.setItem("cdplc_feedbacks", JSON.stringify(userFeedbacks));
   }, [feedbacks]);
 
   useEffect(() => {
     if (shipId) {
-      const vessel = ships.find(ship => ship.id === parseInt(shipId));
+      const vessel = ships.find((ship) => ship.id === parseInt(shipId));
       setSelectedVessel(vessel);
     } else if (ships.length > 0) {
       setSelectedVessel(ships[0]);
@@ -866,7 +930,7 @@ const FeedbackPage = () => {
   }, [shipId, ships]);
 
   if (!user) {
-    navigate('/login');
+    navigate("/login");
     return null;
   }
 
@@ -875,38 +939,46 @@ const FeedbackPage = () => {
     const newFeedback = {
       ...feedbackData,
       id: `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      submittedBy: user.name || 'Anonymous',
+      submittedBy: user.name || "Anonymous",
       submittedAt: new Date().toISOString(),
       vesselName: selectedVessel?.name || feedbackData.vesselName,
       vesselIMO: selectedVessel?.imoNumber || feedbackData.vesselIMO,
-      overallScore: calculateOverallScore(feedbackData.ratings)
+      overallScore: calculateOverallScore(feedbackData.ratings),
     };
 
     // Add to feedbacks list (at the beginning)
-    setFeedbacks(prev => [newFeedback, ...prev]);
-    
+    setFeedbacks((prev) => [newFeedback, ...prev]);
+
     // Set recent feedback for confirmation
     setRecentFeedback(newFeedback);
     setShowConfirmation(true);
     setShowHistory(false);
-    
+
     // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
     // Show success message
-    console.log('Feedback saved successfully:', newFeedback);
+    console.log("Feedback saved successfully:", newFeedback);
   };
 
   const calculateOverallScore = (ratings) => {
-    if (!ratings || typeof ratings !== 'object') return 0;
-    const ratingValues = Object.values(ratings).filter(r => r > 0);
+    if (!ratings || typeof ratings !== "object") return 0;
+    const ratingValues = Object.values(ratings).filter((r) => r > 0);
     if (ratingValues.length === 0) return 0;
-    return Math.round(ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length);
+    return Math.round(
+      ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+    );
   };
 
   const handleDeleteFeedback = (feedbackToDelete) => {
-    if (window.confirm('Are you sure you want to delete this feedback? This action cannot be undone.')) {
-      setFeedbacks(prev => prev.filter(fb => fb.id !== feedbackToDelete.id));
+    if (
+      window.confirm(
+        "Are you sure you want to delete this feedback? This action cannot be undone."
+      )
+    ) {
+      setFeedbacks((prev) =>
+        prev.filter((fb) => fb.id !== feedbackToDelete.id)
+      );
     }
   };
 
@@ -931,16 +1003,28 @@ const FeedbackPage = () => {
   };
 
   // Calculate stats from feedbacks
-  const userFeedbacks = feedbacks.filter(fb => fb.submittedBy === user.name);
+  const userFeedbacks = feedbacks.filter((fb) => fb.submittedBy === user.name);
   const stats = {
     totalResponses: feedbacks.length,
     userResponses: userFeedbacks.length,
-    averageRating: feedbacks.length > 0 
-      ? parseFloat((feedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) / feedbacks.length).toFixed(1))
-      : 0,
-    userAverageRating: userFeedbacks.length > 0
-      ? parseFloat((userFeedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) / userFeedbacks.length).toFixed(1))
-      : 0
+    averageRating:
+      feedbacks.length > 0
+        ? parseFloat(
+            (
+              feedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
+              feedbacks.length
+            ).toFixed(1)
+          )
+        : 0,
+    userAverageRating:
+      userFeedbacks.length > 0
+        ? parseFloat(
+            (
+              userFeedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
+              userFeedbacks.length
+            ).toFixed(1)
+          )
+        : 0,
   };
 
   return (
@@ -950,15 +1034,28 @@ const FeedbackPage = () => {
         onClick={() => setMobileMenuOpen(true)}
         className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
         </svg>
       </button>
 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setMobileMenuOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setMobileMenuOpen(false)}
+          />
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800">
             <Sidebar />
           </div>
@@ -973,16 +1070,21 @@ const FeedbackPage = () => {
 
         <div className="flex-1">
           <Header />
-          
+
           <main className="p-4 sm:p-6 lg:p-8">
             {/* Breadcrumb */}
             <div className="mb-6 flex items-center">
-              <Link to="/dashboard" className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              <Link
+                to="/dashboard"
+                className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
                 <FiArrowLeft className="mr-2" />
                 Back to Dashboard
               </Link>
               <span className="mx-3 text-gray-400">/</span>
-              <span className="text-gray-900 dark:text-white font-medium">Service Feedback</span>
+              <span className="text-gray-900 dark:text-white font-medium">
+                Service Feedback
+              </span>
             </div>
 
             {/* Header */}
@@ -993,17 +1095,18 @@ const FeedbackPage = () => {
                     Service Feedback System
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Share your experience and view feedback history. All data is saved locally.
+                    Share your experience and view feedback history. All data is
+                    saved locally.
                   </p>
                 </div>
-                
+
                 <div className="mt-4 md:mt-0 flex space-x-3">
                   <button
                     onClick={handleNewFeedback}
                     className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      !showHistory 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      !showHistory
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     <FiMessageSquare className="mr-2" />
@@ -1012,9 +1115,9 @@ const FeedbackPage = () => {
                   <button
                     onClick={handleViewHistory}
                     className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      showHistory 
-                        ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                        : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      showHistory
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                     }`}
                   >
                     <FiList className="mr-2" />
@@ -1028,7 +1131,8 @@ const FeedbackPage = () => {
             {apiError && (
               <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-sm text-red-700 dark:text-red-300 flex items-center justify-between">
                 <div>
-                  <strong>Feedback API:</strong> Failed to load latest feedbacks ({apiError}). Showing cached or saved entries.
+                  <strong>Feedback API:</strong> Failed to load latest feedbacks
+                  ({apiError}). Showing cached or saved entries.
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
@@ -1049,7 +1153,9 @@ const FeedbackPage = () => {
                     <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Total Feedback</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Feedback
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.totalResponses}
                     </p>
@@ -1063,7 +1169,9 @@ const FeedbackPage = () => {
                     <FiBarChart2 className="w-6 h-6 text-green-600 dark:text-green-300" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Avg. Rating</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Avg. Rating
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.averageRating}/100
                     </p>
@@ -1077,7 +1185,9 @@ const FeedbackPage = () => {
                     <FiList className="w-6 h-6 text-purple-600 dark:text-purple-300" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Your Submissions</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Your Submissions
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.userResponses}
                     </p>
@@ -1091,7 +1201,9 @@ const FeedbackPage = () => {
                     <FiStar className="w-6 h-6 text-yellow-600 dark:text-yellow-300" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Your Avg. Score</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Your Avg. Score
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.userAverageRating}/100
                     </p>
@@ -1124,13 +1236,33 @@ const FeedbackPage = () => {
             {/* Feedback History Section */}
             {showHistory ? (
               <div className="mb-8">
+                {/* Ship Info Banner */}
+                {selectedVessel && (
+                  <div className="card mb-6 bg-blue-50 dark:bg-blue-900/20">
+                    <div className="flex items-center">
+                      <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg mr-4">
+                        <FiFileText className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Feedback History for {selectedVessel.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Job Category: <span className="font-medium">{selectedJobCategory || 'N/A'}</span> • 
+                          Project: <span className="font-medium">{selectedProjectNumber || 'N/A'}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <FeedbackHistory
                   feedbacks={feedbacks}
                   onDelete={handleDeleteFeedback}
                   onViewDetails={handleViewDetails}
                   isLoading={isLoadingFeedbacks}
                 />
-                
+
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={handleNewFeedback}
@@ -1140,137 +1272,156 @@ const FeedbackPage = () => {
                   </button>
                 </div>
               </div>
-            ) : !showConfirmation && (
-              <>
-                {/* Info banner removed per request */}
+            ) : (
+              !showConfirmation && (
+                <>
+                  {/* Info banner removed per request */}
 
-                {/* Vessel Selection */}
-                {ships.length > 1 && (
-                  <div className="card mb-8">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Select Vessel for Feedback
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {ships.map(ship => (
-                        <button
-                          key={ship.id}
-                          onClick={() => setSelectedVessel(ship)}
-                          className={`p-4 border rounded-lg transition-all ${
-                            selectedVessel?.id === ship.id
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
-                          }`}
-                        >
-                          <div className="flex items-center">
-                            <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                              <FiFileText className="text-blue-600 dark:text-blue-300" />
-                            </div>
-                            <div className="text-left">
-                              <p className="font-medium text-gray-900 dark:text-white">{ship.name}</p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">{ship.imoNumber}</p>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Vessel Info Card */}
-                {selectedVessel && (
-                  <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between">
-                      <div className="mb-4 md:mb-0">
-                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                          {selectedVessel.name}
-                        </h2>
-                        <div className="flex items-center text-gray-600 dark:text-gray-400">
-                          <span className="mr-4">{selectedVessel.imoNumber}</span>
-                          <span>{selectedVessel.type}</span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-                          Ready for Feedback
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <strong>Note:</strong> Your feedback will be automatically saved to your browser's local storage.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Feedback Form */}
-                {selectedVessel && !showConfirmation && (
-                  <div className="mb-6">
-                    <FeedbackForm 
-                      vessel={selectedVessel} 
-                      onSubmit={handleFeedbackSubmit}
-                    />
-                  </div>
-                )}
-
-                {/* Recent Feedback Preview */}
-                {feedbacks.length > 0 && (
-                  <div className="card mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Recent Feedback Submissions
+                  {/* Vessel Selection */}
+                  {ships.length > 1 && (
+                    <div className="card mb-8">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                        Select Vessel for Feedback
                       </h3>
-                      <button
-                        onClick={handleViewHistory}
-                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                      >
-                        View All →
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {feedbacks.slice(0, 3).map((feedback, index) => (
-                        <div
-                          key={feedback.id}
-                          className={`p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
-                            index === 0 ? 'border-blue-300 dark:border-blue-700' : 'border-gray-200 dark:border-gray-700'
-                          }`}
-                          onClick={() => handleViewDetails(feedback)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="font-medium text-gray-900 dark:text-white">
-                                {feedback.vesselName}
-                              </h4>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {new Date(feedback.submittedAt).toLocaleDateString()} • Score: {feedback.overallScore}/100
-                              </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {ships.map((ship) => (
+                          <button
+                            key={ship.id}
+                            onClick={() => setSelectedVessel(ship)}
+                            className={`p-4 border rounded-lg transition-all ${
+                              selectedVessel?.id === ship.id
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
+                            }`}
+                          >
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                <FiFileText className="text-blue-600 dark:text-blue-300" />
+                              </div>
+                              <div className="text-left">
+                                <p className="font-medium text-gray-900 dark:text-white">
+                                  {ship.name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {ship.imoNumber}
+                                </p>
+                              </div>
                             </div>
-                            <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              feedback.overallScore >= 75 
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                                : feedback.overallScore >= 50
-                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                            }`}>
-                              {feedback.overallScore >= 75 ? 'Excellent' : 
-                               feedback.overallScore >= 50 ? 'Good' : 'Needs Improvement'}
-                            </div>
-                          </div>
-                          {feedback.observations && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-                              {feedback.observations}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {/* Local storage info removed per request */}
-              </>
+                  {/* Vessel Info Card */}
+                  {selectedVessel && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between">
+                        <div className="mb-4 md:mb-0">
+                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                            {selectedVessel.name}
+                          </h2>
+                          <div className="flex items-center text-gray-600 dark:text-gray-400">
+                            <span className="mr-4">
+                              {selectedVessel.imoNumber}
+                            </span>
+                            <span>{selectedVessel.type}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
+                            Ready for Feedback
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <strong>Note:</strong> Your feedback will be
+                          automatically saved to your browser's local storage.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Feedback Form */}
+                  {selectedVessel && !showConfirmation && (
+                    <div className="mb-6">
+                      <FeedbackForm
+                        vessel={selectedVessel}
+                        onSubmit={handleFeedbackSubmit}
+                      />
+                    </div>
+                  )}
+
+                  {/* Recent Feedback Preview */}
+                  {feedbacks.length > 0 && (
+                    <div className="card mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Recent Feedback Submissions
+                        </h3>
+                        <button
+                          onClick={handleViewHistory}
+                          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                        >
+                          View All →
+                        </button>
+                      </div>
+
+                      <div className="space-y-3">
+                        {feedbacks.slice(0, 3).map((feedback, index) => (
+                          <div
+                            key={feedback.id}
+                            className={`p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                              index === 0
+                                ? "border-blue-300 dark:border-blue-700"
+                                : "border-gray-200 dark:border-gray-700"
+                            }`}
+                            onClick={() => handleViewDetails(feedback)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h4 className="font-medium text-gray-900 dark:text-white">
+                                  {feedback.vesselName}
+                                </h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {new Date(
+                                    feedback.submittedAt
+                                  ).toLocaleDateString()}{" "}
+                                  • Score: {feedback.overallScore}/100
+                                </p>
+                              </div>
+                              <div
+                                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                  feedback.overallScore >= 75
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                    : feedback.overallScore >= 50
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                }`}
+                              >
+                                {feedback.overallScore >= 75
+                                  ? "Excellent"
+                                  : feedback.overallScore >= 50
+                                  ? "Good"
+                                  : "Needs Improvement"}
+                              </div>
+                            </div>
+                            {feedback.observations && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
+                                {feedback.observations}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Local storage info removed per request */}
+                </>
+              )
             )}
           </main>
         </div>

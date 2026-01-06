@@ -14,6 +14,12 @@ import {
   SUBMIT_MILESTONE_REQUEST,
   SUBMIT_MILESTONE_SUCCESS,
   SUBMIT_MILESTONE_FAILURE,
+  GET_MILESTONE_TYPES_REQUEST,
+  GET_MILESTONE_TYPES_SUCCESS,
+  GET_MILESTONE_TYPES_FAILURE,
+  GET_ALL_FEEDBACKS_REQUEST,
+  GET_ALL_FEEDBACKS_SUCCESS,
+  GET_ALL_FEEDBACKS_FAILURE,
   CLEAR_FEEDBACK_ERROR,
   CLEAR_FEEDBACK_DATES,
 } from "../constants/feedbackActionTypes";
@@ -27,6 +33,10 @@ const initialState = {
   jmainLoading: false,
   unitsDescriptions: [],
   unitsDescriptionsLoading: false,
+  milestoneTypes: [],
+  milestoneTypesLoading: false,
+  allFeedbacks: [],
+  allFeedbacksLoading: false,
   loading: false,
   submitting: false,
   milestoneSubmitting: false,
@@ -187,6 +197,49 @@ const feedbackReducer = (state = initialState, action) => {
         error: action.payload,
       };
 
+    case GET_MILESTONE_TYPES_REQUEST:
+      return {
+        ...state,
+        milestoneTypesLoading: true,
+        error: null,
+      };
+
+    case GET_MILESTONE_TYPES_SUCCESS:
+      let milestoneTypesData = [];
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          milestoneTypesData = action.payload.ResultSet;
+        } else if (Array.isArray(action.payload)) {
+          milestoneTypesData = action.payload;
+        } else if (typeof action.payload === "object") {
+          milestoneTypesData =
+            action.payload.data ||
+            action.payload.result ||
+            action.payload.items ||
+            [];
+        }
+      }
+
+      return {
+        ...state,
+        milestoneTypesLoading: false,
+        milestoneTypes: Array.isArray(milestoneTypesData)
+          ? milestoneTypesData
+          : [],
+        error: null,
+      };
+
+    case GET_MILESTONE_TYPES_FAILURE:
+      return {
+        ...state,
+        milestoneTypesLoading: false,
+        milestoneTypes: [],
+        error: action.payload,
+      };
+
     case SUBMIT_FEEDBACK_REQUEST:
       return {
         ...state,
@@ -232,6 +285,28 @@ const feedbackReducer = (state = initialState, action) => {
         ...state,
         milestoneSubmitting: false,
         milestoneSubmitSuccess: false,
+        error: action.payload,
+      };
+
+    case GET_ALL_FEEDBACKS_REQUEST:
+      return {
+        ...state,
+        allFeedbacksLoading: true,
+        error: null,
+      };
+
+    case GET_ALL_FEEDBACKS_SUCCESS:
+      return {
+        ...state,
+        allFeedbacksLoading: false,
+        allFeedbacks: action.payload,
+        error: null,
+      };
+
+    case GET_ALL_FEEDBACKS_FAILURE:
+      return {
+        ...state,
+        allFeedbacksLoading: false,
         error: action.payload,
       };
 

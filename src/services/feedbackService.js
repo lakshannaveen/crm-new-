@@ -73,12 +73,29 @@ export const addMilestone = async (milestoneData) => {
   }
 };
 
-// Get all feedback entries
-export const getAllFeedback = async (params = {}) => {
+// Get all milestone types
+export const getMilestoneTypes = async () => {
   try {
     const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetAllFeedback",
-      { params }
+      "/CDLRequirmentManagement/Milestone/GetAllMilestoneTypes"
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get all feedback entries by ship
+export const getAllFeedback = async (jobCategory, jmain) => {
+  try {
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetFeedbacksbyShip",
+      {
+        params: {
+          p_job_category: jobCategory,
+          p_jmain: jmain,
+        },
+      }
     );
     return response.data;
   } catch (error) {
