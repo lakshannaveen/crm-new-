@@ -751,9 +751,13 @@ const FeedbackPage = () => {
   // Auto-set job category and project number from selected vessel
   useEffect(() => {
     if (selectedVessel && selectedVessel.raw) {
-      const shipJcat = selectedVessel.raw.SHIP_JCAT || selectedVessel.raw.SHIP_JOB_CATEGORY;
-      const shipJmain = selectedVessel.raw.SHIP_JMAIN || selectedVessel.jmainNo || selectedVessel.id;
-      
+      const shipJcat =
+        selectedVessel.raw.SHIP_JCAT || selectedVessel.raw.SHIP_JOB_CATEGORY;
+      const shipJmain =
+        selectedVessel.raw.SHIP_JMAIN ||
+        selectedVessel.jmainNo ||
+        selectedVessel.id;
+
       if (shipJcat) setSelectedJobCategory(shipJcat);
       if (shipJmain) setSelectedProjectNumber(shipJmain);
     }
@@ -767,7 +771,7 @@ const FeedbackPage = () => {
       if (!selectedJobCategory || !selectedProjectNumber) {
         return;
       }
-      
+
       setIsLoadingFeedbacks(true);
       setApiError(null);
       try {
@@ -1248,8 +1252,14 @@ const FeedbackPage = () => {
                           Feedback History for {selectedVessel.name}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Job Category: <span className="font-medium">{selectedJobCategory || 'N/A'}</span> • 
-                          Project: <span className="font-medium">{selectedProjectNumber || 'N/A'}</span>
+                          Job Category:{" "}
+                          <span className="font-medium">
+                            {selectedJobCategory || "N/A"}
+                          </span>{" "}
+                          • Project:{" "}
+                          <span className="font-medium">
+                            {selectedProjectNumber || "N/A"}
+                          </span>
                         </p>
                       </div>
                     </div>

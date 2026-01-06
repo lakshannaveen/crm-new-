@@ -11,6 +11,8 @@ import {
   FiChevronRight,
   FiUser,
   FiTrendingUp,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
 import { addFeedback } from "../../services/feedbackService";
@@ -46,6 +48,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
+  const [projectSearchTerm, setProjectSearchTerm] = useState("");
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const projectDropdownRef = useRef(null);
   const [evaluationRows, setEvaluationRows] = useState(
     Array(11)
       .fill(null)
@@ -270,6 +275,21 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
   }, [dates]);
 
+  // Handle click outside project dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        projectDropdownRef.current &&
+        !projectDropdownRef.current.contains(event.target)
+      ) {
+        setShowProjectDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -308,6 +328,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       projectName: selectedProject?.FEEDBACK_DESC || "",
     }));
 
+    // Clear search and close dropdown
+    setProjectSearchTerm("");
+    setShowProjectDropdown(false);
+
     // Clear validation errors for project and dates (dates may auto-fill)
     setValidationErrors((prev) => {
       const newErrors = { ...prev };
@@ -318,6 +342,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       return newErrors;
     });
   };
+
+  // Filter projects based on search term
+  const filteredProjects = jmainList.filter((project) => {
+    const jmainValue = project.FEEDBACK_JMAIN || "";
+    const jmainDesc = project.FEEDBACK_DESC || "";
+    const searchLower = projectSearchTerm.toLowerCase();
+    return (
+      jmainValue.toString().toLowerCase().includes(searchLower) ||
+      jmainDesc.toLowerCase().includes(searchLower)
+    );
+  });
 
   const handleSelectChange = (field, value) => {
     setFormData((prev) => ({
@@ -888,10 +923,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             Previous
           </button>
 
-          <button
-            onClick={nextStep}
-            className="flex-1 btn-primary"
-          >
+          <button onClick={nextStep} className="flex-1 btn-primary">
             {currentStep === steps.length - 2 ? "Review" : "Next"}
             <FiChevronRight className="inline ml-2" />
           </button>
@@ -1271,43 +1303,89 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Project Number
                   </label>
-                  <select
-                    value={formData.projectNumber}
-                    onChange={(e) => handleProjectNumberChange(e.target.value)}
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                      validationErrors.projectNumber ? "border-red-500" : ""
-                    }`}
-                    disabled={!formData.jobCategory || jmainLoading}
-                  >
-                    <option value="">
-                      {jmainLoading
-                        ? "Loading project numbers..."
-                        : !formData.jobCategory
-                        ? "Select job category first"
-                        : jmainList.length === 0
-                        ? "No projects found"
-                        : "Select project number"}
-                    </option>
-                    {jmainList &&
-                      jmainList.length > 0 &&
-                      [...jmainList]
-                        .sort((a, b) => {
-                          const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
-                          const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
-                          return aVal - bVal;
-                        })
-                        .map((project, index) => {
-                          const jmainValue = project.FEEDBACK_JMAIN;
-                          return (
-                            <option
-                              key={jmainValue || index}
-                              value={jmainValue}
-                            >
-                              {jmainValue}
-                            </option>
-                          );
-                        })}
-                  </select>
+                  <div className="relative" ref={projectDropdownRef}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          projectSearchTerm ||
+                          (formData.projectNumber
+                            ? jmainList.find(
+                                (p) =>
+                                  p.FEEDBACK_JMAIN === formData.projectNumber
+                              )?.FEEDBACK_JMAIN || formData.projectNumber
+                            : "")
+                        }
+                        onChange={(e) => {
+                          setProjectSearchTerm(e.target.value);
+                          setShowProjectDropdown(true);
+                        }}
+                        onFocus={() => setShowProjectDropdown(true)}
+                        placeholder={
+                          jmainLoading
+                            ? "Loading..."
+                            : !formData.jobCategory
+                            ? "Select job category first"
+                            : "Search or select project..."
+                        }
+                        disabled={!formData.jobCategory || jmainLoading}
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors.projectNumber ? "border-red-500" : ""
+                        } pr-10`}
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <FiSearch className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+
+                    {/* Dropdown list */}
+                    {showProjectDropdown &&
+                      formData.jobCategory &&
+                      !jmainLoading && (
+                        <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                          {filteredProjects.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              No projects found
+                            </div>
+                          ) : (
+                            filteredProjects
+                              .sort((a, b) => {
+                                const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
+                                const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
+                                return aVal - bVal;
+                              })
+                              .map((project) => {
+                                const jmainValue = project.FEEDBACK_JMAIN;
+                                const jmainDesc = project.FEEDBACK_DESC;
+                                return (
+                                  <div
+                                    key={jmainValue}
+                                    onClick={() =>
+                                      handleProjectNumberChange(jmainValue)
+                                    }
+                                    className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                                      formData.projectNumber === jmainValue
+                                        ? "bg-blue-50 dark:bg-blue-900/30"
+                                        : ""
+                                    }`}
+                                  >
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                      {jmainValue}
+                                    </div>
+                                    {/* {jmainDesc && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      {jmainDesc}
+                                    </div>
+                                  )} */}
+                                  </div>
+                                );
+                              })
+                          )}
+                        </div>
+                      )}
+                  </div>
                   <div className="min-h-[20px]">
                     {validationErrors.projectNumber && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -2983,14 +3061,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             >
               <button
                 onClick={() => setCurrentStep(0)}
-                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-secondary`}
+                className={`${
+                  isMobile ? "w-full py-3" : "px-6 py-2"
+                } btn-secondary`}
               >
                 Edit Feedback
               </button>
 
               <button
                 onClick={handleSubmit}
-                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
+                className={`${
+                  isMobile ? "w-full py-3" : "px-6 py-2"
+                } btn-primary`}
               >
                 Submit Feedback
               </button>
@@ -3112,7 +3194,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     );
                     setCurrentStep(0);
                   }}
-                  className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
+                  className={`${
+                    isMobile ? "w-full py-3" : "px-6 py-2"
+                  } btn-primary`}
                 >
                   Submit Another Feedback
                 </button>
@@ -3124,7 +3208,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       window.location.reload();
                     }
                   }}
-                  className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-secondary`}
+                  className={`${
+                    isMobile ? "w-full py-3" : "px-6 py-2"
+                  } btn-secondary`}
                 >
                   View History
                 </button>
@@ -3163,7 +3249,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               <button
                 onClick={() => setCurrentStep(0)}
-                className={`${isMobile ? "w-full py-3" : "px-6 py-2"} btn-primary`}
+                className={`${
+                  isMobile ? "w-full py-3" : "px-6 py-2"
+                } btn-primary`}
               >
                 Go to First Step
               </button>
@@ -3268,14 +3356,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             <button
               onClick={prevStep}
               disabled={currentStep === 0}
-              className={`btn-secondary px-6 ${currentStep === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`btn-secondary px-6 ${
+                currentStep === 0 ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Previous
             </button>
             <button
               onClick={nextStep}
               disabled={currentStep === steps.length - 1}
-              className={`btn-primary px-6 ${currentStep === steps.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`btn-primary px-6 ${
+                currentStep === steps.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               {currentStep === steps.length - 2 ? "Review" : "Next"}
             </button>
