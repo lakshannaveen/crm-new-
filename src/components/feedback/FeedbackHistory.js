@@ -384,14 +384,16 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
           {visibleCount < sortedFeedbacks.length ? (
             <button
               onClick={() => setVisibleCount((v) => Math.min(v + 3, sortedFeedbacks.length))}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
+              aria-label="Load more feedbacks"
             >
               Load more
             </button>
           ) : (
             <button
               onClick={() => setVisibleCount(3)}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+              className="text-gray-600 hover:text-gray-800 font-medium focus:outline-none"
+              aria-label="Show less feedbacks"
             >
               Show less
             </button>

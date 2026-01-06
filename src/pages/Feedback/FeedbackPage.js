@@ -729,7 +729,7 @@ const FeedbackPage = () => {
   const { shipId } = useParams();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { ships } = useSelector((state) => state.ships);
+  const { ships, loading: shipsLoading } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedVessel, setSelectedVessel] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -1228,7 +1228,7 @@ const FeedbackPage = () => {
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={handleNewFeedback}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-6 py-2 btn-primary"
                   >
                     Submit New Feedback
                   </button>
@@ -1240,39 +1240,72 @@ const FeedbackPage = () => {
                   {/* Info banner removed per request */}
 
                   {/* Vessel Selection */}
-                  {ships.length > 1 && (
+                  {shipsLoading ? (
                     <div className="card mb-8">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                         Select Vessel for Feedback
                       </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {ships.map((ship) => (
-                          <button
-                            key={ship.id}
-                            onClick={() => setSelectedVessel(ship)}
-                            className={`p-4 border rounded-lg transition-all ${
-                              selectedVessel?.id === ship.id
-                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                            }`}
-                          >
-                            <div className="flex items-center">
-                              <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                                <FiFileText className="text-blue-600 dark:text-blue-300" />
-                              </div>
-                              <div className="text-left">
-                                <p className="font-medium text-gray-900 dark:text-white">
-                                  {ship.name}
-                                </p>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {ship.imoNumber}
-                                </p>
-                              </div>
-                            </div>
-                          </button>
-                        ))}
+                      <div className="flex items-center justify-center p-6">
+                        <svg
+                          className="animate-spin h-6 w-6 text-blue-600 mr-3"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                          />
+                        </svg>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Loading vessels...
+                        </span>
                       </div>
                     </div>
+                  ) : (
+                    ships.length > 1 && (
+                      <div className="card mb-8">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                          Select Vessel for Feedback
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {ships.map((ship) => (
+                            <button
+                              key={ship.id}
+                              onClick={() => setSelectedVessel(ship)}
+                              className={`p-4 border rounded-lg transition-all ${
+                                selectedVessel?.id === ship.id
+                                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                                  : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
+                              }`}
+                            >
+                              <div className="flex items-center">
+                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                                  <FiFileText className="text-blue-600 dark:text-blue-300" />
+                                </div>
+                                <div className="text-left">
+                                  <p className="font-medium text-gray-900 dark:text-white">
+                                    {ship.name}
+                                  </p>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {ship.imoNumber}
+                                  </p>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
                   )}
 
                   {/* Vessel Info Card */}
