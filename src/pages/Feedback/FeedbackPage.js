@@ -1073,7 +1073,7 @@ const FeedbackPage = () => {
                   ? "Excellent"
                   : feedback.overallScore >= 50
                   ? "Good"
-                  : "Needs Improvement"
+                  : ""
               }
             </span>
           </div>
@@ -1512,7 +1512,7 @@ const FeedbackPage = () => {
                                     ? "Excellent"
                                     : feedback.overallScore >= 50
                                     ? "Good"
-                                    : "Needs Improvement"}
+                                    : ""}
                                 </div>
                                 <button
                                   onClick={() => downloadFeedbackPDF(feedback)}
