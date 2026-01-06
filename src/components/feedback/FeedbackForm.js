@@ -23,6 +23,7 @@ import {
   getMilestoneTypes,
   submitMilestone,
   clearFeedbackDates,
+  getDuration,
 } from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
@@ -30,7 +31,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const { user } = useSelector((state) => state.auth);
   const {
     dates = { startingDate: "", endingDate: "" },
+    duration = { afloatDays: 0, indockDays: 0 },
     loading: datesLoading = false,
+    durationLoading = false,
     jmainList = [],
     jmainLoading = false,
     unitsDescriptions = [],
@@ -267,6 +270,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
   }, [formData.jobCategory, formData.projectNumber, dispatch]);
 
+  // Fetch duration when job category and project number are selected
+  useEffect(() => {
+    if (formData.jobCategory && formData.projectNumber) {
+      dispatch(getDuration(formData.jobCategory, formData.projectNumber));
+    }
+  }, [formData.jobCategory, formData.projectNumber, dispatch]);
+
   // Update form data when dates are loaded from Redux
   useEffect(() => {
     if (dates.startingDate || dates.endingDate) {
@@ -278,11 +288,30 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
   }, [dates]);
 
+  // Update form data when duration is loaded from Redux
+  useEffect(() => {
+    if (
+      duration &&
+      (duration.afloatDays !== undefined || duration.indockDays !== undefined)
+    ) {
+      console.log("Duration data loaded:", duration);
+      setFormData((prev) => ({
+        ...prev,
+        afloatDuration:
+          duration.afloatDays !== undefined ? duration.afloatDays : 0,
+        indockDuration:
+          duration.indockDays !== undefined ? duration.indockDays : 0,
+      }));
+    }
+  }, [duration]);
+
   // When the `vessel` prop changes, prefill job category and remember the JMAIN to auto-select
   useEffect(() => {
     if (vessel && vessel.raw) {
-      const shipJcat = vessel.raw.SHIP_JCAT || vessel.raw.SHIP_JOB_CATEGORY || "";
-      const shipJmain = vessel.raw.SHIP_JMAIN || vessel.jmainNo || vessel.id || "";
+      const shipJcat =
+        vessel.raw.SHIP_JCAT || vessel.raw.SHIP_JOB_CATEGORY || "";
+      const shipJmain =
+        vessel.raw.SHIP_JMAIN || vessel.jmainNo || vessel.id || "";
 
       if (shipJcat) {
         setFormData((prev) => ({
@@ -316,7 +345,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         setFormData((prev) => ({
           ...prev,
           projectNumber: String(autoProjectForVessel),
-          projectName: (vessel && (vessel.raw?.FEEDBACK_DESC || vessel.name)) || prev.projectName || "",
+          projectName:
+            (vessel && (vessel.raw?.FEEDBACK_DESC || vessel.name)) ||
+            prev.projectName ||
+            "",
         }));
       }
       setAutoProjectForVessel(null);
@@ -2706,6 +2738,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Afloat
                   </label>
                   <input
+                  disabled
                     type="number"
                     min="0"
                     placeholder="Days afloat (e.g. 5)"
@@ -2728,6 +2761,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Indock
                   </label>
                   <input
+                  disabled
                     type="number"
                     min="0"
                     placeholder="Days in dock (e.g. 2)"

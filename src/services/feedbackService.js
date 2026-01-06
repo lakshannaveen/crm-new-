@@ -18,6 +18,30 @@ export const getFeedbackDates = async (jobCategory, projectNumber) => {
   }
 };
 
+// Get duration (Afloat and Indock days)
+export const getDuration = async (jobCategory, jmain) => {
+  try {
+    console.log("API Call - getDuration with params:", {
+      p_job_category: jobCategory,
+      p_jmain: jmain,
+    });
+    const response = await api.get(
+      "/CDLRequirmentManagement/Feedback/GetDuration",
+      {
+        params: {
+          p_job_category: jobCategory,
+          p_jmain: jmain,
+        },
+      }
+    );
+    console.log("API Response - getDuration:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("API Error - getDuration:", error.message);
+    throw error;
+  }
+};
+
 // Get JMain (project numbers) by job category
 export const getJmain = async (jobCategory) => {
   try {
