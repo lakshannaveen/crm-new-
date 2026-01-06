@@ -341,12 +341,7 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
             {/* Categories Summary */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {submittedByVal !== 'NA' && (
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Submitted By</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{submittedByVal}</p>
-                  </div>
-                )}
+                {/* Submitted By removed per request */}
 
                 {formatTime(feedback.submittedAt) && (
                   <div>
