@@ -729,60 +729,8 @@ const ProjectManagement = () => {
   const statusColor = getStatusColor(project.status);
   const statusText = getStatusText(project.status);
 
-  // Use milestones from Redux, fallback to mock data if empty
-  const displayMilestones =
-    milestones.length > 0
-      ? milestones
-      : [
-          {
-            title: "Project Kickoff",
-            date: "2024-01-10",
-            status: "completed",
-            progress: 100,
-          },
-          {
-            title: "Hull Assessment",
-            date: "2024-01-25",
-            status: "completed",
-            progress: 100,
-          },
-          {
-            title: "Engine Dismantling",
-            date: "2024-02-10",
-            status: "completed",
-            progress: 100,
-          },
-          {
-            title: "Hull Repair",
-            date: "2024-02-25",
-            status: "in_progress",
-            progress: 85,
-          },
-          {
-            title: "Engine Reassembly",
-            date: "2024-03-05",
-            status: "pending",
-            progress: 30,
-          },
-          {
-            title: "System Testing",
-            date: "2024-03-10",
-            status: "pending",
-            progress: 0,
-          },
-          {
-            title: "Final Inspection",
-            date: "2024-03-12",
-            status: "pending",
-            progress: 0,
-          },
-          {
-            title: "Project Completion",
-            date: "2024-03-15",
-            status: "pending",
-            progress: 0,
-          },
-        ];
+  // Use milestones from Redux
+  const displayMilestones = milestones;
 
   const teamMembers = [
     {
