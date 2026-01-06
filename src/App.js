@@ -261,6 +261,7 @@ import FeedbackPage from './pages/Feedback/FeedbackPage';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
 import LoadingScreen from './components/common/LoadingScreen';
+import ScrollToTop from './components/common/ScrollToTop';
 
 
 const AuthenticatedLayout = ({ children }) => {
@@ -319,6 +320,7 @@ function App() {
 
   return (
     <SidebarProvider>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
