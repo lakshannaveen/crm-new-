@@ -308,11 +308,11 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                           <div className="flex flex-wrap gap-3 mb-2 text-sm text-gray-600 dark:text-gray-400">
                             {milestone.location && (
                               <div className="flex items-center">
-                                <FiFlag className="mr-2 text-purple-500" />
+                                <FiFlag className="mr-2 text-blue-500" />
                                 <span>{milestone.location}</span>
                               </div>
                             )}
-                            <div>
+                            {/* <div>
                               <span
                                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                   milestone.status === "completed"
@@ -328,7 +328,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                                   ? "⟳ In Progress"
                                   : "○ Scheduled"}
                               </span>
-                            </div>
+                            </div> */}
                           </div>
 
                           {milestone.remarks && (
