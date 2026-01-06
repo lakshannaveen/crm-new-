@@ -1120,26 +1120,6 @@ const FeedbackPage = () => {
               </div>
             ) : !showConfirmation && (
               <>
-                {/* Info Banner */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6 mb-8">
-                  <div className="flex items-start">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg mr-4">
-                      <FiAlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                        Important Information
-                      </h3>
-                      <ul className="text-gray-600 dark:text-gray-400 space-y-1">
-                        <li>• All feedback is saved locally in your browser (localStorage)</li>
-                        <li>• You can view, delete, or download your feedback anytime</li>
-                        <li>• Sample feedbacks are pre-loaded for demonstration</li>
-                        <li>• Your data is private and only visible to you</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Vessel Selection */}
                 {ships.length > 1 && (
                   <div className="card mb-8">
@@ -1265,33 +1245,7 @@ const FeedbackPage = () => {
                   </div>
                 )}
 
-                {/* Local Storage Info */}
-                <div className="card">
-                  <div className="flex items-start">
-                    <div className="p-3 bg-green-100 dark:bg-green-900 rounded-lg mr-4">
-                      <FiFileText className="w-6 h-6 text-green-600 dark:text-green-300" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                        About Local Storage
-                      </h4>
-                      <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                        Your feedback is stored locally in your browser. This means:
-                      </p>
-                      <ul className="text-gray-600 dark:text-gray-400 text-sm space-y-1">
-                        <li>• Data persists even when you close the browser</li>
-                        <li>• Only you can see your feedback on this device</li>
-                        <li>• You can export your feedback as JSON files</li>
-                        <li>• Clear browser data to remove all saved feedback</li>
-                      </ul>
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Storage used: {JSON.stringify(feedbacks).length} bytes
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Local storage info removed per request */}
               </>
             )}
           </main>
