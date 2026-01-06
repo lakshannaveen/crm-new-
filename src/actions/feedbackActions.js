@@ -14,6 +14,12 @@ import {
   SUBMIT_MILESTONE_REQUEST,
   SUBMIT_MILESTONE_SUCCESS,
   SUBMIT_MILESTONE_FAILURE,
+  GET_MILESTONE_TYPES_REQUEST,
+  GET_MILESTONE_TYPES_SUCCESS,
+  GET_MILESTONE_TYPES_FAILURE,
+  GET_ALL_FEEDBACKS_REQUEST,
+  GET_ALL_FEEDBACKS_SUCCESS,
+  GET_ALL_FEEDBACKS_FAILURE,
   CLEAR_FEEDBACK_ERROR,
   CLEAR_FEEDBACK_DATES,
 } from "../constants/feedbackActionTypes";
@@ -140,6 +146,56 @@ export const submitMilestone = (milestoneData) => async (dispatch) => {
         error.response?.data?.message ||
         error.message ||
         "Failed to submit milestone",
+    });
+    throw error;
+  }
+};
+
+// Get milestone types
+export const getMilestoneTypes = () => async (dispatch) => {
+  try {
+    dispatch({ type: GET_MILESTONE_TYPES_REQUEST });
+
+    const data = await feedbackService.getMilestoneTypes();
+
+    dispatch({
+      type: GET_MILESTONE_TYPES_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_MILESTONE_TYPES_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch milestone types",
+    });
+    throw error;
+  }
+};
+
+// Get all feedbacks
+export const getAllFeedbacks = (jobCategory, jmain) => async (dispatch) => {
+  try {
+    dispatch({ type: GET_ALL_FEEDBACKS_REQUEST });
+
+    const data = await feedbackService.getAllFeedback(jobCategory, jmain);
+
+    dispatch({
+      type: GET_ALL_FEEDBACKS_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_ALL_FEEDBACKS_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch feedbacks",
     });
     throw error;
   }

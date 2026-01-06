@@ -18,6 +18,7 @@ import {
   getFeedbackDates,
   getJmain,
   getUnitsDescriptions,
+  getMilestoneTypes,
   submitMilestone,
   clearFeedbackDates,
 } from "../../actions/feedbackActions";
@@ -32,6 +33,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    milestoneTypes = [],
+    milestoneTypesLoading = false,
     milestoneSubmitting = false,
     milestoneSubmitSuccess = false,
     error: datesError = null,
@@ -179,6 +182,35 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     { value: "4", label: "Reluctant to Issue" },
   ];
 
+  const milestoneLocationOptions = [
+    { value: "", label: "Select Location" },
+    { value: "DOCK-01", label: "DOCK-01" },
+    { value: "DOCK-02", label: "DOCK-02" },
+    { value: "DOCK-03", label: "DOCK-03" },
+    { value: "DOCK-04", label: "DOCK-04" },
+    { value: "PIER-01", label: "PIER-01" },
+    { value: "PIER-02", label: "PIER-02" },
+    { value: "PIER-03", label: "PIER-03" },
+    { value: "GP1", label: "GUIDE PIER I" },
+    { value: "GP2", label: "GUIDE PIER II" },
+    { value: "NPD4", label: "NORTH PIER DOCK-4" },
+    { value: "DN3E", label: "DOCK NO.3 ENTRANCE" },
+    { value: "DN4E", label: "DOCK NO.4 ENTRANCE" },
+    { value: "DOLPHINS", label: "DOLPHINS" },
+    { value: "SLPA BERTH", label: "SLPA BERTH" },
+    { value: "OUTANCH", label: "OUTER ANCHORAGE" },
+    { value: "JCT", label: "JCT" },
+    { value: "UCT", label: "UCT" },
+    { value: "PVQ", label: "PVQ" },
+    { value: "BQ", label: "BQ" },
+    { value: "TANKER BERTH", label: "TANKER BERTH" },
+    { value: "GATEWAY", label: "GATEWAY" },
+    { value: "PASSTERM", label: "PASSENGER TERMINAL" },
+    { value: "GALLE", label: "GALLE" },
+    { value: "TRINCOMALE", label: "TRINCOMALE" },
+    { value: "OTHER", label: "OTHER" },
+  ];
+
   const steps = [
     { id: 0, title: "Project Details", icon: <FiCalendar /> },
     { id: 1, title: "Evaluation Details", icon: <FiStar /> },
@@ -191,9 +223,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const safeCurrentStep = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const currentStepData = steps[safeCurrentStep] || steps[0];
 
-  // Fetch units descriptions on component mount
+  // Fetch units descriptions and milestone types on component mount
   useEffect(() => {
     dispatch(getUnitsDescriptions());
+    dispatch(getMilestoneTypes());
   }, [dispatch]);
 
   // Cleanup: Clear dates when component unmounts
@@ -1492,10 +1525,38 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         // Milestones Step
         const handleMilestoneChange = (index, field, value) => {
           const updatedMilestones = [...formData.milestones];
-          updatedMilestones[index] = {
-            ...updatedMilestones[index],
-            [field]: value,
-          };
+
+          // If changing code field, auto-populate milestone description
+          if (field === "code") {
+            const selectedMilestone = milestoneTypes.find(
+              (mt) =>
+                (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
+                value
+            );
+            if (selectedMilestone) {
+              updatedMilestones[index] = {
+                ...updatedMilestones[index],
+                code: value,
+                milestone:
+                  selectedMilestone.MILESTONE_DESCRIPTION ||
+                  selectedMilestone.MILESTONE_TYPE_DESC ||
+                  selectedMilestone.DESCRIPTION ||
+                  selectedMilestone.DESC ||
+                  "",
+              };
+            } else {
+              updatedMilestones[index] = {
+                ...updatedMilestones[index],
+                [field]: value,
+              };
+            }
+          } else {
+            updatedMilestones[index] = {
+              ...updatedMilestones[index],
+              [field]: value,
+            };
+          }
+
           setFormData((prev) => ({
             ...prev,
             milestones: updatedMilestones,
@@ -1658,8 +1719,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Code
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={milestone.code}
                         onChange={(e) =>
                           handleMilestoneChange(index, "code", e.target.value)
@@ -1671,8 +1731,41 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             ? "border-red-500"
                             : ""
                         }`}
-                        placeholder="e.g., MS-001"
-                      />
+                        disabled={milestoneTypesLoading}
+                      >
+                        <option value="">
+                          {milestoneTypesLoading
+                            ? "Loading codes..."
+                            : "Select milestone code"}
+                        </option>
+                        {milestoneTypes
+                          .slice()
+                          .sort((a, b) => {
+                            const aCode =
+                              a.MILESTONE_TYPE_CODE ||
+                              a.MILESTONE_CODE ||
+                              a.CODE;
+                            const bCode =
+                              b.MILESTONE_TYPE_CODE ||
+                              b.MILESTONE_CODE ||
+                              b.CODE;
+                            const na = parseInt(aCode, 10);
+                            const nb = parseInt(bCode, 10);
+                            if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                            return String(aCode).localeCompare(String(bCode));
+                          })
+                          .map((mt, idx) => {
+                            const code =
+                              mt.MILESTONE_TYPE_CODE ||
+                              mt.MILESTONE_CODE ||
+                              mt.CODE;
+                            return (
+                              <option key={idx} value={code}>
+                                {code}
+                              </option>
+                            );
+                          })}
+                      </select>
                       {validationErrors[`milestone_code_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {validationErrors[`milestone_code_${index}`]}
@@ -1687,21 +1780,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <input
                         type="text"
                         value={milestone.milestone}
-                        onChange={(e) =>
-                          handleMilestoneChange(
-                            index,
-                            "milestone",
-                            e.target.value
-                          )
-                        }
+                        readOnly
                         className={`input-field ${
                           isMobile ? "py-2 text-sm" : ""
                         } ${
                           validationErrors[`milestone_milestone_${index}`]
                             ? "border-red-500"
                             : ""
-                        }`}
-                        placeholder="e.g., Project Kickoff"
+                        } bg-gray-100 dark:bg-gray-700 cursor-not-allowed`}
+                        placeholder="Auto-populated from code selection"
                       />
                       {validationErrors[`milestone_milestone_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -1739,8 +1826,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Location
                       </label>
-                      <input
-                        type="text"
+                      <select
                         value={milestone.location}
                         onChange={(e) =>
                           handleMilestoneChange(
@@ -1756,8 +1842,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             ? "border-red-500"
                             : ""
                         }`}
-                        placeholder="e.g., Office, Site A"
-                      />
+                      >
+                        {milestoneLocationOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                       {validationErrors[`milestone_location_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {validationErrors[`milestone_location_${index}`]}
