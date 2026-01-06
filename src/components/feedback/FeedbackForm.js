@@ -162,6 +162,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     ],
   });
 
+  // If vessel is provided, we may auto-fill job category and project number (JMAIN)
+  const [autoProjectForVessel, setAutoProjectForVessel] = useState(null);
+
   // Dropdown options
   const jobCategoryOptions = [
     { value: "", label: "Select Category" },
@@ -274,6 +277,51 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       }));
     }
   }, [dates]);
+
+  // When the `vessel` prop changes, prefill job category and remember the JMAIN to auto-select
+  useEffect(() => {
+    if (vessel && vessel.raw) {
+      const shipJcat = vessel.raw.SHIP_JCAT || vessel.raw.SHIP_JOB_CATEGORY || "";
+      const shipJmain = vessel.raw.SHIP_JMAIN || vessel.jmainNo || vessel.id || "";
+
+      if (shipJcat) {
+        setFormData((prev) => ({
+          ...prev,
+          jobCategory: shipJcat,
+        }));
+        // Remember the project we want to auto-select once jmainList is loaded
+        if (shipJmain) setAutoProjectForVessel(String(shipJmain));
+      } else if (shipJmain) {
+        // If no job category available, still set projectNumber so users see JMAIN
+        setFormData((prev) => ({
+          ...prev,
+          projectNumber: String(shipJmain),
+          projectName: vessel.name || prev.projectName || "",
+        }));
+      }
+    }
+  }, [vessel]);
+
+  // When jmainList is updated (after dispatching getJmain), select the matching project for the vessel
+  useEffect(() => {
+    if (autoProjectForVessel) {
+      const match = (jmainList || []).find(
+        (p) => String(p.FEEDBACK_JMAIN) === String(autoProjectForVessel)
+      );
+      if (match) {
+        // use existing handler to ensure projectName and related state update
+        handleProjectNumberChange(match.FEEDBACK_JMAIN);
+      } else {
+        // If not found in the list, set the raw project number
+        setFormData((prev) => ({
+          ...prev,
+          projectNumber: String(autoProjectForVessel),
+          projectName: (vessel && (vessel.raw?.FEEDBACK_DESC || vessel.name)) || prev.projectName || "",
+        }));
+      }
+      setAutoProjectForVessel(null);
+    }
+  }, [jmainList, autoProjectForVessel, vessel]);
 
   // Handle click outside project dropdown
   useEffect(() => {
