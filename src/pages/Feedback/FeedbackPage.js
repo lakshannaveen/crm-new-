@@ -1228,7 +1228,7 @@ const FeedbackPage = () => {
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={handleNewFeedback}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="px-6 py-2 btn-primary"
                   >
                     Submit New Feedback
                   </button>
