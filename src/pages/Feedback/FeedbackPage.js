@@ -710,7 +710,7 @@ import Header from '../../components/common/Header';
 import { getShips } from '../../actions/shipActions';
 import Sidebar from '../../components/common/Sidebar';
 import FeedbackForm from '../../components/feedback/FeedbackForm';
-import LoginForm from '../../components/auth/LoginForm';
+import { logout } from '../../actions/authActions';
 import FeedbackHistory from '../../components/feedback/FeedbackHistory';
 import FeedbackDetailModal from '../../components/feedback/FeedbackDetailModal';
 import FeedbackConfirmation from '../../components/feedback/FeedbackConfirmation';
@@ -854,13 +854,17 @@ const FeedbackPage = () => {
     }
   }, [shipId, ships]);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <LoginForm />
-      </div>
-    );
-  }
+  // If there's no logged-in user (token removed/expired), clear session and redirect to login
+  useEffect(() => {
+    if (!user) {
+      try {
+        dispatch(logout());
+      } catch (e) {
+        // ignore
+      }
+      navigate('/login');
+    }
+  }, [user, dispatch, navigate]);
 
   const handleFeedbackSubmit = (feedbackData) => {
     // Create new feedback object
