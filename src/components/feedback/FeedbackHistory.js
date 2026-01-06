@@ -222,7 +222,19 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => (
+        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
+          const vesselName = feedback.vesselName && String(feedback.vesselName).trim() !== '' && String(feedback.vesselName) !== 'NA' ? feedback.vesselName : null;
+          const jmainVal = getFieldValue(feedback, 'FEEDBACK_JMAIN', 'P_JMAIN');
+          const descVal = getFieldValue(feedback, 'FEEDBACK_DESC');
+          const codeVal = getFieldValue(feedback, 'FEEDBACK_CODE', 'P_CODE');
+          const evalVal = getFieldValue(feedback, 'FEEDBACK_EVAL');
+          const answerVal = getFieldValue(feedback, 'FEEDBACK_ANSWER', 'P_ANSWER_TYPE');
+          const completionVal = getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE');
+          const observationsVal = feedback.observations && String(feedback.observations).trim() !== '' && String(feedback.observations) !== 'NA' ? feedback.observations : null;
+          const submittedByVal = getFieldValue(feedback, 'submittedBy', 'submitted_by');
+          const vesselIMOVal = getFieldValue(feedback, 'vesselIMO', 'vessel_imo');
+
+          return (
           <div
             key={feedback.id || index}
             className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800"
@@ -250,49 +262,63 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                   <div className="flex-1">
                     <div className="flex flex-col md:flex-row md:items-center justify-between">
                       <div className="w-full">
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                          {feedback.vesselName || 'NA'}
-                        </h3>
+                        {vesselName && (
+                          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                            {vesselName}
+                          </h3>
+                        )}
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">JMAIN</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_JMAIN', 'P_JMAIN')}</div>
-                          </div>
+                          {jmainVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">JMAIN</div>
+                              <div className="font-medium">{jmainVal}</div>
+                            </div>
+                          )}
 
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Description</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_DESC')}</div>
-                          </div>
+                          {descVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Description</div>
+                              <div className="font-medium">{descVal}</div>
+                            </div>
+                          )}
 
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_CODE', 'P_CODE')}</div>
-                          </div>
+                          {codeVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                              <div className="font-medium">{codeVal}</div>
+                            </div>
+                          )}
 
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_EVAL')}</div>
-                          </div>
+                          {evalVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
+                              <div className="font-medium">{evalVal}</div>
+                            </div>
+                          )}
 
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_ANSWER', 'P_ANSWER_TYPE')}</div>
-                          </div>
+                          {answerVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                              <div className="font-medium">{answerVal}</div>
+                            </div>
+                          )}
 
-                          <div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
-                            <div className="font-medium">{getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE') === 'NA' ? 'NA' : formatDate(getFieldValue(feedback, 'FEEDBACK_COMPLETION_DATE'))}</div>
-                          </div>
+                          {completionVal !== 'NA' && (
+                            <div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
+                              <div className="font-medium">{formatDate(completionVal)}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                     
                     {/* Observations Preview */}
-                    {feedback.observations && (
+                    {observationsVal && (
                       <div className="mt-3">
                         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                          {feedback.observations}
+                          {observationsVal}
                         </p>
                       </div>
                     )}
@@ -315,18 +341,20 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
             {/* Categories Summary */}
             <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Submitted By</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {getFieldValue(feedback, 'submittedBy', 'submitted_by')}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Submitted Time</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {formatTime(feedback.submittedAt) || 'NA'}
-                  </p>
-                </div>
+                {submittedByVal !== 'NA' && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Submitted By</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{submittedByVal}</p>
+                  </div>
+                )}
+
+                {formatTime(feedback.submittedAt) && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Submitted Time</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{formatTime(feedback.submittedAt)}</p>
+                  </div>
+                )}
+
                 {Object.values(feedback.ratings || {}).filter(r => r > 0).length > 0 && (
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Categories Rated</p>
@@ -335,15 +363,18 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
                     </p>
                   </div>
                 )}
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Vessel IMO</p>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {getFieldValue(feedback, 'vesselIMO', 'vessel_imo')}
-                  </p>
-                </div>
+
+                {vesselIMOVal !== 'NA' && (
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Vessel IMO</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{vesselIMOVal}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
+          );
+        })}
         ))}
       </div>
 
