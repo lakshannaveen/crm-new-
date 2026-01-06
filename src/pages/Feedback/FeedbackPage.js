@@ -719,6 +719,7 @@ import {
   FiMessageSquare,
   FiBarChart2,
   FiStar,
+  FiDownload,
 } from "react-icons/fi";
 import { getShips } from "../../actions/shipActions";
 import { getAllFeedbacks } from "../../actions/feedbackActions";
@@ -989,6 +990,117 @@ const FeedbackPage = () => {
   const handleViewDetails = (feedback) => {
     setSelectedFeedback(feedback);
     setIsModalOpen(true);
+  };
+
+  const downloadFeedbackPDF = (feedback) => {
+    // Create a PDF with only card content: vessel name, date, score, rating, observations
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Feedback Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 30px; color: #333; }
+            .header { border-bottom: 3px solid #2563eb; padding-bottom: 15px; margin-bottom: 20px; }
+            .title { font-size: 20px; font-weight: bold; color: #1e40af; }
+            .info-row { margin-bottom: 12px; }
+            .label { font-weight: bold; color: #374151; width: 140px; display: inline-block; }
+            .value { color: #666; }
+            .score-box { 
+              display: inline-block; 
+              background: #dbeafe; 
+              padding: 6px 12px; 
+              border-radius: 6px; 
+              font-weight: bold; 
+              color: #1e40af;
+            }
+            .rating-badge {
+              display: inline-block;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-weight: bold;
+              margin-top: 8px;
+            }
+            .rating-excellent { background: #dcfce7; color: #166534; }
+            .rating-good { background: #fef3c7; color: #92400e; }
+            .rating-needs { background: #fee2e2; color: #991b1b; }
+            .observations { 
+              background: #f9fafb; 
+              padding: 12px; 
+              border-left: 4px solid #2563eb;
+              border-radius: 4px;
+              margin-top: 12px;
+              line-height: 1.6;
+              white-space: pre-wrap;
+              word-wrap: break-word;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">Feedback Report</div>
+          </div>
+
+          <div className="info-row">
+            <span class="label">Vessel Name:</span>
+            <span class="value">${feedback.vesselName || "N/A"}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="label">Submitted On:</span>
+            <span class="value">${new Date(
+              feedback.submittedAt
+            ).toLocaleDateString()}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="label">Overall Score:</span>
+            <span class="score-box">${feedback.overallScore}/100</span>
+          </div>
+
+          <div class="info-row">
+            <span class="label">Rating:</span>
+            <br/>
+            <span class="rating-badge ${
+              feedback.overallScore >= 75
+                ? "rating-excellent"
+                : feedback.overallScore >= 50
+                ? "rating-good"
+                : "rating-needs"
+            }">
+              ${
+                feedback.overallScore >= 75
+                  ? "Excellent"
+                  : feedback.overallScore >= 50
+                  ? "Good"
+                  : "Needs Improvement"
+              }
+            </span>
+          </div>
+
+          ${
+            feedback.observations
+              ? `
+            <div class="info-row">
+              <span class="label">Observations:</span>
+              <div class="observations">${feedback.observations}</div>
+            </div>
+          `
+              : ""
+          }
+        </body>
+      </html>
+    `;
+
+    // Open print dialog with the HTML content
+    const printWindow = window.open("", "", "width=800,height=600");
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+
+    // Trigger print dialog and save as PDF
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   const handleViewHistory = () => {
@@ -1368,15 +1480,14 @@ const FeedbackPage = () => {
                         {feedbacks.slice(0, 3).map((feedback, index) => (
                           <div
                             key={feedback.id}
-                            className={`p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer ${
+                            className={`p-4 border rounded-lg ${
                               index === 0
                                 ? "border-blue-300 dark:border-blue-700"
                                 : "border-gray-200 dark:border-gray-700"
                             }`}
-                            onClick={() => handleViewDetails(feedback)}
                           >
-                            <div className="flex items-center justify-between">
-                              <div>
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex-1">
                                 <h4 className="font-medium text-gray-900 dark:text-white">
                                   {feedback.vesselName}
                                 </h4>
@@ -1387,24 +1498,33 @@ const FeedbackPage = () => {
                                   • Score: {feedback.overallScore}/100
                                 </p>
                               </div>
-                              <div
-                                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                  feedback.overallScore >= 75
-                                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                              <div className="flex items-center space-x-2">
+                                <div
+                                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                    feedback.overallScore >= 75
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                      : feedback.overallScore >= 50
+                                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                  }`}
+                                >
+                                  {feedback.overallScore >= 75
+                                    ? "Excellent"
                                     : feedback.overallScore >= 50
-                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                    : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                }`}
-                              >
-                                {feedback.overallScore >= 75
-                                  ? "Excellent"
-                                  : feedback.overallScore >= 50
-                                  ? "Good"
-                                  : "Needs Improvement"}
+                                    ? "Good"
+                                    : "Needs Improvement"}
+                                </div>
+                                <button
+                                  onClick={() => downloadFeedbackPDF(feedback)}
+                                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                  title="Download as PDF"
+                                >
+                                  <FiDownload className="w-4 h-4" />
+                                </button>
                               </div>
                             </div>
                             {feedback.observations && (
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                                 {feedback.observations}
                               </p>
                             )}
