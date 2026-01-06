@@ -652,6 +652,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
+import { getShipDetails } from "../../actions/shipActions";
 import {
   FiArrowLeft,
   FiCalendar,
@@ -681,15 +682,30 @@ const ProjectManagement = () => {
   const dispatch = useDispatch();
   const { currentProject, loading, milestones, milestonesLoading } =
     useSelector((state) => state.projects);
+  const { currentShip, loading: shipLoading } = useSelector(
+    (state) => state.ships
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("milestones");
   const [showMoreActions, setShowMoreActions] = useState(false);
+
+  // Fetch ship details when component mounts
+  useEffect(() => {
+    const selectedJmain = localStorage.getItem("SELECTED_SHIP_JMAIN");
+    if (selectedJmain) {
+      dispatch(getShipDetails(selectedJmain));
+    }
+  }, [dispatch]);
+
+  // Build project name from ship name if available
+  const shipName = currentShip?.name || "Project";
+  const projectName = currentProject?.name || `${shipName} `;
 
   const project = currentProject || {
     id: id,
-    name: "MV Ocean Queen - Major Repair",
-    description:
-      "Complete hull repair and engine overhaul with system upgrades",
+    name: projectName,
+    // description:
+    //   "Complete hull repair and engine overhaul with system upgrades",
     status: "on_track",
     progress: 75,
     startDate: "2024-01-10",
@@ -965,7 +981,7 @@ const ProjectManagement = () => {
                         {formatDate(project.deadline, "short")}
                       </span>
                     </div>
-                    <div className="flex items-center text-sm">
+                    {/* <div className="flex items-center text-sm">
                       <FiUsers className="text-gray-400 mr-2 flex-shrink-0" />
                       <span className="text-gray-600 dark:text-gray-400">
                         Team:{" "}
@@ -973,12 +989,12 @@ const ProjectManagement = () => {
                       <span className="ml-1 font-medium text-gray-900 dark:text-white">
                         {project.teamSize} members
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
                 {/* Progress & Budget */}
-                <div className="w-full lg:w-1/3">
+                {/* <div className="w-full lg:w-1/3">
                   <div className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -1028,7 +1044,7 @@ const ProjectManagement = () => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -1036,7 +1052,6 @@ const ProjectManagement = () => {
             <div className="mb-6">
               <div className="flex space-x-0 sm:space-x-4 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
                 {[
-                  "overview",
                   "milestones" /*'team', 'documents', 'communications', 'settings'*/,
                 ].map((tab) => (
                   <button
@@ -1056,213 +1071,6 @@ const ProjectManagement = () => {
 
             {/* Tab Content */}
             <div className="card">
-              {activeTab === "overview" && (
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Key Metrics */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Key Metrics
-                    </h3>
-                    <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {[
-                        {
-                          icon: FiCheckCircle,
-                          color: "blue",
-                          label: "Completed Tasks",
-                          value: project.tasks.completed,
-                          subtext: `Out of ${project.tasks.total} total tasks`,
-                        },
-                        {
-                          icon: FiTrendingUp,
-                          color: "green",
-                          label: "Progress Rate",
-                          value: `${Math.round(
-                            (project.progress /
-                              ((new Date(project.deadline) -
-                                new Date(project.startDate)) /
-                                (1000 * 60 * 60 * 24))) *
-                              100
-                          )}%`,
-                          subtext: "Average daily progress",
-                        },
-                        {
-                          icon: FiUsers,
-                          color: "purple",
-                          label: "Team Utilization",
-                          value: "92%",
-                          subtext: `${project.teamSize} active team members`,
-                        },
-                        {
-                          icon: FiAlertCircle,
-                          color: "yellow",
-                          label: "Risk Level",
-                          value: "Low",
-                          subtext: "2 minor risks identified",
-                        },
-                      ].map((metric, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 sm:p-4 bg-${metric.color}-50 dark:bg-${metric.color}-900/30 rounded-lg`}
-                        >
-                          <div className="flex items-center mb-2">
-                            <metric.icon
-                              className={`text-${metric.color}-500 mr-3 flex-shrink-0`}
-                            />
-                            <div className="min-w-0">
-                              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {metric.label}
-                              </p>
-                              <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white truncate">
-                                {metric.value}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
-                            {metric.subtext}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Project Leads */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Project Leadership
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                      {[
-                        {
-                          person: project.coordinator,
-                          role: "Project Coordinator",
-                          initials: project.coordinator
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join(""),
-                          color: "blue",
-                          details: [
-                            {
-                              icon: FiCalendar,
-                              text: "Overall project supervision",
-                            },
-                            {
-                              icon: FiMessageSquare,
-                              text: "Primary point of contact",
-                            },
-                            { icon: FiBarChart2, text: "Progress reporting" },
-                          ],
-                        },
-                        {
-                          person: project.teamLeader,
-                          role: "Team Leader",
-                          initials: project.teamLeader
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join(""),
-                          color: "green",
-                          details: [
-                            { icon: FiSettings, text: "Technical supervision" },
-                            { icon: FiUsers, text: "Team management" },
-                            { icon: FiCheckCircle, text: "Quality assurance" },
-                          ],
-                        },
-                      ].map((lead, index) => (
-                        <div
-                          key={index}
-                          className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                        >
-                          <div className="flex items-center mb-4">
-                            <div
-                              className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-${lead.color}-100 dark:bg-${lead.color}-900 flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0`}
-                            >
-                              <span
-                                className={`text-${lead.color}-600 dark:text-${lead.color}-300 font-medium text-sm sm:text-base`}
-                              >
-                                {lead.initials}
-                              </span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 dark:text-white truncate">
-                                {lead.person}
-                              </p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {lead.role}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            {lead.details.map((detail, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center text-sm"
-                              >
-                                <detail.icon className="text-gray-400 mr-2 flex-shrink-0" />
-                                <span className="text-gray-600 dark:text-gray-400 truncate">
-                                  {detail.text}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recent Updates */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Recent Updates
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        {
-                          update:
-                            "Hull repair phase completed ahead of schedule",
-                          time: "2 hours ago",
-                          user: "Anil Kumar",
-                        },
-                        {
-                          update: "New safety equipment installed and tested",
-                          time: "1 day ago",
-                          user: "Maria Silva",
-                        },
-                        {
-                          update: "Engine parts received from supplier",
-                          time: "2 days ago",
-                          user: "David Chen",
-                        },
-                        {
-                          update: "Weekly progress meeting conducted",
-                          time: "3 days ago",
-                          user: "Raj Patel",
-                        },
-                      ].map((update, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
-                        >
-                          <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 mt-1 flex-shrink-0">
-                            <FiMessageSquare className="text-blue-600 dark:text-blue-300" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm text-gray-900 dark:text-white truncate">
-                              {update.update}
-                            </p>
-                            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 flex-wrap">
-                              <span>{update.time}</span>
-                              <span className="mx-2 hidden sm:inline">•</span>
-                              <span className="sm:ml-0 ml-2">
-                                By {update.user}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {activeTab === "milestones" && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
