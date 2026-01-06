@@ -375,7 +375,7 @@ const FeedbackHistory = ({ feedbacks = [], onDelete, onViewDetails, isLoading = 
           </div>
           );
         })}
-        ))}
+    
       </div>
 
       {/* Load more / Show less */}
