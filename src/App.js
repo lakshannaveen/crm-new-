@@ -245,7 +245,45 @@ import { loadUser } from './actions/authActions';
 import LoginPage from './pages/Auth/LoginPage';
 import FeedbackPage from './pages/Feedback/FeedbackPage';
 import LoadingScreen from './components/common/LoadingScreen';
+<<<<<<< HEAD
 import { SidebarProvider } from './context/SidebarContext';
+=======
+import ScrollToTop from './components/common/ScrollToTop';
+
+
+const AuthenticatedLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <Sidebar />
+      <div className="pt-16">
+        <div className="md:ml-6">
+          <main className="p-2 sm:p-2 lg:p-2">
+            {children}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Layout for admin pages
+const AdminLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <Sidebar />
+      <div className="pt-6">
+        <div className="md:ml-6">
+          <main className="p-4 sm:p-2 lg:p-2">
+            {children}
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+};
+>>>>>>> feedback-form-
 
 function App() {
   const dispatch = useDispatch();
@@ -270,6 +308,7 @@ function App() {
 
   return (
     <SidebarProvider>
+      <ScrollToTop />
       <Routes>
       {/* Keep the app minimal: only login and feedback routes */}
       <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/feedback" />} />

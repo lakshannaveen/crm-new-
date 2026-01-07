@@ -291,6 +291,7 @@
 // export default OwnerDashboard;
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getShips } from '../../actions/shipActions';
 import { getUserByServiceNo } from '../../actions/userActions';
@@ -299,7 +300,7 @@ import Sidebar from '../../components/common/Sidebar';
 import ProfileSection from '../../components/dashboard/ProfileSection';
 import ShipCard from '../../components/dashboard/ShipCard';
 import StatsCard from '../../components/dashboard/StatsCard';
-import { FiAnchor, FiClock, FiCheckCircle, FiAlertCircle, FiPlus } from 'react-icons/fi';
+import { FiAnchor, FiClock, FiCheckCircle, FiAlertCircle, FiPlus, FiUsers, FiSettings, FiMessageSquare } from 'react-icons/fi';
 
 const OwnerDashboard = () => {
   const dispatch = useDispatch();
@@ -309,6 +310,7 @@ const OwnerDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [showAllShips, setShowAllShips] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getShips());
@@ -539,61 +541,36 @@ const OwnerDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <div className="mt-8">
               <div className="card">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Quick Actions
                 </h3>
-                <div className="space-y-3">
-                  <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
-                                   dark:hover:bg-gray-700 transition-colors">
-                    View Maintenance Schedule
+                <div className="space-y-3 md:flex md:items-start md:gap-4 md:space-y-0">
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <FiUsers className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    <span className="font-medium text-gray-900 dark:text-white">Profile</span>
                   </button>
-                  <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
-                                   dark:hover:bg-gray-700 transition-colors">
-                    Download Reports
+
+                  <button
+                    onClick={() => navigate('/settings')}
+                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <FiSettings className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    <span className="font-medium text-gray-900 dark:text-white">Settings</span>
                   </button>
-                  <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
-                                   dark:hover:bg-gray-700 transition-colors">
-                    Contact Dockyard
+
+                  <button
+                    onClick={() => navigate('/feedback')}
+                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <FiMessageSquare className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    <span className="font-medium text-gray-900 dark:text-white">Feedback</span>
                   </button>
-                </div>
-              </div>
-              <div className="card md:col-span-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  Recent Activities
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/30 
-                                rounded-lg">
-                    <div className="h-10 w-10 bg-blue-100 dark:bg-blue-800 rounded-full 
-                                  flex items-center justify-center mr-3">
-                      <FiCheckCircle className="text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        MV Ocean Queen repair progress updated to 75%
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        2 hours ago
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 
-                                rounded-lg">
-                    <div className="h-10 w-10 bg-gray-100 dark:bg-gray-600 rounded-full 
-                                  flex items-center justify-center mr-3">
-                      <FiAlertCircle className="text-gray-600 dark:text-gray-300" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        MV Sea Voyager survey due in 30 days
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Yesterday
-                      </p>
-                    </div>
-                  </div>
+
                 </div>
               </div>
             </div>

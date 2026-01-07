@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import toast from "react-hot-toast";
 import {
   FiCheck,
   FiAlertCircle,
@@ -9,6 +10,9 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiUser,
+  FiTrendingUp,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
 import { addFeedback } from "../../services/feedbackService";
@@ -16,6 +20,10 @@ import {
   getFeedbackDates,
   getJmain,
   getUnitsDescriptions,
+  getMilestoneTypes,
+  submitMilestone,
+  clearFeedbackDates,
+  getDuration,
 } from "../../actions/feedbackActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
@@ -23,11 +31,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const { user } = useSelector((state) => state.auth);
   const {
     dates = { startingDate: "", endingDate: "" },
+    duration = { afloatDays: 0, indockDays: 0 },
     loading: datesLoading = false,
+    durationLoading = false,
     jmainList = [],
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    milestoneTypes = [],
+    milestoneTypesLoading = false,
+    milestoneSubmitting = false,
+    milestoneSubmitSuccess = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
@@ -36,6 +50,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
+  const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
+  const [projectSearchTerm, setProjectSearchTerm] = useState("");
+  const [showProjectDropdown, setShowProjectDropdown] = useState(false);
+  const projectDropdownRef = useRef(null);
   const [evaluationRows, setEvaluationRows] = useState(
     Array(11)
       .fill(null)
@@ -140,7 +158,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     remarks: "",
     actionTaken: "",
     // Removed vessel fields (vesselName, vesselIMO)
+
+    // Milestones
+    milestones: [
+      { code: "", milestone: "", date: "", location: "", remarks: "" },
+    ],
   });
+
+  // If vessel is provided, we may auto-fill job category and project number (JMAIN)
+  const [autoProjectForVessel, setAutoProjectForVessel] = useState(null);
 
   // Dropdown options
   const jobCategoryOptions = [
@@ -167,30 +193,72 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     { value: "4", label: "Reluctant to Issue" },
   ];
 
+  const milestoneLocationOptions = [
+    { value: "", label: "Select Location" },
+    { value: "DOCK-01", label: "DOCK-01" },
+    { value: "DOCK-02", label: "DOCK-02" },
+    { value: "DOCK-03", label: "DOCK-03" },
+    { value: "DOCK-04", label: "DOCK-04" },
+    { value: "PIER-01", label: "PIER-01" },
+    { value: "PIER-02", label: "PIER-02" },
+    { value: "PIER-03", label: "PIER-03" },
+    { value: "GP1", label: "GUIDE PIER I" },
+    { value: "GP2", label: "GUIDE PIER II" },
+    { value: "NPD4", label: "NORTH PIER DOCK-4" },
+    { value: "DN3E", label: "DOCK NO.3 ENTRANCE" },
+    { value: "DN4E", label: "DOCK NO.4 ENTRANCE" },
+    { value: "DOLPHINS", label: "DOLPHINS" },
+    { value: "SLPA BERTH", label: "SLPA BERTH" },
+    { value: "OUTANCH", label: "OUTER ANCHORAGE" },
+    { value: "JCT", label: "JCT" },
+    { value: "UCT", label: "UCT" },
+    { value: "PVQ", label: "PVQ" },
+    { value: "BQ", label: "BQ" },
+    { value: "TANKER BERTH", label: "TANKER BERTH" },
+    { value: "GATEWAY", label: "GATEWAY" },
+    { value: "PASSTERM", label: "PASSENGER TERMINAL" },
+    { value: "GALLE", label: "GALLE" },
+    { value: "TRINCOMALE", label: "TRINCOMALE" },
+    { value: "OTHER", label: "OTHER" },
+  ];
+
   const steps = [
     { id: 0, title: "Project Details", icon: <FiCalendar /> },
     { id: 1, title: "Evaluation Details", icon: <FiStar /> },
-    { id: 2, title: "Review", icon: <FiCheck /> },
-    { id: 3, title: "Complete", icon: <FiCheck /> },
+    { id: 2, title: "Milestones", icon: <FiTrendingUp /> },
+    { id: 3, title: "Review", icon: <FiCheck /> },
+    { id: 4, title: "Complete", icon: <FiCheck /> },
   ];
 
   // Ensure currentStep is within bounds
   const safeCurrentStep = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const currentStepData = steps[safeCurrentStep] || steps[0];
 
-  // Fetch units descriptions on component mount
+  // Fetch units descriptions and milestone types on component mount
   useEffect(() => {
     dispatch(getUnitsDescriptions());
+    dispatch(getMilestoneTypes());
+  }, [dispatch]);
+
+  // Cleanup: Clear dates when component unmounts
+  useEffect(() => {
+    return () => {
+      dispatch(clearFeedbackDates());
+    };
   }, [dispatch]);
 
   // Fetch JMain (project numbers) when job category is selected
   useEffect(() => {
     if (formData.jobCategory) {
       dispatch(getJmain(formData.jobCategory));
-      // Reset project number when job category changes
+      // Clear dates from Redux when job category changes
+      dispatch(clearFeedbackDates());
+      // Reset project number and dates when job category changes
       setFormData((prev) => ({
         ...prev,
         projectNumber: "",
+        startingDate: "",
+        endingDate: "",
       }));
     }
   }, [formData.jobCategory, dispatch]);
@@ -199,6 +267,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   useEffect(() => {
     if (formData.jobCategory && formData.projectNumber) {
       dispatch(getFeedbackDates(formData.jobCategory, formData.projectNumber));
+    }
+  }, [formData.jobCategory, formData.projectNumber, dispatch]);
+
+  // Fetch duration when job category and project number are selected
+  useEffect(() => {
+    if (formData.jobCategory && formData.projectNumber) {
+      dispatch(getDuration(formData.jobCategory, formData.projectNumber));
     }
   }, [formData.jobCategory, formData.projectNumber, dispatch]);
 
@@ -212,6 +287,88 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       }));
     }
   }, [dates]);
+
+  // Update form data when duration is loaded from Redux
+  useEffect(() => {
+    if (
+      duration &&
+      (duration.afloatDays !== undefined || duration.indockDays !== undefined)
+    ) {
+      console.log("Duration data loaded:", duration);
+      setFormData((prev) => ({
+        ...prev,
+        afloatDuration:
+          duration.afloatDays !== undefined ? duration.afloatDays : 0,
+        indockDuration:
+          duration.indockDays !== undefined ? duration.indockDays : 0,
+      }));
+    }
+  }, [duration]);
+
+  // When the `vessel` prop changes, prefill job category and remember the JMAIN to auto-select
+  useEffect(() => {
+    if (vessel && vessel.raw) {
+      const shipJcat =
+        vessel.raw.SHIP_JCAT || vessel.raw.SHIP_JOB_CATEGORY || "";
+      const shipJmain =
+        vessel.raw.SHIP_JMAIN || vessel.jmainNo || vessel.id || "";
+
+      if (shipJcat) {
+        setFormData((prev) => ({
+          ...prev,
+          jobCategory: shipJcat,
+        }));
+        // Remember the project we want to auto-select once jmainList is loaded
+        if (shipJmain) setAutoProjectForVessel(String(shipJmain));
+      } else if (shipJmain) {
+        // If no job category available, still set projectNumber so users see JMAIN
+        setFormData((prev) => ({
+          ...prev,
+          projectNumber: String(shipJmain),
+          projectName: vessel.name || prev.projectName || "",
+        }));
+      }
+    }
+  }, [vessel]);
+
+  // When jmainList is updated (after dispatching getJmain), select the matching project for the vessel
+  useEffect(() => {
+    if (autoProjectForVessel) {
+      const match = (jmainList || []).find(
+        (p) => String(p.FEEDBACK_JMAIN) === String(autoProjectForVessel)
+      );
+      if (match) {
+        // use existing handler to ensure projectName and related state update
+        handleProjectNumberChange(match.FEEDBACK_JMAIN);
+      } else {
+        // If not found in the list, set the raw project number
+        setFormData((prev) => ({
+          ...prev,
+          projectNumber: String(autoProjectForVessel),
+          projectName:
+            (vessel && (vessel.raw?.FEEDBACK_DESC || vessel.name)) ||
+            prev.projectName ||
+            "",
+        }));
+      }
+      setAutoProjectForVessel(null);
+    }
+  }, [jmainList, autoProjectForVessel, vessel]);
+
+  // Handle click outside project dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        projectDropdownRef.current &&
+        !projectDropdownRef.current.contains(event.target)
+      ) {
+        setShowProjectDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -251,6 +408,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       projectName: selectedProject?.FEEDBACK_DESC || "",
     }));
 
+    // Clear search and close dropdown
+    setProjectSearchTerm("");
+    setShowProjectDropdown(false);
+
     // Clear validation errors for project and dates (dates may auto-fill)
     setValidationErrors((prev) => {
       const newErrors = { ...prev };
@@ -261,6 +422,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       return newErrors;
     });
   };
+
+  // Filter projects based on search term
+  const filteredProjects = jmainList.filter((project) => {
+    const jmainValue = project.FEEDBACK_JMAIN || "";
+    const jmainDesc = project.FEEDBACK_DESC || "";
+    const searchLower = projectSearchTerm.toLowerCase();
+    return (
+      jmainValue.toString().toLowerCase().includes(searchLower) ||
+      jmainDesc.toLowerCase().includes(searchLower)
+    );
+  });
 
   const handleSelectChange = (field, value) => {
     setFormData((prev) => ({
@@ -525,7 +697,31 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             "At least one evaluation row must be completed";
         }
         break;
-      case 2: // Review
+      case 2: // Milestones
+        // Validate that at least one milestone with milestone name is provided
+        const hasValidMilestone = formData.milestones.some(
+          (milestone) =>
+            milestone.milestone && milestone.milestone.trim() !== ""
+        );
+        if (!hasValidMilestone) {
+          errors.milestones = "At least one milestone is required";
+        }
+        // Validate each milestone that has a milestone name
+        formData.milestones.forEach((milestone, index) => {
+          if (milestone.milestone && milestone.milestone.trim() !== "") {
+            if (!milestone.code) {
+              errors[`milestone_code_${index}`] = "Code is required";
+            }
+            if (!milestone.date) {
+              errors[`milestone_date_${index}`] = "Date is required";
+            }
+            if (!milestone.location) {
+              errors[`milestone_location_${index}`] = "Location is required";
+            }
+          }
+        });
+        break;
+      case 3: // Review
         // No validation needed for review
         break;
       default:
@@ -537,8 +733,69 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      // Validate current step before proceeding
-      const errors = validateStep(currentStep);
+      // Check if on milestone step and milestones not submitted
+      if (currentStep === 2 && !milestonesSubmitted) {
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-3">
+                <FiAlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Submit Milestones?
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    You haven't submitted any milestones yet. Do you want to
+                    submit milestones?
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    // User chose to skip, clear any errors and proceed
+                    setValidationErrors({});
+                    setCurrentStep((prev) => {
+                      const next = Math.min(prev + 1, steps.length - 1);
+                      setTimeout(scrollToQuestionSection, 100);
+                      return next;
+                    });
+                  }}
+                  className="btn-secondary text-sm"
+                >
+                  Skip
+                </button>
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    // User wants to submit milestones, stay on current step
+                    setValidationErrors({
+                      milestones:
+                        "Please fill out the milestone form and click 'Submit Milestones' button",
+                    });
+                    setTimeout(scrollToQuestionSection, 100);
+                  }}
+                  className="btn-primary text-sm"
+                >
+                  Fill Milestones
+                </button>
+              </div>
+            </div>
+          ),
+          {
+            duration: Infinity,
+            position: "top-center",
+            style: {
+              maxWidth: "500px",
+            },
+          }
+        );
+        return;
+      }
+
+      // Validate current step before proceeding (skip milestone validation)
+      const errors = currentStep === 2 ? {} : validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
 
@@ -609,6 +866,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         setTimeout(scrollToQuestionSection, 100);
         return prevStep;
       });
+      // Reset milestones submitted flag when going back to milestone step
+      if (currentStep === 3) {
+        setMilestonesSubmitted(false);
+      }
     }
   };
 
@@ -649,6 +910,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       FeedbackList: evaluationRows
         .filter((row) => row.criteriaCode && row.unitCode)
         .map((row) => {
+<<<<<<< HEAD
           const answer = (() => {
             if (typeof row.yesNo === 'string') {
               return row.yesNo.toUpperCase().startsWith('Y') ? 'Y' : 'N';
@@ -657,6 +919,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               return row.yesNo ? 'Y' : 'N';
             }
             return 'N';
+=======
+          // Use only evaluation letters P, A, G, E, N. If evaluation missing or invalid, send 'N'.
+          const answer = (() => {
+            const val = (row.evaluation || "").toString().toUpperCase();
+            return ["P", "A", "G", "E", "N"].includes(val) ? val : "N";
+>>>>>>> feedback-form-
           })();
 
           return {
@@ -678,7 +946,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (onSubmit) {
       onSubmit(feedbackPayload);
     }
-    setCurrentStep(3);
+    setCurrentStep(4);
   };
 
   // Mobile Progress Indicator
@@ -734,20 +1002,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           <button
             onClick={prevStep}
             disabled={currentStep === 0}
-            className={`px-4 py-3 rounded-lg flex-1 ${
-              currentStep === 0
-                ? "bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            className={`flex-1 btn-secondary ${
+              currentStep === 0 ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             <FiChevronLeft className="inline mr-2" />
             Previous
           </button>
 
-          <button
-            onClick={nextStep}
-            className="px-4 py-3 bg-blue-600 text-white rounded-lg flex-1 hover:bg-blue-700"
-          >
+          <button onClick={nextStep} className="flex-1 btn-primary">
             {currentStep === steps.length - 2 ? "Review" : "Next"}
             <FiChevronRight className="inline ml-2" />
           </button>
@@ -1127,43 +1390,112 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Project Number
                   </label>
-                  <select
-                    value={formData.projectNumber}
-                    onChange={(e) => handleProjectNumberChange(e.target.value)}
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                      validationErrors.projectNumber ? "border-red-500" : ""
-                    }`}
-                    disabled={!formData.jobCategory || jmainLoading}
-                  >
-                    <option value="">
-                      {jmainLoading
-                        ? "Loading project numbers..."
-                        : !formData.jobCategory
-                        ? "Select job category first"
-                        : jmainList.length === 0
-                        ? "No projects found"
-                        : "Select project number"}
-                    </option>
-                    {jmainList &&
-                      jmainList.length > 0 &&
-                      [...jmainList]
-                        .sort((a, b) => {
-                          const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
-                          const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
-                          return aVal - bVal;
-                        })
-                        .map((project, index) => {
-                          const jmainValue = project.FEEDBACK_JMAIN;
-                          return (
-                            <option
-                              key={jmainValue || index}
-                              value={jmainValue}
-                            >
-                              {jmainValue}
-                            </option>
-                          );
-                        })}
-                  </select>
+                  <div className="relative" ref={projectDropdownRef}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={
+                          projectSearchTerm ||
+                          (formData.projectNumber
+                            ? jmainList.find(
+                                (p) =>
+                                  p.FEEDBACK_JMAIN === formData.projectNumber
+                              )?.FEEDBACK_JMAIN || formData.projectNumber
+                            : "")
+                        }
+                        onChange={(e) => {
+                          setProjectSearchTerm(e.target.value);
+                          setShowProjectDropdown(true);
+                        }}
+                        onFocus={() => setShowProjectDropdown(true)}
+                        placeholder={
+                          jmainLoading
+                            ? "Loading..."
+                            : !formData.jobCategory
+                            ? "Select job category first"
+                            : "Search or select project..."
+                        }
+                        disabled={!formData.jobCategory || jmainLoading}
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors.projectNumber ? "border-red-500" : ""
+                        } pr-10`}
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        {jmainLoading ? (
+                          <svg
+                            className="animate-spin h-4 w-4 text-blue-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                          </svg>
+                        ) : (
+                          <FiSearch className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dropdown list */}
+                    {showProjectDropdown &&
+                      formData.jobCategory &&
+                      !jmainLoading && (
+                        <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                          {filteredProjects.length === 0 ? (
+                            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                              No projects found
+                            </div>
+                          ) : (
+                            filteredProjects
+                              .sort((a, b) => {
+                                const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
+                                const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
+                                return aVal - bVal;
+                              })
+                              .map((project) => {
+                                const jmainValue = project.FEEDBACK_JMAIN;
+                                const jmainDesc = project.FEEDBACK_DESC;
+                                return (
+                                  <div
+                                    key={jmainValue}
+                                    onClick={() =>
+                                      handleProjectNumberChange(jmainValue)
+                                    }
+                                    className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                                      formData.projectNumber === jmainValue
+                                        ? "bg-blue-50 dark:bg-blue-900/30"
+                                        : ""
+                                    }`}
+                                  >
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                      {jmainValue}
+                                    </div>
+                                    {/* {jmainDesc && (
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      {jmainDesc}
+                                    </div>
+                                  )} */}
+                                  </div>
+                                );
+                              })
+                          )}
+                        </div>
+                      )}
+                  </div>
                   <div className="min-h-[20px]">
                     {validationErrors.projectNumber && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -1267,13 +1599,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
 
               {/* Show error if dates fetch fails */}
-              {datesError && (
+              {/* {datesError && (
                 <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <p className="text-sm text-yellow-800 dark:text-yellow-200">
                     Note: Could not auto-load dates. Please enter them manually.
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* Status Fields */}
               <div
@@ -1371,6 +1703,431 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        );
+
+      case 2:
+        // Milestones Step
+        const handleMilestoneChange = (index, field, value) => {
+          const updatedMilestones = [...formData.milestones];
+
+          // If changing code field, auto-populate milestone description
+          if (field === "code") {
+            const selectedMilestone = milestoneTypes.find(
+              (mt) =>
+                (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
+                value
+            );
+            if (selectedMilestone) {
+              updatedMilestones[index] = {
+                ...updatedMilestones[index],
+                code: value,
+                milestone:
+                  selectedMilestone.MILESTONE_DESCRIPTION ||
+                  selectedMilestone.MILESTONE_TYPE_DESC ||
+                  selectedMilestone.DESCRIPTION ||
+                  selectedMilestone.DESC ||
+                  "",
+              };
+            } else {
+              updatedMilestones[index] = {
+                ...updatedMilestones[index],
+                [field]: value,
+              };
+            }
+          } else {
+            updatedMilestones[index] = {
+              ...updatedMilestones[index],
+              [field]: value,
+            };
+          }
+
+          setFormData((prev) => ({
+            ...prev,
+            milestones: updatedMilestones,
+          }));
+
+          // Reset submitted state when changes are made
+          if (milestonesSubmitted) {
+            setMilestonesSubmitted(false);
+          }
+
+          // Clear validation errors
+          if (validationErrors[`milestone_${field}_${index}`]) {
+            setValidationErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors[`milestone_${field}_${index}`];
+              return newErrors;
+            });
+          }
+          if (validationErrors.milestones) {
+            setValidationErrors((prev) => {
+              const newErrors = { ...prev };
+              delete newErrors.milestones;
+              return newErrors;
+            });
+          }
+        };
+
+        const addMilestone = () => {
+          setFormData((prev) => ({
+            ...prev,
+            milestones: [
+              ...prev.milestones,
+              { code: "", milestone: "", date: "", location: "", remarks: "" },
+            ],
+          }));
+          // Reset submitted state when adding new milestone
+          if (milestonesSubmitted) {
+            setMilestonesSubmitted(false);
+          }
+        };
+
+        const removeMilestone = (index) => {
+          if (formData.milestones.length > 1) {
+            const updatedMilestones = formData.milestones.filter(
+              (_, i) => i !== index
+            );
+            setFormData((prev) => ({
+              ...prev,
+              milestones: updatedMilestones,
+            }));
+            // Reset submitted state when removing milestone
+            if (milestonesSubmitted) {
+              setMilestonesSubmitted(false);
+            }
+          }
+        };
+
+        const handleSubmitMilestones = async () => {
+          // Validate milestones before submitting
+          const errors = validateStep(2);
+          if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            // Scroll to first error
+            setTimeout(() => {
+              const errorElement = document.querySelector(
+                '[class*="text-red-600"]'
+              );
+              if (errorElement) {
+                errorElement.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                });
+              }
+            }, 100);
+            return;
+          }
+
+          // Prepare the milestone payload
+          const milestonePayload = {
+            p_job_category: formData.jobCategory,
+            p_jmain: formData.projectNumber,
+            MilestoneList: formData.milestones
+              .filter(
+                (milestone) =>
+                  milestone.milestone && milestone.milestone.trim() !== ""
+              )
+              .map((milestone) => ({
+                p_milestone_code: milestone.code,
+                p_milestone_date: milestone.date,
+                p_remarks: milestone.remarks || "",
+                p_milestone_location: milestone.location || "",
+              })),
+          };
+
+          try {
+            await dispatch(submitMilestone(milestonePayload));
+            // Mark milestones as submitted on success
+            setMilestonesSubmitted(true);
+            setValidationErrors({});
+          } catch (error) {
+            console.error("Failed to submit milestones:", error);
+            setValidationErrors({
+              milestones:
+                error.message ||
+                "Failed to submit milestones. Please try again.",
+            });
+          }
+        };
+
+        return (
+          <div
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
+          >
+            <div className="mb-4">
+              <h2
+                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
+              >
+                Project Milestones
+              </h2>
+              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
+                Track key milestones and achievements for this project
+              </p>
+            </div>
+
+            {validationErrors.milestones && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {validationErrors.milestones}
+                </p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {formData.milestones.map((milestone, index) => (
+                <div
+                  key={index}
+                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900"
+                >
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Milestone {index + 1}
+                    </h3>
+                    {formData.milestones.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMilestone(index)}
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    className={`grid ${
+                      isMobile ? "grid-cols-1 gap-3" : "grid-cols-2 gap-4"
+                    }`}
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Code
+                      </label>
+                      <select
+                        value={milestone.code}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "code", e.target.value)
+                        }
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors[`milestone_code_${index}`]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                        disabled={milestoneTypesLoading}
+                      >
+                        <option value="">
+                          {milestoneTypesLoading
+                            ? "Loading codes..."
+                            : "Select milestone code"}
+                        </option>
+                        {milestoneTypes
+                          .slice()
+                          .sort((a, b) => {
+                            const aCode =
+                              a.MILESTONE_TYPE_CODE ||
+                              a.MILESTONE_CODE ||
+                              a.CODE;
+                            const bCode =
+                              b.MILESTONE_TYPE_CODE ||
+                              b.MILESTONE_CODE ||
+                              b.CODE;
+                            const na = parseInt(aCode, 10);
+                            const nb = parseInt(bCode, 10);
+                            if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                            return String(aCode).localeCompare(String(bCode));
+                          })
+                          .map((mt, idx) => {
+                            const code =
+                              mt.MILESTONE_TYPE_CODE ||
+                              mt.MILESTONE_CODE ||
+                              mt.CODE;
+                            return (
+                              <option key={idx} value={code}>
+                                {code}
+                              </option>
+                            );
+                          })}
+                      </select>
+                      {validationErrors[`milestone_code_${index}`] && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                          {validationErrors[`milestone_code_${index}`]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Milestone
+                      </label>
+                      <input
+                        type="text"
+                        value={milestone.milestone}
+                        readOnly
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors[`milestone_milestone_${index}`]
+                            ? "border-red-500"
+                            : ""
+                        } bg-gray-100 dark:bg-gray-700 cursor-not-allowed`}
+                        placeholder="Auto-populated from code selection"
+                      />
+                      {validationErrors[`milestone_milestone_${index}`] && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                          {validationErrors[`milestone_milestone_${index}`]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={milestone.date}
+                        onChange={(e) =>
+                          handleMilestoneChange(index, "date", e.target.value)
+                        }
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors[`milestone_date_${index}`]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      />
+                      {validationErrors[`milestone_date_${index}`] && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                          {validationErrors[`milestone_date_${index}`]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Location
+                      </label>
+                      <select
+                        value={milestone.location}
+                        onChange={(e) =>
+                          handleMilestoneChange(
+                            index,
+                            "location",
+                            e.target.value
+                          )
+                        }
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          validationErrors[`milestone_location_${index}`]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                      >
+                        {milestoneLocationOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {validationErrors[`milestone_location_${index}`] && (
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                          {validationErrors[`milestone_location_${index}`]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className={isMobile ? "" : "col-span-2"}>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Remarks
+                      </label>
+                      <textarea
+                        value={milestone.remarks}
+                        onChange={(e) =>
+                          handleMilestoneChange(
+                            index,
+                            "remarks",
+                            e.target.value
+                          )
+                        }
+                        className={`input-field ${
+                          isMobile ? "py-2 text-sm" : ""
+                        } ${
+                          isMobile ? "h-20" : "h-24"
+                        } resize-none overflow-auto`}
+                        placeholder="Add any remarks about this milestone..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button
+                type="button"
+                onClick={addMilestone}
+                className="btn-secondary w-full flex items-center justify-center gap-2"
+              >
+                <FiTrendingUp className="w-5 h-5" />
+                Add Another Milestone
+              </button>
+            </div>
+
+            {/* Submit Milestones Button */}
+            <div className="mt-6">
+              {milestonesSubmitted ? (
+                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg flex items-center gap-3">
+                  <FiCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+                    Milestones submitted successfully! You can now proceed to
+                    the next step.
+                  </span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmitMilestones}
+                  disabled={milestoneSubmitting}
+                  className={`btn-primary w-full flex items-center justify-center gap-2 ${
+                    milestoneSubmitting ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  {milestoneSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <FiCheck className="w-5 h-5" />
+                      Submit Milestones
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         );
@@ -1476,24 +2233,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             }
                           >
                             <option value="">UNIT_CODE</option>
-                            {getUnitCodesForCriteria(
-                              row.criteriaCode,
-                              index
-                            ).map((item) => (
-                              <option
-                                key={item.code}
-                                value={item.code}
-                                disabled={item.disabled}
-                                className={
-                                  item.disabled
-                                    ? "text-gray-400 dark:text-gray-600"
-                                    : ""
-                                }
-                              >
-                                {item.code}{" "}
-                                {item.disabled ? "(Already selected)" : ""}
-                              </option>
-                            ))}
+                            {getUnitCodesForCriteria(row.criteriaCode, index)
+                              .filter((item) => !item.disabled)
+                              .map((item) => (
+                                <option key={item.code} value={item.code}>
+                                  {item.code}
+                                </option>
+                              ))}
                           </select>
                           {validationErrors[`unitCode_${index}`] && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
@@ -1705,23 +2451,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   {getUnitCodesForCriteria(
                                     row.criteriaCode,
                                     index
-                                  ).map((item) => (
-                                    <option
-                                      key={item.code}
-                                      value={item.code}
-                                      disabled={item.disabled}
-                                      className={
-                                        item.disabled
-                                          ? "text-gray-400 dark:text-gray-600"
-                                          : ""
-                                      }
-                                    >
-                                      {item.code}{" "}
-                                      {item.disabled
-                                        ? "(Already selected)"
-                                        : ""}
-                                    </option>
-                                  ))}
+                                  )
+                                    .filter((item) => !item.disabled)
+                                    .map((item) => (
+                                      <option key={item.code} value={item.code}>
+                                        {item.code}
+                                      </option>
+                                    ))}
                                 </select>
                               </td>
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
@@ -2013,11 +2749,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Afloat
                   </label>
                   <input
+                  disabled
                     type="number"
+                    min="0"
                     placeholder="Days afloat (e.g. 5)"
                     value={
                       formData.afloatDuration === 0
-                        ? ""
+                        ? "0"
                         : formData.afloatDuration
                     }
                     onChange={(e) =>
@@ -2034,11 +2772,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Indock
                   </label>
                   <input
+                  disabled
                     type="number"
+                    min="0"
                     placeholder="Days in dock (e.g. 2)"
                     value={
                       formData.indockDuration === 0
-                        ? ""
+                        ? "0"
                         : formData.indockDuration
                     }
                     onChange={(e) =>
@@ -2070,7 +2810,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 2:
+      case 3:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2177,6 +2917,71 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             </div>
 
+            {/* Milestones Summary */}
+            {formData.milestones.filter((m) => m.milestone).length > 0 && (
+              <div className="mb-6">
+                <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
+                  Project Milestones
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {formData.milestones
+                    .filter((milestone) => milestone.milestone)
+                    .map((milestone, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <span className="inline-flex w-fit px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-md text-xs font-medium">
+                                  {milestone.code}
+                                </span>
+                                <h5 className="font-medium text-gray-900 dark:text-white break-words">
+                                  {milestone.milestone}
+                                </h5>
+                              </div>
+
+                              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center">
+                                  <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
+                                  <span className="break-words">
+                                    {milestone.date
+                                      ? new Date(
+                                          milestone.date
+                                        ).toLocaleDateString()
+                                      : "No date set"}
+                                  </span>
+                                </div>
+                                {milestone.location && (
+                                  <div className="flex items-center min-w-0">
+                                    <span className="mr-1 flex-shrink-0">
+                                      📍
+                                    </span>
+                                    <span className="break-words">
+                                      {milestone.location}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {milestone.remarks && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
+                                {milestone.remarks}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
             {/* Ratings Summary */}
             <div className="mb-6">
               <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
@@ -2191,13 +2996,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
                     Evaluation Details
                   </h5>
-                  <div
-                    className={`grid ${
-                      isMobile
-                        ? "grid-cols-1 gap-3"
-                        : "grid-cols-2 md:grid-cols-3 gap-4"
-                    } mb-6`}
-                  >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
                     {evaluationRows
                       .filter((row) => row.evaluation && row.evaluation !== "N")
                       .map((row, index) => {
@@ -2220,15 +3019,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         return (
                           <div
                             key={index}
-                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                            className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
                                 {row.description ||
                                   `${row.criteriaCode}-${row.unitCode}`}
                               </span>
                               <span
-                                className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
+                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
                                   score
                                 )}`}
                               >
@@ -2274,13 +3073,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
                     Standard Ratings
                   </h5>
-                  <div
-                    className={`grid ${
-                      isMobile
-                        ? "grid-cols-1 gap-3"
-                        : "grid-cols-2 md:grid-cols-3 gap-4"
-                    } mb-6`}
-                  >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
                     {Object.entries(formData.ratings)
                       .filter(([_, score]) => score > 0)
                       .slice(0, isMobile ? 6 : 12)
@@ -2296,17 +3089,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         return (
                           <div
                             key={category}
-                            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
+                            className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                           >
-                            <div className="flex justify-between items-start mb-2">
-                              <span className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
                                 {category
                                   .split(/(?=[A-Z])/)
                                   .slice(0, 2)
                                   .join(" ")}
                               </span>
                               <span
-                                className={`px-2 py-1 text-xs rounded-full ${getScoreColor(
+                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
                                   score
                                 )}`}
                               >
@@ -2382,7 +3175,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 onClick={() => setCurrentStep(0)}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
-                } border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700`}
+                } btn-secondary`}
               >
                 Edit Feedback
               </button>
@@ -2391,7 +3184,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 onClick={handleSubmit}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
-                } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                } btn-primary`}
               >
                 Submit Feedback
               </button>
@@ -2399,7 +3192,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2490,12 +3283,32 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       observations: "",
                       poorAverageDetails: "",
                       shipManagerComments: "",
+                      milestones: [
+                        {
+                          code: "",
+                          milestone: "",
+                          date: "",
+                          location: "",
+                          remarks: "",
+                        },
+                      ],
                     });
+                    setEvaluationRows(
+                      Array(11)
+                        .fill(null)
+                        .map(() => ({
+                          criteriaCode: "",
+                          unitCode: "",
+                          description: "",
+                          evaluation: "",
+                          yesNo: "",
+                        }))
+                    );
                     setCurrentStep(0);
                   }}
                   className={`${
                     isMobile ? "w-full py-3" : "px-6 py-2"
-                  } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                  } btn-primary`}
                 >
                   Submit Another Feedback
                 </button>
@@ -2509,7 +3322,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   }}
                   className={`${
                     isMobile ? "w-full py-3" : "px-6 py-2"
-                  } border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700`}
+                  } btn-secondary`}
                 >
                   View History
                 </button>
@@ -2550,7 +3363,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 onClick={() => setCurrentStep(0)}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
-                } bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors`}
+                } btn-primary`}
               >
                 Go to First Step
               </button>
@@ -2643,29 +3456,32 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       {/* Mobile Step Buttons */}
       {isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 2 &&
-        currentStep !== 3 && <MobileStepButtons />}
+        currentStep !== 3 &&
+        currentStep !== 4 && <MobileStepButtons />}
 
       {/* Desktop Navigation */}
       {!isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 2 &&
-        currentStep !== 3 && (
+        currentStep !== 3 &&
+        currentStep !== 4 && (
           <div className="flex justify-between mt-8">
             <button
               onClick={prevStep}
               disabled={currentStep === 0}
-              className={`px-6 py-2 rounded-lg transition-colors ${
-                currentStep === 0
-                  ? "bg-gray-100 text-gray-400 dark:bg-gray-700 cursor-not-allowed"
-                  : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+              className={`btn-secondary px-6 ${
+                currentStep === 0 ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
               Previous
             </button>
             <button
               onClick={nextStep}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              disabled={currentStep === steps.length - 1}
+              className={`btn-primary px-6 ${
+                currentStep === steps.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               {currentStep === steps.length - 2 ? "Review" : "Next"}
             </button>
