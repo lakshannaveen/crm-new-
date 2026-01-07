@@ -179,7 +179,7 @@ class ShipService {
     const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetOwnersShip`,
-      { params: { P_SERVICE_NO: "O0376"}, headers }
+      { params: { P_SERVICE_NO: "1000574"}, headers }
     );
 
     const list = response.data?.ResultSet || [];
@@ -192,7 +192,7 @@ class ShipService {
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetShipByJmainId`,
       {
         params: {
-          p_service_no: "O0376",
+          p_service_no: "1000574",
           p_jmain_no: "1260",
         },
         headers,
