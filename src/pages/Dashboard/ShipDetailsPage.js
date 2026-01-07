@@ -2014,7 +2014,7 @@ const ShipDetailsPage = () => {
                   )}
                   {renderInfoSection("Duration Information", durationInfo, 2)}
 
-                  <div className="space-y-4">
+                  {/* <div className="space-y-4">
                     <h4 className="text-base font-semibold text-gray-900 dark:text-white">
                       Project Tasks
                     </h4>
@@ -2054,7 +2054,7 @@ const ShipDetailsPage = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
