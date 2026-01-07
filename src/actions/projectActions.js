@@ -14,6 +14,7 @@ import {
   GET_MILESTONES_FAILURE,
 } from "../constants/projectActionTypes";
 import { projectService } from "../services/projectService";
+import * as feedbackService from "../services/feedbackService";
 
 // Get all projects
 export const getProjects = () => async (dispatch) => {
@@ -83,7 +84,7 @@ export const getMilestonesByShip = (jobCategory, jmain) => async (dispatch) => {
       throw new Error("Job category and JMAIN are required");
     }
 
-    const milestones = await projectService.getMilestonesByShip(
+    const milestones = await feedbackService.getMilestonesByShip(
       jobCategory,
       jmain
     );
