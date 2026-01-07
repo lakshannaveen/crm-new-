@@ -1963,7 +1963,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             ? "border-red-500"
                             : ""
                         } bg-gray-100 dark:bg-gray-700 cursor-not-allowed`}
-                        placeholder="Auto-populated from code selection"
+                        placeholder="Select a milestone code first"
                       />
                       {validationErrors[`milestone_milestone_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -2738,7 +2738,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Afloat
                   </label>
                   <input
-                  disabled
+                    disabled
                     type="number"
                     min="0"
                     placeholder="Days afloat (e.g. 5)"
@@ -2761,7 +2761,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Indock
                   </label>
                   <input
-                  disabled
+                    disabled
                     type="number"
                     min="0"
                     placeholder="Days in dock (e.g. 2)"
