@@ -397,7 +397,7 @@ const OwnerDashboard = () => {
                 </div>
               </div>
               
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
+              {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-green-100 dark:bg-green-900 rounded-lg flex-shrink-0">
                     <FiClock className="w-4 h-4 md:w-6 md:h-6 text-green-600 dark:text-green-300" />
@@ -409,9 +409,9 @@ const OwnerDashboard = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
               
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
+              {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-purple-100 dark:bg-purple-900 rounded-lg flex-shrink-0">
                     <FiCheckCircle className="w-4 h-4 md:w-6 md:h-6 text-purple-600 dark:text-purple-300" />
@@ -423,9 +423,9 @@ const OwnerDashboard = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
               
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
+              {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-red-100 dark:bg-red-900 rounded-lg flex-shrink-0">
                     <FiAlertCircle className="w-4 h-4 md:w-6 md:h-6 text-red-600 dark:text-red-300" />
@@ -437,7 +437,7 @@ const OwnerDashboard = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Profile Section */}
