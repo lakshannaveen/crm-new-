@@ -56,7 +56,7 @@ class AuthService {
 
   // Request OTP from remote backend
   async requestOTPBackend(phoneNumber) {
-    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/EMPLogin`;
 
     // Try multiple possible payload field names in case backend expects different key
     const phoneKeys = [
@@ -130,7 +130,7 @@ class AuthService {
 
   // Verify OTP with remote backend
   async verifyOTPBackend(phoneNumber, otp) {
-    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
+    const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/EMPLogin`;
 
     // Try multiple field name combinations for phone and otp
     const phoneKeys = [
