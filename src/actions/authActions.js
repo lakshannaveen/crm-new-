@@ -109,9 +109,10 @@ const normalizeUserDetails = (user) => {
   const normalized = {
     ...user,
     serviceNo: user.ServiceNo || user.serviceNo || user.Service_No || null,
-    name: user.FName || user.Name || user.name || user.fname || null,
+    name: user.FName && user.LName ? `${user.FName} ${user.LName}`.trim() : (user.FName || user.Name || user.name || user.fname || null),
     phone: user.PhoneNo || user.phone || user.mobile || null,
     email: user.Email || user.email || null,
+    role: user.UserType === 'E' ? 'owner' : user.UserType === 'A' ? 'admin' : 'owner', // Map UserType to role
   };
   return normalized;
 };
