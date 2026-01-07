@@ -1,15 +1,24 @@
-import api from "./api";
+import axios from "axios";
+import { authService } from "./authService";
+import config from "../config";
+
+const BACKEND_BASE_URL = config.api.baseURL;
 
 // Get feedback dates from backend
 export const getFeedbackDates = async (jobCategory, projectNumber) => {
   try {
-    const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetDates",
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetDates`,
       {
         params: {
           P_JOB_CATEGORY: jobCategory,
           P_JMAIN: projectNumber,
         },
+        headers,
       }
     );
     return response.data;
@@ -25,13 +34,18 @@ export const getDuration = async (jobCategory, jmain) => {
       p_job_category: jobCategory,
       p_jmain: jmain,
     });
-    const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetDuration",
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetDuration`,
       {
         params: {
           p_job_category: jobCategory,
           p_jmain: jmain,
         },
+        headers,
       }
     );
     console.log("API Response - getDuration:", response.data);
@@ -45,12 +59,17 @@ export const getDuration = async (jobCategory, jmain) => {
 // Get JMain (project numbers) by job category
 export const getJmain = async (jobCategory) => {
   try {
-    const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetJmain",
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetJmain`,
       {
         params: {
           P_JOB_CATEGORY: jobCategory,
         },
+        headers,
       }
     );
     return response.data;
@@ -62,9 +81,14 @@ export const getJmain = async (jobCategory) => {
 // Add feedback
 export const addFeedback = async (feedbackData) => {
   try {
-    const response = await api.post(
-      "/CDLRequirmentManagement/Feedback/Addfeedback",
-      feedbackData
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/Addfeedback`,
+      feedbackData,
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -75,8 +99,13 @@ export const addFeedback = async (feedbackData) => {
 // Get Units and Descriptions
 export const getUnitsDescriptions = async () => {
   try {
-    const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetUnitsDescriptions"
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetUnitsDescriptions`,
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -87,9 +116,14 @@ export const getUnitsDescriptions = async () => {
 // Add Milestone
 export const addMilestone = async (milestoneData) => {
   try {
-    const response = await api.post(
-      "/CDLRequirmentManagement/Milestone/AddMilestone",
-      milestoneData
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Milestone/AddMilestone`,
+      milestoneData,
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -100,8 +134,13 @@ export const addMilestone = async (milestoneData) => {
 // Get all milestone types
 export const getMilestoneTypes = async () => {
   try {
-    const response = await api.get(
-      "/CDLRequirmentManagement/Milestone/GetAllMilestoneTypes"
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Milestone/GetAllMilestoneTypes`,
+      { headers }
     );
     return response.data;
   } catch (error) {
@@ -112,17 +151,124 @@ export const getMilestoneTypes = async () => {
 // Get all feedback entries by ship
 export const getAllFeedback = async (jobCategory, jmain) => {
   try {
-    const response = await api.get(
-      "/CDLRequirmentManagement/Feedback/GetFeedbacksbyShip",
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetFeedbacksbyShip`,
       {
         params: {
           p_job_category: jobCategory,
           p_jmain: jmain,
         },
+        headers,
       }
     );
     return response.data;
   } catch (error) {
     throw error;
+  }
+};
+
+// Get milestones by ship
+export const getMilestonesByShip = async (jobCategory, jmain) => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Milestone/GetMilestonebyShip`,
+      {
+        params: {
+          P_JOB_CATEGORY: jobCategory,
+          P_JMAIN: jmain,
+        },
+        headers,
+      }
+    );
+
+    const milestones = response.data?.ResultSet || [];
+
+    // Get milestone types to fetch descriptions
+    const milestoneTypesResponse = await getMilestoneTypes();
+    const milestoneTypes = milestoneTypesResponse?.ResultSet || [];
+
+    // Create a map of milestone codes to descriptions
+    const milestoneDescMap = {};
+    milestoneTypes.forEach((type) => {
+      const code = type.MILESTONE_CODE || type.code;
+      const description = type.MILESTONE_DESCRIPTION || type.description;
+      if (code && description) {
+        milestoneDescMap[code] = description;
+      }
+    });
+
+    return milestones.map((milestone) =>
+      transformMilestoneData(milestone, milestoneDescMap)
+    );
+  } catch (error) {
+    console.error("Error fetching milestones:", error);
+    throw error;
+  }
+};
+
+// Transform milestone data helper function
+const transformMilestoneData = (apiMilestone, milestoneDescMap = {}) => {
+  // Get milestone code from API response
+  const milestoneCode =
+    apiMilestone.MILESTONE_CODE ||
+    apiMilestone.P_MILESTONE_CODE ||
+    apiMilestone.code;
+
+  // Get description from milestone types map, fallback to API data
+  const milestoneDescription =
+    milestoneDescMap[milestoneCode] ||
+    apiMilestone.MILESTONE_NAME ||
+    apiMilestone.title ||
+    "Unnamed Milestone";
+
+  // Transform API milestone data to match the expected format
+  return {
+    id: apiMilestone.MILESTONE_ID || apiMilestone.id,
+    title: milestoneDescription,
+    description: apiMilestone.MILESTONE_DESC || apiMilestone.description || "",
+    date:
+      apiMilestone.P_MILESTONE_DATE ||
+      apiMilestone.MILESTONE_DATE ||
+      apiMilestone.date ||
+      new Date().toISOString(),
+    remarks: apiMilestone.P_REMARKS || apiMilestone.REMARKS || "",
+    location:
+      apiMilestone.P_MILESTONE_LOCATION ||
+      apiMilestone.MILESTONE_LOCATION ||
+      "",
+    status: getMilestoneStatus(apiMilestone),
+    progress: apiMilestone.MILESTONE_PROGRESS || apiMilestone.progress || 0,
+    // Keep raw data for reference
+    raw: apiMilestone,
+  };
+};
+
+// Get milestone status helper function
+const getMilestoneStatus = (milestone) => {
+  // Determine status based on API data
+  const statusCode = milestone.MILESTONE_STATUS || milestone.status;
+
+  if (
+    statusCode === "C" ||
+    statusCode === "completed" ||
+    milestone.MILESTONE_PROGRESS >= 100
+  ) {
+    return "completed";
+  } else if (
+    statusCode === "P" ||
+    statusCode === "in_progress" ||
+    (milestone.MILESTONE_PROGRESS > 0 && milestone.MILESTONE_PROGRESS < 100)
+  ) {
+    return "in_progress";
+  } else {
+    return "pending";
   }
 };
