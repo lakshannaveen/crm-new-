@@ -1,5 +1,5 @@
 // Mock service for authentication
-import config from '../config';
+import config from "../config";
 class AuthService {
   // Mock users database
   users = [
@@ -49,7 +49,9 @@ class AuthService {
 
   async sendOTP(phoneNumber) {
     // sendOTP (mock) is deprecated in API-only mode. Use requestOTPBackend instead.
-    throw new Error('sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow');
+    throw new Error(
+      "sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow"
+    );
   }
 
   // Request OTP from remote backend
@@ -58,17 +60,17 @@ class AuthService {
 
     // Try multiple possible payload field names in case backend expects different key
     const phoneKeys = [
-      'P_PHONE_NO',
-      'PHONE',
-      'P_PHONE',
-      'P_MOBILE',
-      'MOBILE',
-      'MSISDN',
-      'P_MOB',
+      "P_PHONE_NO",
+      "PHONE",
+      "P_PHONE",
+      "P_MOBILE",
+      "MOBILE",
+      "MSISDN",
+      "P_MOB",
     ];
 
     const headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
     let lastError = null;
     let lastResponse = null;
@@ -79,7 +81,7 @@ class AuthService {
 
       try {
         const res = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           headers,
           body: JSON.stringify(body),
         });
@@ -92,7 +94,13 @@ class AuthService {
           data = { raw: text };
         }
 
-        console.debug('requestOTPBackend try', { url, key, body, status: res.status, data });
+        console.debug("requestOTPBackend try", {
+          url,
+          key,
+          body,
+          status: res.status,
+          data,
+        });
 
         lastResponse = data;
 
@@ -105,7 +113,11 @@ class AuthService {
 
         // If not 200, continue trying other keys
       } catch (err) {
-        console.warn('requestOTPBackend fetch failed for key', key, err && err.message);
+        console.warn(
+          "requestOTPBackend fetch failed for key",
+          key,
+          err && err.message
+        );
         lastError = err;
         continue;
       }
@@ -113,7 +125,7 @@ class AuthService {
 
     // If we reach here, none of the payload keys produced a success response
     if (lastResponse) return lastResponse;
-    throw lastError || new Error('Failed to request OTP from backend');
+    throw lastError || new Error("Failed to request OTP from backend");
   }
 
   // Verify OTP with remote backend
@@ -121,11 +133,19 @@ class AuthService {
     const url = `${config.api.baseURL}/CDLRequirmentManagement/Login/Login`;
 
     // Try multiple field name combinations for phone and otp
-    const phoneKeys = ['P_PHONE_NO', 'PHONE', 'P_PHONE', 'P_MOBILE', 'MOBILE', 'MSISDN', 'P_MOB'];
-    const otpKeys = ['P_OTP', 'OTP', 'CODE', 'P_CODE'];
+    const phoneKeys = [
+      "P_PHONE_NO",
+      "PHONE",
+      "P_PHONE",
+      "P_MOBILE",
+      "MOBILE",
+      "MSISDN",
+      "P_MOB",
+    ];
+    const otpKeys = ["P_OTP", "OTP", "CODE", "P_CODE"];
 
     const headers = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
 
     let lastError = null;
@@ -139,7 +159,7 @@ class AuthService {
 
         try {
           const res = await fetch(url, {
-            method: 'POST',
+            method: "POST",
             headers,
             body: JSON.stringify(body),
           });
@@ -152,7 +172,14 @@ class AuthService {
             data = { raw: text };
           }
 
-          console.debug('verifyOTPBackend try', { url, pKey, oKey, body, status: res.status, data });
+          console.debug("verifyOTPBackend try", {
+            url,
+            pKey,
+            oKey,
+            body,
+            status: res.status,
+            data,
+          });
 
           lastResponse = data;
 
@@ -162,7 +189,12 @@ class AuthService {
             return data;
           }
         } catch (err) {
-          console.warn('verifyOTPBackend fetch failed for', pKey, oKey, err && err.message);
+          console.warn(
+            "verifyOTPBackend fetch failed for",
+            pKey,
+            oKey,
+            err && err.message
+          );
           lastError = err;
           continue;
         }
@@ -170,7 +202,7 @@ class AuthService {
     }
 
     if (lastResponse) return lastResponse;
-    throw lastError || new Error('Verify request failed');
+    throw lastError || new Error("Verify request failed");
   }
 
   async verifyOTP(phoneNumber, otp) {
@@ -279,12 +311,12 @@ class AuthService {
   // Session helpers ------------------------------------------------------
   // Try to parse a JWT token and return payload if possible
   parseJwt(token) {
-    if (!token || typeof token !== 'string') return null;
+    if (!token || typeof token !== "string") return null;
     try {
-      const parts = token.split('.');
+      const parts = token.split(".");
       if (parts.length !== 3) return null;
       const payload = parts[1];
-      const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
       return JSON.parse(decodeURIComponent(escape(json)));
     } catch (e) {
       return null;
@@ -293,37 +325,51 @@ class AuthService {
 
   // Save session to localStorage. If expiresInSeconds provided, save expiry timestamp.
   setSession(token, user, expiresInSeconds = null) {
-    if (token) localStorage.setItem('token', token);
+    if (token) localStorage.setItem("token", token);
     if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem("user", JSON.stringify(user));
       // Persist service number separately for service-only API calls
-      if (user.serviceNo) localStorage.setItem('serviceNo', user.serviceNo);
+      if (user.serviceNo) localStorage.setItem("serviceNo", user.serviceNo);
     }
 
     if (expiresInSeconds && Number.isFinite(Number(expiresInSeconds))) {
-      localStorage.setItem('tokenExpiry', String(Date.now() + Number(expiresInSeconds) * 1000));
+      localStorage.setItem(
+        "tokenExpiry",
+        String(Date.now() + Number(expiresInSeconds) * 1000)
+      );
     } else {
       // Try to infer expiry from JWT exp claim
       const payload = this.parseJwt(token);
       if (payload && payload.exp) {
-        localStorage.setItem('tokenExpiry', String(payload.exp * 1000));
+        localStorage.setItem("tokenExpiry", String(payload.exp * 1000));
       } else {
-        localStorage.removeItem('tokenExpiry');
+        localStorage.removeItem("tokenExpiry");
       }
     }
   }
 
-  // Clear session
+  // Clear session and all associated localStorage data
   clearSession() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tokenExpiry');
-    localStorage.removeItem('serviceNo');
+    // Auth-related items
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tokenExpiry");
+    localStorage.removeItem("serviceNo");
+    localStorage.removeItem("backendToken");
+    localStorage.removeItem("backendUser");
+    localStorage.removeItem("backendOTP");
+
+    // App-related items
+    localStorage.removeItem("SELECTED_SHIP_JMAIN");
+    localStorage.removeItem("sidebarCollapsed");
+    localStorage.removeItem("theme_mode");
+    localStorage.removeItem("theme");
+    localStorage.removeItem("cdplc_feedbacks");
   }
 
   // Is token expired?
   isTokenExpired() {
-    const expiry = localStorage.getItem('tokenExpiry');
+    const expiry = localStorage.getItem("tokenExpiry");
     if (!expiry) return false; // no expiry recorded
     const expiryMs = Number(expiry);
     if (!expiryMs) return false;
@@ -332,18 +378,18 @@ class AuthService {
 
   // Is user logged in (has token and not expired)
   isLoggedIn() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return false;
     return !this.isTokenExpired();
   }
 
   // Get auth header for API calls
   getAuthHeader() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) return {};
     // The backend expects the token in `auth-key` header (no Bearer prefix).
     // Return the header object so callers can spread it into request headers.
-    return { 'auth-key': token };
+    return { "auth-key": token };
   }
 
   async updateProfile(userId, userData) {

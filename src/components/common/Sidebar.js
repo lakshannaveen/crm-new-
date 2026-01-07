@@ -182,7 +182,7 @@ import { useSidebar } from '../../context/SidebarContext';
 // Import sidebar logo
 import sidebarLogo from '../../assets/image/logo512.png'; // Optional: different logo for sidebar
 
-const Sidebar = () => {
+const Sidebar = ({ embedded = false }) => {
   const location = useLocation();
   const { user } = useSelector(state => state.auth);
   
@@ -396,7 +396,7 @@ const Sidebar = () => {
       </div>
 
       {/* Mobile Sidebar Overlay */}
-      {mobileOpen && (
+      {!embedded && mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div 
             className="absolute inset-0 bg-black bg-opacity-50" 
