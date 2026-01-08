@@ -150,12 +150,12 @@ const LoginForm = () => {
             {!loading && <FiArrowRight />}
           </button>
 
-          <p className="text-center text-sm text-gray-600 dark:text-gray-400">
+          {/* <p className="text-center text-sm text-gray-600 dark:text-gray-400">
             Don’t have an account?{' '}
             <Link to="/register" className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 transition-colors">
               Sign up
             </Link>
-          </p>
+          </p> */}
         </form>
       )}
 
@@ -212,11 +212,11 @@ const LoginForm = () => {
         </form>
       )}
 
-      <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-center">
+      {/* <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4 text-center">
         <Link to="/admin" className="text-xs text-gray-600 hover:text-gray-900">
           Admin access
         </Link>
-      </div>
+      </div> */}
     </div>
   );
 };
