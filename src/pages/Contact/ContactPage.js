@@ -10,11 +10,11 @@ const ContactPage = () => {
         {/* Header */}
         <div className="mb-8">
           <Link 
-            to="/register" 
+            to="/login" 
             className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors mb-6"
           >
             <FiArrowLeft className="mr-2" />
-            Back to Register
+            Back to Login
           </Link>
           
           <div className="flex items-center justify-center mb-6">
@@ -132,12 +132,12 @@ const ContactPage = () => {
             >
               Login
             </Link>
-            <Link 
+            {/* <Link 
               to="/register" 
               className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             >
               Register
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
