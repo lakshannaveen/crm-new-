@@ -32,6 +32,7 @@ const initialState = {
   phoneNumber: "",
   otpResent: false,
   registrationSuccess: false,
+  postLoginRedirect: "/feedback",
 };
 
 const authReducer = (state = initialState, action) => {

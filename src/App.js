@@ -299,7 +299,7 @@ const AdminLayout = ({ children }) => {
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated, user, loading } = useSelector(state => state.auth);
+  const { isAuthenticated, user, loading, postLoginRedirect } = useSelector(state => state.auth);
   const theme = useSelector(state => state.theme);
 
   useEffect(() => {
@@ -323,8 +323,8 @@ function App() {
       <ScrollToTop />
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />} />
-        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to="/dashboard" />} />
+        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={postLoginRedirect} />} />
+        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to={postLoginRedirect} />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -420,7 +420,7 @@ function App() {
         } />
         
         {/* Default Route */}
-        <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
+        <Route path="/" element={<Navigate to={isAuthenticated ? postLoginRedirect : "/login"} />} />
       </Routes>
     </SidebarProvider>
   );
