@@ -1501,6 +1501,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Project Name
                 </label>
                 <input
+                  disabled
                   type="text"
                   value={formData.projectName}
                   onChange={(e) =>
@@ -1540,13 +1541,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="date"
                     value={formData.startingDate}
-                    onChange={(e) =>
-                      handleInputChange("startingDate", e.target.value)
-                    }
+                    readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.startingDate ? "border-red-500" : ""
                     }`}
-                    disabled={datesLoading}
+                    disabled={datesLoading || !!formData.startingDate}
                   />
                   <div className="min-h-[20px]">
                     {validationErrors.startingDate && (
@@ -1569,13 +1568,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <input
                     type="date"
                     value={formData.endingDate}
-                    onChange={(e) =>
-                      handleInputChange("endingDate", e.target.value)
-                    }
+                    readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.endingDate ? "border-red-500" : ""
                     }`}
-                    disabled={datesLoading}
+                    disabled={datesLoading || !!formData.endingDate}
                   />
                   <div className="min-h-[20px]">
                     {validationErrors.endingDate && (
@@ -2906,70 +2903,71 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             </div>
 
-            {/* Milestones Summary */}
-            {formData.milestones.filter((m) => m.milestone).length > 0 && (
-              <div className="mb-6">
-                <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
-                  Project Milestones
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {formData.milestones
-                    .filter((milestone) => milestone.milestone)
-                    .map((milestone, index) => {
-                      return (
-                        <div
-                          key={index}
-                          className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <span className="inline-flex w-fit px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-md text-xs font-medium">
-                                  {milestone.code}
-                                </span>
-                                <h5 className="font-medium text-gray-900 dark:text-white break-words">
-                                  {milestone.milestone}
-                                </h5>
-                              </div>
-
-                              <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                <div className="flex items-center">
-                                  <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
-                                  <span className="break-words">
-                                    {milestone.date
-                                      ? new Date(
-                                          milestone.date
-                                        ).toLocaleDateString()
-                                      : "No date set"}
+            {/* Milestones Summary - only show if milestones were submitted */}
+            {milestonesSubmitted &&
+              formData.milestones.filter((m) => m.milestone).length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
+                    Project Milestones
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {formData.milestones
+                      .filter((milestone) => milestone.milestone)
+                      .map((milestone, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                  <span className="inline-flex w-fit px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-md text-xs font-medium">
+                                    {milestone.code}
                                   </span>
+                                  <h5 className="font-medium text-gray-900 dark:text-white break-words">
+                                    {milestone.milestone}
+                                  </h5>
                                 </div>
-                                {milestone.location && (
-                                  <div className="flex items-center min-w-0">
-                                    <span className="mr-1 flex-shrink-0">
-                                      📍
-                                    </span>
+
+                                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                  <div className="flex items-center">
+                                    <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
                                     <span className="break-words">
-                                      {milestone.location}
+                                      {milestone.date
+                                        ? new Date(
+                                            milestone.date
+                                          ).toLocaleDateString()
+                                        : "No date set"}
                                     </span>
                                   </div>
-                                )}
+                                  {milestone.location && (
+                                    <div className="flex items-center min-w-0">
+                                      <span className="mr-1 flex-shrink-0">
+                                        📍
+                                      </span>
+                                      <span className="break-words">
+                                        {milestone.location}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          {milestone.remarks && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                              <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
-                                {milestone.remarks}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            {milestone.remarks && (
+                              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
+                                  {milestone.remarks}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Ratings Summary */}
             <div className="mb-6">
