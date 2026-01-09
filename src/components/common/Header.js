@@ -179,8 +179,11 @@ const Header = () => {
   const { mobileOpen, toggleMobileSidebar, desktopCollapsed, toggleDesktopSidebar } = useSidebar();
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (confirmLogout) {
+      dispatch(logout());
+      navigate('/login');
+    }
   };
 
   const handleSearch = (e) => {
