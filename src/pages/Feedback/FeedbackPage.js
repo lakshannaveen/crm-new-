@@ -702,7 +702,7 @@
 
 // export default FeedbackPage;
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Header from "../../components/common/Header";
@@ -745,6 +745,7 @@ const FeedbackPage = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const feedbackFormRef = useRef(null);
 
   // Filter state for View History - Auto-loaded from selected vessel
   const [selectedJobCategory, setSelectedJobCategory] = useState();
@@ -770,7 +771,7 @@ const FeedbackPage = () => {
   // Compute how many ships to show (3 rows) based on current breakpoint
   useEffect(() => {
     const getCols = () => {
-      if (typeof window === 'undefined') return 3;
+      if (typeof window === "undefined") return 3;
       const w = window.innerWidth;
       if (w >= 1024) return 3; // lg
       if (w >= 768) return 2; // md
@@ -785,8 +786,8 @@ const FeedbackPage = () => {
     };
 
     updateCounts();
-    window.addEventListener('resize', updateCounts);
-    return () => window.removeEventListener('resize', updateCounts);
+    window.addEventListener("resize", updateCounts);
+    return () => window.removeEventListener("resize", updateCounts);
   }, [showAllShips]);
 
   // Load feedbacks from API on component mount (fallback to local sample data)
@@ -1136,6 +1137,14 @@ const FeedbackPage = () => {
   const handleNewFeedback = () => {
     setShowHistory(false);
     setShowConfirmation(false);
+    // If a vessel is selected, scroll to the feedback form
+    if (selectedVessel && feedbackFormRef.current) {
+      const el = feedbackFormRef.current;
+      const rect = el.getBoundingClientRect();
+      const offset = 120; // adjust for top nav + any sticky headers
+      const top = window.pageYOffset + rect.top - offset;
+      window.scrollTo({ top, behavior: "smooth" });
+    }
   };
 
   const handleResetForm = () => {
@@ -1503,7 +1512,7 @@ const FeedbackPage = () => {
 
                   {/* Feedback Form */}
                   {selectedVessel && !showConfirmation && (
-                    <div className="mb-6">
+                    <div className="mb-6" ref={feedbackFormRef}>
                       <FeedbackForm
                         vessel={selectedVessel}
                         onSubmit={handleFeedbackSubmit}
@@ -1539,13 +1548,19 @@ const FeedbackPage = () => {
                             <div className="flex items-center justify-between mb-3">
                               <div className="flex-1">
                                 <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">Vessel</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Vessel
+                                  </div>
                                   <h4 className="font-medium text-gray-900 dark:text-white">
                                     {feedback.vesselName}
                                   </h4>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Date</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Date
+                                  </div>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {new Date(feedback.submittedAt).toLocaleDateString()}
+                                    {new Date(
+                                      feedback.submittedAt
+                                    ).toLocaleDateString()}
                                   </p>
                                 </div>
                               </div>
@@ -1561,7 +1576,9 @@ const FeedbackPage = () => {
                             </div>
                             {feedback.observations && (
                               <div className="mt-2">
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Observations</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Observations
+                                </div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                                   {feedback.observations}
                                 </p>
