@@ -54,6 +54,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropdownRef = useRef(null);
+  const [openMilestoneIndex, setOpenMilestoneIndex] = useState(null);
+  const milestoneDropdownRefs = useRef({});
+  const [openLocationIndex, setOpenLocationIndex] = useState(null);
   const [evaluationRows, setEvaluationRows] = useState(
     Array(11)
       .fill(null)
@@ -367,7 +370,27 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    const handleClickOutsideMilestones = (event) => {
+      // If click is outside any open milestone dropdown, close them
+      const refs = milestoneDropdownRefs.current || {};
+      let clickedInsideAny = false;
+      Object.values(refs).forEach((r) => {
+        if (r && r.contains && r.contains(event.target))
+          clickedInsideAny = true;
+      });
+      if (!clickedInsideAny) {
+        setOpenMilestoneIndex(null);
+        setOpenLocationIndex(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutsideMilestones);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutsideMilestones);
+    };
   }, []);
 
   const handleRatingChange = (category, value) => {
@@ -1891,53 +1914,105 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Code
                       </label>
-                      <select
-                        value={milestone.code}
-                        onChange={(e) =>
-                          handleMilestoneChange(index, "code", e.target.value)
+                      <div
+                        className="relative"
+                        ref={(el) =>
+                          (milestoneDropdownRefs.current[index] = el)
                         }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_code_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                        disabled={milestoneTypesLoading}
                       >
-                        <option value="">
-                          {milestoneTypesLoading
-                            ? "Loading codes..."
-                            : "Select milestone code"}
-                        </option>
-                        {milestoneTypes
-                          .slice()
-                          .sort((a, b) => {
-                            const aCode =
-                              a.MILESTONE_TYPE_CODE ||
-                              a.MILESTONE_CODE ||
-                              a.CODE;
-                            const bCode =
-                              b.MILESTONE_TYPE_CODE ||
-                              b.MILESTONE_CODE ||
-                              b.CODE;
-                            const na = parseInt(aCode, 10);
-                            const nb = parseInt(bCode, 10);
-                            if (!isNaN(na) && !isNaN(nb)) return na - nb;
-                            return String(aCode).localeCompare(String(bCode));
-                          })
-                          .map((mt, idx) => {
-                            const code =
-                              mt.MILESTONE_TYPE_CODE ||
-                              mt.MILESTONE_CODE ||
-                              mt.CODE;
-                            return (
-                              <option key={idx} value={code}>
-                                {code}
-                              </option>
-                            );
-                          })}
-                      </select>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenMilestoneIndex(
+                              openMilestoneIndex === index ? null : index
+                            )
+                          }
+                          disabled={milestoneTypesLoading}
+                          className={`w-full text-left input-field flex items-center justify-between ${
+                            isMobile ? "py-2 text-sm" : ""
+                          } ${
+                            validationErrors[`milestone_code_${index}`]
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
+                          <span>
+                            {milestone.code
+                              ? milestone.code
+                              : milestoneTypesLoading
+                              ? "Loading codes..."
+                              : "Select milestone code"}
+                          </span>
+                          <svg
+                            className="w-4 h-4 ml-2 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {openMilestoneIndex === index && (
+                          <div
+                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+                            style={{ maxHeight: "10rem", overflowY: "auto" }}
+                          >
+                            {milestoneTypes
+                              .slice()
+                              .sort((a, b) => {
+                                const aCode =
+                                  a.MILESTONE_TYPE_CODE ||
+                                  a.MILESTONE_CODE ||
+                                  a.CODE;
+                                const bCode =
+                                  b.MILESTONE_TYPE_CODE ||
+                                  b.MILESTONE_CODE ||
+                                  b.CODE;
+                                const na = parseInt(aCode, 10);
+                                const nb = parseInt(bCode, 10);
+                                if (!isNaN(na) && !isNaN(nb)) return na - nb;
+                                return String(aCode).localeCompare(
+                                  String(bCode)
+                                );
+                              })
+                              .map((mt, idx) => {
+                                const code =
+                                  mt.MILESTONE_TYPE_CODE ||
+                                  mt.MILESTONE_CODE ||
+                                  mt.CODE;
+                                return (
+                                  <div
+                                    key={idx}
+                                    onClick={() => {
+                                      handleMilestoneChange(
+                                        index,
+                                        "code",
+                                        code
+                                      );
+                                      setOpenMilestoneIndex(null);
+                                    }}
+                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                                      milestone.code === code
+                                        ? "bg-blue-50 dark:bg-blue-900/30"
+                                        : ""
+                                    }`}
+                                  >
+                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                      {code}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+                      </div>
                       {validationErrors[`milestone_code_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {validationErrors[`milestone_code_${index}`]}
@@ -1998,29 +2073,78 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Location
                       </label>
-                      <select
-                        value={milestone.location}
-                        onChange={(e) =>
-                          handleMilestoneChange(
-                            index,
-                            "location",
-                            e.target.value
-                          )
+                      <div
+                        className="relative"
+                        ref={(el) =>
+                          (milestoneDropdownRefs.current[`loc_${index}`] = el)
                         }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_location_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        }`}
                       >
-                        {milestoneLocationOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenLocationIndex(
+                              openLocationIndex === index ? null : index
+                            )
+                          }
+                          className={`w-full text-left input-field flex items-center justify-between ${
+                            isMobile ? "py-2 text-sm" : ""
+                          } ${
+                            validationErrors[`milestone_location_${index}`]
+                              ? "border-red-500"
+                              : ""
+                          }`}
+                        >
+                          <span>
+                            {milestone.location
+                              ? (
+                                  milestoneLocationOptions.find(
+                                    (o) => o.value === milestone.location
+                                  ) || { label: milestone.location }
+                                ).label
+                              : "Select Location"}
+                          </span>
+                          <svg
+                            className="w-4 h-4 ml-2 text-gray-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        </button>
+
+                        {openLocationIndex === index && (
+                          <div
+                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
+                            style={{ maxHeight: "8rem", overflowY: "auto" }}
+                          >
+                            {milestoneLocationOptions.map((option) => (
+                              <div
+                                key={option.value}
+                                onClick={() => {
+                                  handleMilestoneChange(
+                                    index,
+                                    "location",
+                                    option.value
+                                  );
+                                  setOpenLocationIndex(null);
+                                }}
+                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <div className="text-sm text-gray-900 dark:text-white">
+                                  {option.label}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {validationErrors[`milestone_location_${index}`] && (
                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {validationErrors[`milestone_location_${index}`]}
