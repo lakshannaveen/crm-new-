@@ -165,6 +165,7 @@ import {
 import { toggleTheme } from "../../actions/themeActions";
 import { logout } from "../../actions/authActions";
 import { generateAvatar } from "../../utils/helpers";
+import toast from "react-hot-toast";
 import { useSidebar } from "../../context/SidebarContext";
 import { getShips } from "../../actions/shipActions";
 import { setSelectedShipJmain } from "../../actions/shipActions";
@@ -196,11 +197,44 @@ const Header = () => {
   } = useSidebar();
 
   const handleLogout = () => {
-    const confirmLogout = window.confirm("Are you sure you want to logout?");
-    if (confirmLogout) {
-      dispatch(logout());
-      navigate("/login");
-    }
+    toast(
+      (t) => (
+        <div className="flex items-center gap-4">
+          <div>Are you sure you want to logout?</div>
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => {
+                dispatch(logout());
+                navigate("/login");
+                toast.dismiss(t.id);
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm"
+            >
+              Logout
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: "top-center",
+        // style overrides to center the toast in the viewport
+        style: {
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "auto",
+          minWidth: "320px",
+          zIndex: 99999,
+        },
+      }
+    );
   };
 
   const handleSearch = (e) => {

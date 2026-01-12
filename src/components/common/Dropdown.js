@@ -24,6 +24,7 @@ export default function CustomDropdown({
   onChange,
   disabled = false,
   placeholder = "Select...",
+  openDownward = false,
 }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef(null);
@@ -36,14 +37,18 @@ export default function CustomDropdown({
     if (!btn) return;
 
     const rect = btn.getBoundingClientRect();
+    // Default: open below the button
     let top = rect.bottom;
 
-    const dropdownMaxHeight = isMobile ? 200 : 160;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
+    // If not forced to open downward, compute if we need to flip up when space is limited
+    if (!openDownward) {
+      const dropdownMaxHeight = isMobile ? 200 : 160;
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
 
-    if (spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow) {
-      top = Math.max(8, rect.top - Math.min(dropdownMaxHeight, spaceAbove));
+      if (spaceBelow < dropdownMaxHeight && spaceAbove > spaceBelow) {
+        top = Math.max(8, rect.top - Math.min(dropdownMaxHeight, spaceAbove));
+      }
     }
 
     setPos({
@@ -101,9 +106,7 @@ export default function CustomDropdown({
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
-        <span className="truncate leading-[28px]">
-          {value || placeholder}
-        </span>
+        <span className="truncate leading-[28px]">{value || placeholder}</span>
         <ArrowIcon open={open} />
       </button>
 
