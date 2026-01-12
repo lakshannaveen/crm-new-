@@ -25,6 +25,7 @@ import {
   clearFeedbackDates,
   getDuration,
 } from "../../actions/feedbackActions";
+import CustomDropdown from "../common/Dropdown";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -2296,28 +2297,28 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
                       >
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Criteria
-                          </label>
-                          <select
-                            value={row.criteriaCode}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(
-                                index,
-                                "criteriaCode",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                            disabled={unitsDescriptionsLoading}
-                          >
-                            <option value="">PPE_CRITERIA_CODE</option>
-                            {getCriteriaCodes().map((code) => (
-                              <option key={code} value={code}>
-                                {code}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="mb-2">
+  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+    Criteria Code
+  </label>
+
+  <CustomDropdown
+    value={row.criteriaCode}
+    options={getCriteriaCodes()}
+    placeholder="Select.."
+    disabled={unitsDescriptionsLoading}
+    onChange={(val) =>
+      handleEvaluationRowChange(index, "criteriaCode", val)
+    }
+  />
+
+  {validationErrors[`criteriaCode_${index}`] && (
+    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+      {validationErrors[`criteriaCode_${index}`]}
+    </p>
+  )}
+</div>
+
                           {validationErrors[`criteriaCode_${index}`] && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                               {validationErrors[`criteriaCode_${index}`]}
@@ -2326,31 +2327,22 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </div>
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Unit
+                            Unit Code
                           </label>
-                          <select
-                            value={row.unitCode}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(
-                                index,
-                                "unitCode",
-                                e.target.value
-                              )
-                            }
-                            className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                            disabled={
-                              !row.criteriaCode || unitsDescriptionsLoading
-                            }
-                          >
-                            <option value="">UNIT_CODE</option>
-                            {getUnitCodesForCriteria(row.criteriaCode, index)
-                              .filter((item) => !item.disabled)
-                              .map((item) => (
-                                <option key={item.code} value={item.code}>
-                                  {item.code}
-                                </option>
-                              ))}
-                          </select>
+                          <div className="mb-2">
+  <CustomDropdown
+    value={row.unitCode}
+    options={getUnitCodesForCriteria(row.criteriaCode, index)
+      .filter((item) => !item.disabled)
+      .map((item) => item.code)}
+    placeholder="Select..."
+    disabled={!row.criteriaCode || unitsDescriptionsLoading}
+    onChange={(val) =>
+      handleEvaluationRowChange(index, "unitCode", val)
+    }
+  />
+</div>
+
                           {validationErrors[`unitCode_${index}`] && (
                             <p className="mt-1 text-xs text-red-600 dark:text-red-400">
                               {validationErrors[`unitCode_${index}`]}
@@ -2521,54 +2513,28 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           <React.Fragment key={index}>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <select
-                                  value={row.criteriaCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "criteriaCode",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                  disabled={unitsDescriptionsLoading}
-                                >
-                                  <option value="">Select...</option>
-                                  {getCriteriaCodes().map((code) => (
-                                    <option key={code} value={code}>
-                                      {code}
-                                    </option>
-                                  ))}
-                                </select>
+                               <CustomDropdown
+  value={row.criteriaCode}
+  options={getCriteriaCodes()}
+  onChange={(val) =>
+    handleEvaluationRowChange(index, "criteriaCode", val)
+  }
+  disabled={unitsDescriptionsLoading}
+/>
+
                               </td>
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <select
-                                  value={row.unitCode}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "unitCode",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                  disabled={
-                                    !row.criteriaCode ||
-                                    unitsDescriptionsLoading
-                                  }
-                                >
-                                  <option value="">Select...</option>
-                                  {getUnitCodesForCriteria(
-                                    row.criteriaCode,
-                                    index
-                                  )
-                                    .filter((item) => !item.disabled)
-                                    .map((item) => (
-                                      <option key={item.code} value={item.code}>
-                                        {item.code}
-                                      </option>
-                                    ))}
-                                </select>
+                               <CustomDropdown
+  value={row.unitCode}
+  options={getUnitCodesForCriteria(row.criteriaCode, index)
+    .filter((i) => !i.disabled)
+    .map((i) => i.code)}
+  onChange={(val) =>
+    handleEvaluationRowChange(index, "unitCode", val)
+  }
+  disabled={!row.criteriaCode || unitsDescriptionsLoading}
+/>
+
                               </td>
                               <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
                                 <input
