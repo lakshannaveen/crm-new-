@@ -19,11 +19,11 @@ import {
 } from "../constants/shipActionTypes";
 import { shipService } from "../services/shipService";
 
-export const fetchOwnerShips = (serviceNo) => async (dispatch) => {
+export const fetchOwnerShips = (jcat, jmain) => async (dispatch) => {
   dispatch({ type: FETCH_SHIPS_REQUEST });
 
   try {
-    const ships = await shipService.getShips(serviceNo);
+    const ships = await shipService.getShips(jcat || "SR", jmain || "1455");
     dispatch({ type: FETCH_SHIPS_SUCCESS, payload: ships });
   } catch (error) {
     dispatch({
@@ -38,15 +38,23 @@ export const getShips = () => async (dispatch, getState) => {
   try {
     dispatch({ type: GET_SHIPS_REQUEST });
 
-    // Get serviceNo from logged-in user
+    // Get jcat and jmain from logged-in user
     const { auth } = getState();
-    const serviceNo = auth.user?.serviceNo;
+    const jcat = auth.user?.jcat;
+    const jmain = auth.user?.jmain;
 
-    if (!serviceNo) {
-      throw new Error("User service number not found. Please log in again.");
+    if (!jcat || !jmain) {
+      // Fallback to hardcoded values if not found
+      console.warn("User jcat or jmain not found, using fallback values");
+      const ships = await shipService.getShips("SR", "1455");
+      dispatch({
+        type: GET_SHIPS_SUCCESS,
+        payload: ships,
+      });
+      return;
     }
 
-    const ships = await shipService.getShips(serviceNo);
+    const ships = await shipService.getShips(jcat, jmain);
 
     dispatch({
       type: GET_SHIPS_SUCCESS,

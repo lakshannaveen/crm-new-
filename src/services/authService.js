@@ -12,6 +12,8 @@ class AuthService {
       company: "Ocean Shipping Ltd",
       status: "active",
       serviceNo: "O0077", // Service number for API calls
+      jcat: "SR",
+      jmain: "1455",
       ships: [1, 2],
       createdAt: "2023-06-15T10:30:00Z",
       lastLogin: new Date().toISOString(),

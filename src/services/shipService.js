@@ -175,11 +175,11 @@ class ShipService {
     return oceanQueenImage;
   }
 
-  async getShips(serviceNo) {
+  async getShips(jcat, jmain) {
     const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
     const response = await axios.get(
-      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetOwnersShip`,
-      { params: { P_SERVICE_NO: "1000574"}, headers }
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetAllShips`,
+      { params: { p_jcat: jcat, p_jmain_no: jmain }, headers }
     );
 
     const list = response.data?.ResultSet || [];

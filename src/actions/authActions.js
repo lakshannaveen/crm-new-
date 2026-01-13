@@ -15,6 +15,7 @@ import {
   LOAD_USER_FAILURE,
 } from "../constants/authActionTypes";
 import { authService } from "../services/authService";
+import { userService } from "../services/userService";
 
 // Login with phone number
 export const login = (phoneNumber) => async (dispatch) => {
@@ -243,9 +244,27 @@ export const loadUser = () => async (dispatch) => {
     }
 
     const token = localStorage.getItem("token");
-    const user = await authService.getCurrentUser(token);
+    const basicUser = await authService.getCurrentUser(token);
 
-    dispatch({ type: LOAD_USER_SUCCESS, payload: user });
+    // Get full user details including jcat and jmain
+    if (basicUser.serviceNo) {
+      try {
+        const fullUserDetails = await userService.getUserByServiceNo(basicUser.serviceNo);
+        // Merge the details, map JCAT to jcat, JMAIN to jmain
+        const user = { 
+          ...basicUser, 
+          ...fullUserDetails,
+          jcat: fullUserDetails.JCAT || fullUserDetails.jcat || basicUser.jcat,
+          jmain: fullUserDetails.JMAIN || fullUserDetails.jmain || basicUser.jmain
+        };
+        dispatch({ type: LOAD_USER_SUCCESS, payload: user });
+      } catch (error) {
+        console.warn("Failed to get full user details, using basic user:", error);
+        dispatch({ type: LOAD_USER_SUCCESS, payload: basicUser });
+      }
+    } else {
+      dispatch({ type: LOAD_USER_SUCCESS, payload: basicUser });
+    }
   } catch (error) {
     dispatch({
       type: LOAD_USER_FAILURE,
