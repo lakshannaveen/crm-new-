@@ -155,7 +155,6 @@ import {
   FiBell,
   FiSun,
   FiMoon,
-  FiUser,
   FiLogOut,
   FiMenu,
   FiMinimize2,
@@ -181,7 +180,6 @@ const Header = () => {
   const showSearch = !location.pathname.startsWith("/settings");
   const { user } = useSelector((state) => state.auth);
   const { mode } = useSelector((state) => state.theme);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
@@ -452,66 +450,33 @@ const Header = () => {
               <FiBell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full"></span>
             </button> */}
-
-            {/* Profile Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileMenu(!showProfileMenu)}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100
-                         dark:hover:bg-gray-700 transition-colors"
+            {/* Profile Button */}
+            <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+              <div
+                className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
               >
-                <div
-                  className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
-                >
-                  <span className="text-white font-medium text-sm">
-                    {avatar.initials}
-                  </span>
-                </div>
-                <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name || "User"}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.role === "admin" ? "Administrator" : "Ship Owner"}
-                  </p>
-                </div>
-              </button>
-
-              {/* Profile Dropdown */}
-              {showProfileMenu && (
-                <div
-                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg
-                             shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
-                >
-                  <Link
-                    to="/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700
-                             dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <FiUser className="mr-3" />
-                    Your Profile
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700
-                             dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    onClick={() => setShowProfileMenu(false)}
-                  >
-                    <FiSun className="mr-3" />
-                    Settings
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600
-                             dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <FiLogOut className="mr-3" />
-                    Logout
-                  </button>
-                </div>
-              )}
+                <span className="text-white font-medium text-sm">
+                  {avatar.initials}
+                </span>
+              </div>
+              <div className="hidden md:block text-left">
+                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                  {user?.name || "User"}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {user?.role === "admin" ? "Administrator" : "Ship Owner"}
+                </p>
+              </div>
             </div>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Logout"
+            >
+              <FiLogOut className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            </button>
           </div>
         </div>
       </div>

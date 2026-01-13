@@ -3,7 +3,6 @@
 // import { getShips } from '../../actions/shipActions';
 // import Header from '../../components/common/Header';
 // import Sidebar from '../../components/common/Sidebar';
-// import ProfileSection from '../../components/dashboard/ProfileSection';
 // import ShipCard from '../../components/dashboard/ShipCard';
 // import { FiAnchor, FiClock, FiCheckCircle, FiAlertCircle, FiPlus } from 'react-icons/fi';
 
@@ -440,10 +439,6 @@ const OwnerDashboard = () => {
               </div> */}
             </div>
 
-            {/* Profile Section */}
-            <div className="mb-6 md:mb-8">
-              <ProfileSection />
-            </div>
 
             {/* Ships Section */}
             <div className="card">
