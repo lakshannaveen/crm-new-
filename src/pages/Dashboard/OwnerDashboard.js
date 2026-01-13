@@ -293,7 +293,6 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getShips } from "../../actions/shipActions";
-import { getUserByServiceNo } from "../../actions/userActions";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import ProfileSection from "../../components/dashboard/ProfileSection";
@@ -322,10 +321,7 @@ const OwnerDashboard = () => {
 
   useEffect(() => {
     dispatch(getShips());
-    // Auto-fetch user profile data for dashboard using logged-in serviceNo
-    const svc = user?.serviceNo || localStorage.getItem("serviceNo");
-    if (svc) dispatch(getUserByServiceNo(svc));
-  }, [dispatch, user?.serviceNo]);
+  }, [dispatch]);
 
   const filteredShips = ships.filter((ship) => {
     if (activeFilter === "all") return true;

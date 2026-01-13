@@ -169,7 +169,7 @@ class ShipService {
 
   getShipImage(ship) {
     const type = (ship.SHIP_VESSEL_TYPE || "").toString();
-    if (type === "7") return oceanQueenImage, EverUniqueImage;
+    if (type === "7") return EverUniqueImage;
     if (type === "1") return SeaVoyagerImage;
     if (type === "2") return BlueWaveImage;
     return oceanQueenImage;
@@ -192,8 +192,8 @@ class ShipService {
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetShipByJmainId`,
       {
         params: {
-          p_service_no: "1000574",
-          p_jmain_no: "1260",
+          p_service_no: serviceNo,
+          p_jmain_no: jmainNo,
         },
         headers,
       }
