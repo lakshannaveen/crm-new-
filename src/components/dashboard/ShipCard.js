@@ -146,7 +146,7 @@ const ShipCard = ({ ship }) => {
                 onClick={handleProjectDetailsClick}
                 className="flex-1 min-w-[120px] btn-primary text-center py-2 text-sm"
               >
-                Project Details
+                Project Milestones
               </Link>
               <button
                 className="flex-1 min-w-[120px] btn-secondary py-2 text-sm"

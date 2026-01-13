@@ -322,10 +322,10 @@ function App() {
     <SidebarProvider>
       <ScrollToTop />
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={postLoginRedirect} />} />
-        <Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to={postLoginRedirect} />} />
-        <Route path="/terms" element={<TermsPage />} />
+{/* Public Routes */}
+<Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to={postLoginRedirect} />} />
+<Route path="/register" element={!isAuthenticated ? <RegisterPage /> : <Navigate to={postLoginRedirect} />} />
+<Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/contact" element={<ContactPage />} />
         

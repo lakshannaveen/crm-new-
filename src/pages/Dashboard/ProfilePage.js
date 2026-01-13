@@ -6,7 +6,7 @@ import Sidebar from '../../components/common/Sidebar';
 import {
   FiUser, FiMail, FiPhone, FiMapPin, FiGlobe,
   FiCalendar, FiLock, FiBell, FiShield, FiSave,
-  FiCamera, FiUpload, FiCheckCircle
+  FiCheckCircle
 } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
 import { generateAvatar } from '../../utils/helpers';
@@ -158,11 +158,6 @@ const ProfilePage = () => {
                           {avatar.initials}
                         </span>
                       </div>
-                      <button className="absolute bottom-4 right-4 h-10 w-10 bg-white dark:bg-gray-800 
-                                       rounded-full border border-gray-300 dark:border-gray-600 
-                                       flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <FiCamera className="text-gray-600 dark:text-gray-400" />
-                      </button>
                     </div>
                     
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">

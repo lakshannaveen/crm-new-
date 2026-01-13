@@ -416,7 +416,7 @@ const FeedbackHistory = ({
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {/* Submitted By removed per request */}
 
-                  {formatTime(feedback.submittedAt) && (
+                  {/* {formatTime(feedback.submittedAt) && (
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
                         Submitted Time
@@ -425,7 +425,7 @@ const FeedbackHistory = ({
                         {formatTime(feedback.submittedAt)}
                       </p>
                     </div>
-                  )}
+                  )} */}
 
                   {Object.values(feedback.ratings || {}).filter((r) => r > 0)
                     .length > 0 && (

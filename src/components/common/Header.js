@@ -53,8 +53,8 @@
 //                   placeholder="Search ships, projects, or documents..."
 //                   value={searchQuery}
 //                   onChange={(e) => setSearchQuery(e.target.value)}
-//                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-//                            bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 
+//                   className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+//                            bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2
 //                            focus:ring-blue-500 focus:border-transparent"
 //                 />
 //               </div>
@@ -89,7 +89,7 @@
 //             <div className="relative">
 //               <button
 //                 onClick={() => setShowProfileMenu(!showProfileMenu)}
-//                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 
+//                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100
 //                          dark:hover:bg-gray-700 transition-colors"
 //               >
 //                 <div className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
@@ -107,11 +107,11 @@
 
 //               {/* Profile Dropdown */}
 //               {showProfileMenu && (
-//                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg 
+//                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg
 //                               shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
 //                   <Link
 //                     to="/profile"
-//                     className="flex items-center px-4 py-2 text-sm text-gray-700 
+//                     className="flex items-center px-4 py-2 text-sm text-gray-700
 //                              dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 //                     onClick={() => setShowProfileMenu(false)}
 //                   >
@@ -120,7 +120,7 @@
 //                   </Link>
 //                   <Link
 //                     to="/settings"
-//                     className="flex items-center px-4 py-2 text-sm text-gray-700 
+//                     className="flex items-center px-4 py-2 text-sm text-gray-700
 //                              dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 //                     onClick={() => setShowProfileMenu(false)}
 //                   >
@@ -129,7 +129,7 @@
 //                   </Link>
 //                   <button
 //                     onClick={handleLogout}
-//                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 
+//                     className="flex items-center w-full px-4 py-2 text-sm text-red-600
 //                              dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
 //                   >
 //                     <FiLogOut className="mr-3" />
@@ -147,45 +147,99 @@
 
 // export default Header;
 
-
-
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiBell, FiSun, FiMoon, FiUser, FiLogOut, FiMenu, FiMinimize2, FiMaximize2 } from 'react-icons/fi';
-import { toggleTheme } from '../../actions/themeActions';
-import { logout } from '../../actions/authActions';
-import { generateAvatar } from '../../utils/helpers';
-import { useSidebar } from '../../context/SidebarContext';
-import { getShips } from '../../actions/shipActions';
-import { setSelectedShipJmain } from '../../actions/shipActions';
-import { getMilestonesByShip } from '../../actions/projectActions';
+import React, { useState, useEffect, useRef } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  FiSearch,
+  FiBell,
+  FiSun,
+  FiMoon,
+  FiUser,
+  FiLogOut,
+  FiMenu,
+  FiMinimize2,
+  FiMaximize2,
+  FiX,
+} from "react-icons/fi";
+import { toggleTheme } from "../../actions/themeActions";
+import { logout } from "../../actions/authActions";
+import { generateAvatar } from "../../utils/helpers";
+import toast from "react-hot-toast";
+import { useSidebar } from "../../context/SidebarContext";
+import { getShips } from "../../actions/shipActions";
+import { setSelectedShipJmain } from "../../actions/shipActions";
+import { getMilestonesByShip } from "../../actions/projectActions";
 
 // Import your logo image
-import logo from '../../assets/image/logo512.png'; // Make sure to add your logo file
+import logo from "../../assets/image/logo512.png"; // Make sure to add your logo file
 
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector(state => state.auth);
-  const { mode } = useSelector(state => state.theme);
+  const location = useLocation();
+  const showSearch = !location.pathname.startsWith("/settings");
+  const { user } = useSelector((state) => state.auth);
+  const { mode } = useSelector((state) => state.theme);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const inputRef = useRef(null);
-  
+  const inputElRef = useRef(null);
+
   // Use sidebar context
-  const { mobileOpen, toggleMobileSidebar, desktopCollapsed, toggleDesktopSidebar } = useSidebar();
+  const {
+    mobileOpen,
+    toggleMobileSidebar,
+    desktopCollapsed,
+    toggleDesktopSidebar,
+  } = useSidebar();
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    toast(
+      (t) => (
+        <div className="flex items-center gap-4">
+          <div>Are you sure you want to logout?</div>
+          <div className="ml-auto flex gap-2">
+            <button
+              onClick={() => {
+                dispatch(logout());
+                navigate("/login");
+                toast.dismiss(t.id);
+              }}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm"
+            >
+              Logout
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: Infinity,
+        position: "top-center",
+        // style overrides to center the toast in the viewport
+        style: {
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "auto",
+          minWidth: "320px",
+          zIndex: 99999,
+        },
+      }
+    );
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', searchQuery);
+    console.log("Searching for:", searchQuery);
   };
 
   // load ships for search (if not already loaded)
@@ -202,22 +256,22 @@ const Header = () => {
         setShowResults(false);
       }
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []); // run once
 
   const filteredShips = searchQuery
     ? shipsList.filter((s) => {
         const q = searchQuery.toString().toLowerCase();
         return (
-          (s.name || '').toString().toLowerCase().includes(q) ||
-          (s.imoNumber || '').toString().toLowerCase().includes(q) ||
-          (s.jmainNo || '').toString().toLowerCase().includes(q)
+          (s.name || "").toString().toLowerCase().includes(q) ||
+          (s.imoNumber || "").toString().toLowerCase().includes(q) ||
+          (s.jmainNo || "").toString().toLowerCase().includes(q)
         );
       })
     : [];
 
-  const avatar = generateAvatar(user?.name || 'User');
+  const avatar = generateAvatar(user?.name || "User");
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50">
@@ -233,13 +287,15 @@ const Header = () => {
             >
               <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             </button>
-            
+
             {/* Desktop Minimize/Expand Button */}
             <button
               onClick={toggleDesktopSidebar}
               className="hidden md:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
-              aria-label={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              title={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={
+                desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              }
+              title={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {desktopCollapsed ? (
                 <FiMaximize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -247,15 +303,11 @@ const Header = () => {
                 <FiMinimize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               )}
             </button>
-            
+
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center">
               {logo ? (
-                <img 
-                  src={logo} 
-                  alt="Colombo Dockyard" 
-                  className="h-8 w-auto"
-                />
+                <img src={logo} alt="Colombo Dockyard" className="h-8 w-auto" />
               ) : (
                 <div className="h-8 w-8 bg-dockyard-blue rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-lg">CD</span>
@@ -268,62 +320,116 @@ const Header = () => {
           </div>
 
           {/* Center - Search (hidden on mobile) */}
-          <div className="flex-1 max-w-2xl mx-4 hidden md:block" ref={inputRef}>
-            <form onSubmit={handleSearch} className="relative">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search ships, projects, or documents..."
-                  value={searchQuery}
-                  onChange={(e) => { setSearchQuery(e.target.value); setShowResults(true); }}
-                  onFocus={() => setShowResults(true)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+          {showSearch && (
+            <div
+              className="flex-1 max-w-2xl mx-4 hidden md:block"
+              ref={inputRef}
+            >
+              <form onSubmit={handleSearch} className="relative">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search ships, projects, or documents..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowResults(true);
+                    }}
+                    ref={inputElRef}
+                    onFocus={() => setShowResults(true)}
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                            bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2
                            focus:ring-blue-500 focus:border-transparent"
-                />
+                  />
 
-                {/* Dropdown results */}
-                {showResults && (
-                  <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-72 overflow-auto">
-                    {filteredShips.length > 0 ? (
-                      filteredShips.map((ship) => (
-                        <Link
-                          key={ship.id}
-                          to={`/projects/${ship.id}`}
-                          className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b last:border-b-0"
-                          onClick={() => {
-                            setShowResults(false);
-                            setSearchQuery('');
-                            const jobCategory = ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
-                            const jmain = ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
-                            if (jmain) dispatch(setSelectedShipJmain(jmain));
-                            if (jobCategory && jmain) dispatch(getMilestonesByShip(jobCategory, jmain));
-                          }}
-                        >
-                          <img src={ship.image} alt={ship.name} className="h-12 w-16 object-cover rounded mr-3" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{ship.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{ship.imoNumber} • {ship.type}</p>
-                          </div>
-                          <div className="ml-3 text-sm text-gray-600 dark:text-gray-300">{ship.progress ?? 0}%</div>
-                        </Link>
-                      ))
-                    ) : (
-                      <div className="p-3 text-sm text-gray-500">No ships found</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </form>
-          </div>
+                  {/* Clear (X) button - appears when there's text */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setShowResults(false);
+                        inputElRef.current?.focus();
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                      aria-label="Clear search"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  )}
+
+                  {/* Dropdown results */}
+                  {showResults && (
+                    <div className="absolute left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-72 overflow-auto">
+                      {filteredShips.length > 0 ? (
+                        filteredShips.map((ship) => (
+                          <Link
+                            key={ship.id}
+                            to={`/projects/${ship.id}`}
+                            className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b last:border-b-0"
+                            onClick={() => {
+                              setShowResults(false);
+                              setSearchQuery("");
+                              const jobCategory =
+                                ship.raw?.SHIP_JCAT ||
+                                ship.SHIP_JCAT ||
+                                ship.JCAT ||
+                                ship.jcat;
+                              const jmain =
+                                ship.raw?.SHIP_JMAIN ||
+                                ship.jmainNo ||
+                                ship.SHIP_JMAIN ||
+                                ship.id;
+                              if (jmain) dispatch(setSelectedShipJmain(jmain));
+                              if (jobCategory && jmain)
+                                dispatch(
+                                  getMilestonesByShip(jobCategory, jmain)
+                                );
+                            }}
+                          >
+                            <img
+                              src={ship.image}
+                              alt={ship.name}
+                              className="h-12 w-16 object-cover rounded mr-3"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                {ship.name}
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {ship.imoNumber} • {ship.type}
+                              </p>
+                            </div>
+                            <div className="ml-3 text-sm text-gray-600 dark:text-gray-300">
+                              {ship.progress ?? 0}%
+                            </div>
+                          </Link>
+                        ))
+                      ) : (
+                        <div className="p-3 text-sm text-gray-500">
+                          No ships found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* Right side - Actions */}
           <div className="flex items-center space-x-4">
             {/* Search button for mobile */}
-            <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-              <FiSearch className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            </button>
+            {showSearch && (
+              <button
+                onClick={() => setShowMobileSearch(true)}
+                className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                aria-label="Search"
+              >
+                <FiSearch className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </button>
+            )}
 
             {/* Theme Toggle */}
             <button
@@ -331,7 +437,7 @@ const Header = () => {
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Toggle theme"
             >
-              {mode === 'light' ? (
+              {mode === "light" ? (
                 <FiMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               ) : (
                 <FiSun className="w-5 h-5 text-gray-300" />
@@ -354,23 +460,29 @@ const Header = () => {
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100
                          dark:hover:bg-gray-700 transition-colors"
               >
-                <div className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
-                  <span className="text-white font-medium text-sm">{avatar.initials}</span>
+                <div
+                  className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
+                >
+                  <span className="text-white font-medium text-sm">
+                    {avatar.initials}
+                  </span>
                 </div>
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name || 'User'}
+                    {user?.name || "User"}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user?.role === 'admin' ? 'Administrator' : 'Ship Owner'}
+                    {user?.role === "admin" ? "Administrator" : "Ship Owner"}
                   </p>
                 </div>
               </button>
 
               {/* Profile Dropdown */}
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg
-                             shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                <div
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg
+                             shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700"
+                >
                   <Link
                     to="/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700
@@ -403,17 +515,114 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Search Modal */}
+      {showMobileSearch && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setShowMobileSearch(false)}
+        >
+          <div
+            className="absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-4">
+              <form onSubmit={handleSearch} className="relative">
+                <div className="relative">
+                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search ships..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowResults(true);
+                    }}
+                    autoFocus
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                           bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2
+                           focus:ring-blue-500 focus:border-transparent"
+                  />
+
+                  {/* Clear (X) button */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setShowResults(false);
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                      aria-label="Clear search"
+                    >
+                      <FiX className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {/* Mobile Search Results */}
+              {showResults && (
+                <div className="mt-2 max-h-96 overflow-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  {filteredShips.length > 0 ? (
+                    filteredShips.map((ship) => (
+                      <Link
+                        key={ship.id}
+                        to={`/projects/${ship.id}`}
+                        className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b last:border-b-0"
+                        onClick={() => {
+                          setShowMobileSearch(false);
+                          setShowResults(false);
+                          setSearchQuery("");
+                          const jobCategory =
+                            ship.raw?.SHIP_JCAT ||
+                            ship.SHIP_JCAT ||
+                            ship.JCAT ||
+                            ship.jcat;
+                          const jmain =
+                            ship.raw?.SHIP_JMAIN ||
+                            ship.jmainNo ||
+                            ship.SHIP_JMAIN ||
+                            ship.id;
+                          if (jmain) dispatch(setSelectedShipJmain(jmain));
+                          if (jobCategory && jmain)
+                            dispatch(getMilestonesByShip(jobCategory, jmain));
+                        }}
+                      >
+                        <img
+                          src={ship.image}
+                          alt={ship.name}
+                          className="h-12 w-16 object-cover rounded mr-3"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {ship.name}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {ship.imoNumber} • {ship.type}
+                          </p>
+                        </div>
+                        <div className="ml-3 text-sm text-gray-600 dark:text-gray-300">
+                          {ship.progress ?? 0}%
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="p-3 text-sm text-gray-500">
+                      No ships found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
 
 export default Header;
-
-
-
-
-
-
 
 // import React, { useState } from 'react';
 // import { useSelector, useDispatch } from 'react-redux';
@@ -459,7 +668,7 @@ export default Header;
 //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
 //               </svg>
 //             </button>
-            
+
 //             {/* Logo */}
 //             <Link to="/dashboard" className="flex items-center">
 //               <div className="h-8 w-8 bg-dockyard-blue rounded-lg flex items-center justify-center">

@@ -647,7 +647,7 @@
 
 // export default ProjectManagement;
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import Header from "../../components/common/Header";
@@ -687,6 +687,10 @@ const ProjectManagement = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
   const [showMoreActions, setShowMoreActions] = useState(false);
+  const [isScrollUp, setIsScrollUp] = useState(false);
+  const lastScrollY = useRef(
+    typeof window !== "undefined" ? window.pageYOffset : 0
+  );
 
   // Fetch ship details when component mounts
   useEffect(() => {
@@ -695,6 +699,25 @@ const ProjectManagement = () => {
       dispatch(getShipDetails(selectedJmain));
     }
   }, [dispatch]);
+
+  // Toggle translucent header when scrolling up
+  useEffect(() => {
+    let ticking = false;
+    const handleScroll = () => {
+      const currentY = window.pageYOffset || 0;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const isUp = currentY < lastScrollY.current;
+          setIsScrollUp(isUp && currentY > 20);
+          lastScrollY.current = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Build project name from ship name if available
   const shipName = currentShip?.name || "Project";
@@ -881,7 +904,7 @@ const ProjectManagement = () => {
                 </Link>
                 <FiChevronRight className="mx-2 sm:mx-3 text-gray-400 flex-shrink-0" />
                 <span className="text-gray-900 dark:text-white font-medium truncate">
-                  Project Details
+                  Project Milestones
                 </span>
               </div>
               <div className="hidden sm:flex items-center space-x-3">
@@ -895,7 +918,13 @@ const ProjectManagement = () => {
             </div>
 
             {/* Project Header */}
-            <div className="card mb-6">
+            <div
+              className={`card mb-6 sticky top-16 z-40 transition-colors ${
+                isScrollUp
+                  ? "bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border-transparent"
+                  : "bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+              }`}
+            >
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
                 <div className="mb-6 lg:mb-0 lg:mr-8">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">

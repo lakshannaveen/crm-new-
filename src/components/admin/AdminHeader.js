@@ -13,7 +13,10 @@ const AdminHeader = () => {
   const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
-    dispatch(logout());
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (confirmLogout) {
+      dispatch(logout());
+    }
   };
 
   const avatar = generateAvatar(user?.name || 'Admin');
