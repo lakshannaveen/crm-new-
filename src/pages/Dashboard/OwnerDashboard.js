@@ -10,7 +10,7 @@
 //   const dispatch = useDispatch();
 //   const { ships, loading } = useSelector(state => state.ships);
 //   const { user } = useSelector(state => state.auth);
-  
+
 //   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 //   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -37,11 +37,11 @@
 //       {/* Mobile Menu Button */}
 //       <button
 //         onClick={() => setMobileMenuOpen(true)}
-//         className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white 
+//         className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white
 //                  dark:bg-gray-800 shadow-lg"
 //       >
 //         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
 //                 d="M4 6h16M4 12h16M4 18h16" />
 //         </svg>
 //       </button>
@@ -49,7 +49,7 @@
 //       {/* Mobile Sidebar Overlay */}
 //       {mobileMenuOpen && (
 //         <div className="fixed inset-0 z-40">
-//           <div className="absolute inset-0 bg-black bg-opacity-50" 
+//           <div className="absolute inset-0 bg-black bg-opacity-50"
 //                onClick={() => setMobileMenuOpen(false)} />
 //           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800">
 //             <Sidebar />
@@ -140,7 +140,7 @@
 
 //             {/* Ships Section */}
 //             <div className="card">
-//               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between 
+//               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between
 //                             mb-6 gap-4">
 //                 <div>
 //                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -190,7 +190,7 @@
 
 //               {loading ? (
 //                 <div className="flex justify-center items-center h-64">
-//                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 
+//                   <div className="animate-spin rounded-full h-12 w-12 border-b-2
 //                                 border-blue-600"></div>
 //                 </div>
 //               ) : filteredShips.length > 0 ? (
@@ -201,7 +201,7 @@
 //                 </div>
 //               ) : (
 //                 <div className="text-center py-12">
-//                   <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 
+//                   <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800
 //                                 rounded-full mb-4">
 //                     <FiAnchor className="w-12 h-12 text-gray-400" /> {/* Changed from FiShip */}
 //                   </div>
@@ -209,7 +209,7 @@
 //                     No ships found
 //                   </h3>
 //                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-//                     {activeFilter === 'all' 
+//                     {activeFilter === 'all'
 //                       ? "You don't have any ships registered yet."
 //                       : `No ships match the "${activeFilter}" filter.`}
 //                   </p>
@@ -228,15 +228,15 @@
 //                   Quick Actions
 //                 </h3>
 //                 <div className="space-y-3">
-//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
+//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50
 //                                    dark:hover:bg-gray-700 transition-colors">
 //                     View Maintenance Schedule
 //                   </button>
-//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
+//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50
 //                                    dark:hover:bg-gray-700 transition-colors">
 //                     Download Reports
 //                   </button>
-//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 
+//                   <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50
 //                                    dark:hover:bg-gray-700 transition-colors">
 //                     Contact Dockyard
 //                   </button>
@@ -247,9 +247,9 @@
 //                   Recent Activities
 //                 </h3>
 //                 <div className="space-y-4">
-//                   <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/30 
+//                   <div className="flex items-center p-3 bg-blue-50 dark:bg-blue-900/30
 //                                 rounded-lg">
-//                     <div className="h-10 w-10 bg-blue-100 dark:bg-blue-800 rounded-full 
+//                     <div className="h-10 w-10 bg-blue-100 dark:bg-blue-800 rounded-full
 //                                   flex items-center justify-center mr-3">
 //                       <FiCheckCircle className="text-blue-600 dark:text-blue-300" />
 //                     </div>
@@ -262,9 +262,9 @@
 //                       </p>
 //                     </div>
 //                   </div>
-//                   <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-700 
+//                   <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-700
 //                                 rounded-lg">
-//                     <div className="h-10 w-10 bg-gray-100 dark:bg-gray-600 rounded-full 
+//                     <div className="h-10 w-10 bg-gray-100 dark:bg-gray-600 rounded-full
 //                                   flex items-center justify-center mr-3">
 //                       <FiAlertCircle className="text-gray-600 dark:text-gray-300" />
 //                     </div>
@@ -289,50 +289,66 @@
 
 // export default OwnerDashboard;
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { getShips } from '../../actions/shipActions';
-import { getUserByServiceNo } from '../../actions/userActions';
-import Header from '../../components/common/Header';
-import Sidebar from '../../components/common/Sidebar';
-import ProfileSection from '../../components/dashboard/ProfileSection';
-import ShipCard from '../../components/dashboard/ShipCard';
-import StatsCard from '../../components/dashboard/StatsCard';
-import { FiAnchor, FiClock, FiCheckCircle, FiAlertCircle, FiPlus, FiUsers, FiSettings, FiMessageSquare } from 'react-icons/fi';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getShips } from "../../actions/shipActions";
+import { getUserByServiceNo } from "../../actions/userActions";
+import Header from "../../components/common/Header";
+import Sidebar from "../../components/common/Sidebar";
+import ProfileSection from "../../components/dashboard/ProfileSection";
+import ShipCard from "../../components/dashboard/ShipCard";
+import StatsCard from "../../components/dashboard/StatsCard";
+import {
+  FiAnchor,
+  FiClock,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiPlus,
+  FiUsers,
+  FiSettings,
+  FiMessageSquare,
+} from "react-icons/fi";
 
 const OwnerDashboard = () => {
   const dispatch = useDispatch();
-  const { ships, loading } = useSelector(state => state.ships);
-  const { user } = useSelector(state => state.auth);
-  
+  const { ships, loading } = useSelector((state) => state.ships);
+  const { user } = useSelector((state) => state.auth);
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [activeFilter, setActiveFilter] = useState("all");
   const [showAllShips, setShowAllShips] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     dispatch(getShips());
     // Auto-fetch user profile data for dashboard using logged-in serviceNo
-    const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+    const svc = user?.serviceNo || localStorage.getItem("serviceNo");
     if (svc) dispatch(getUserByServiceNo(svc));
   }, [dispatch, user?.serviceNo]);
 
-  const filteredShips = ships.filter(ship => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'active') return ship.status === 'under_repair' || ship.status === 'in_dock';
-    if (activeFilter === 'planned') return ship.status === 'planned';
+  const filteredShips = ships.filter((ship) => {
+    if (activeFilter === "all") return true;
+    if (activeFilter === "active")
+      return ship.status === "under_repair" || ship.status === "in_dock";
+    if (activeFilter === "planned") return ship.status === "planned";
     return true;
   });
 
   // Show only first 3 ships by default
-  const displayedShips = showAllShips ? filteredShips : filteredShips.slice(0, 3);
+  const displayedShips = showAllShips
+    ? filteredShips
+    : filteredShips.slice(0, 3);
 
   const stats = {
     total: ships.length,
-    active: ships.filter(s => s.status === 'under_repair' || s.status === 'in_dock').length,
-    completed: ships.filter(s => s.progress === 100).length,
-    delayed: ships.filter(s => s.progress < 50 && new Date(s.endDate) < new Date()).length,
+    active: ships.filter(
+      (s) => s.status === "under_repair" || s.status === "in_dock"
+    ).length,
+    completed: ships.filter((s) => s.progress === 100).length,
+    delayed: ships.filter(
+      (s) => s.progress < 50 && new Date(s.endDate) < new Date()
+    ).length,
   };
 
   return (
@@ -343,17 +359,28 @@ const OwnerDashboard = () => {
         className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-white 
                  dark:bg-gray-800 shadow-lg"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                d="M4 6h16M4 12h16M4 18h16" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M4 6h16M4 12h16M4 18h16"
+          />
         </svg>
       </button>
 
       {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-black bg-opacity-50" 
-               onClick={() => setMobileMenuOpen(false)} />
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setMobileMenuOpen(false)}
+          />
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800">
             <Sidebar />
           </div>
@@ -373,10 +400,12 @@ const OwnerDashboard = () => {
             {/* Welcome Banner */}
             <div className="mb-6 md:mb-8">
               <h1 className="text-xl sm:text-2xl md:text-2xl font-bold text-gray-900 dark:text-white">
-                Welcome back, <br></br>{user?.name}!
+                Welcome back, <br></br>
+                {user?.name}!
               </h1>
               <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1 md:mt-2">
-                Here's an overview of your vessels and projects at Colombo Dockyard
+                Here's an overview of your vessels and projects at Colombo
+                Dockyard
               </p>
             </div>
 
@@ -388,14 +417,16 @@ const OwnerDashboard = () => {
                     <FiAnchor className="w-4 h-4 md:w-6 md:h-6 text-blue-600 dark:text-blue-300" />
                   </div>
                   <div className="ml-3 md:ml-4">
-                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">Total Ships</p>
+                    <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                      Total Ships
+                    </p>
                     <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
                       {stats.total}
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-green-100 dark:bg-green-900 rounded-lg flex-shrink-0">
@@ -409,7 +440,7 @@ const OwnerDashboard = () => {
                   </div>
                 </div>
               </div> */}
-              
+
               {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-purple-100 dark:bg-purple-900 rounded-lg flex-shrink-0">
@@ -423,7 +454,7 @@ const OwnerDashboard = () => {
                   </div>
                 </div>
               </div> */}
-              
+
               {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-red-100 dark:bg-red-900 rounded-lg flex-shrink-0">
@@ -442,8 +473,10 @@ const OwnerDashboard = () => {
 
             {/* Ships Section */}
             <div className="card">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between 
-                            mb-6 gap-4">
+              <div
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between 
+                            mb-6 gap-4"
+              >
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                     My Ships
@@ -454,31 +487,31 @@ const OwnerDashboard = () => {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setActiveFilter('all')}
+                    onClick={() => setActiveFilter("all")}
                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-sm ${
-                      activeFilter === 'all'
-                        ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                      activeFilter === "all"
+                        ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                     }`}
                   >
                     All Ships
                   </button>
                   <button
-                    onClick={() => setActiveFilter('active')}
+                    onClick={() => setActiveFilter("active")}
                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-sm ${
-                      activeFilter === 'active'
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                      activeFilter === "active"
+                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                     }`}
                   >
                     Active
                   </button>
                   <button
-                    onClick={() => setActiveFilter('planned')}
+                    onClick={() => setActiveFilter("planned")}
                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-sm ${
-                      activeFilter === 'planned'
-                        ? 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300'
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'
+                      activeFilter === "planned"
+                        ? "bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300"
+                        : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
                     }`}
                   >
                     Planned
@@ -488,8 +521,10 @@ const OwnerDashboard = () => {
 
               {loading ? (
                 <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 
-                                border-blue-600"></div>
+                  <div
+                    className="animate-spin rounded-full h-12 w-12 border-b-2 
+                                border-blue-600"
+                  ></div>
                 </div>
               ) : filteredShips.length > 0 ? (
                 <>
@@ -498,7 +533,7 @@ const OwnerDashboard = () => {
                       <ShipCard key={ship.id} ship={ship} />
                     ))}
                   </div>
-                  
+
                   {/* See More / See Less Button */}
                   {filteredShips.length > 3 && (
                     <div className="mt-6 text-center">
@@ -506,24 +541,30 @@ const OwnerDashboard = () => {
                         onClick={() => setShowAllShips(!showAllShips)}
                         className="w-full text-center p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
-                        {showAllShips 
-                          ? <span>Show Less</span>
-                          : <span>{`See More (${filteredShips.length - 3} more)`}</span>}
+                        {showAllShips ? (
+                          <span>Show Less</span>
+                        ) : (
+                          <span>{`See More (${
+                            filteredShips.length - 3
+                          } more)`}</span>
+                        )}
                       </button>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <div className="inline-block p-6 bg-gray-100 dark:bg-gray-800 
-                                rounded-full mb-4">
+                  <div
+                    className="inline-block p-6 bg-gray-100 dark:bg-gray-800 
+                                rounded-full mb-4"
+                  >
                     <FiAnchor className="w-12 h-12 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     No ships found
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mb-6">
-                    {activeFilter === 'all' 
+                    {activeFilter === "all"
                       ? "You don't have any ships registered yet."
                       : `No ships match the "${activeFilter}" filter.`}
                   </p>
@@ -541,31 +582,26 @@ const OwnerDashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   Quick Actions
                 </h3>
-                <div className="space-y-3 md:flex md:items-start md:gap-4 md:space-y-0">
+                <div className="space-y-3 md:flex md:items-start md:gap-2 md:space-y-0">
                   <button
-                    onClick={() => navigate('/profile')}
-                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <FiUsers className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                    <span className="font-medium text-gray-900 dark:text-white">Profile</span>
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/settings')}
-                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => navigate("/settings")}
+                    className="w-full md:w-1/2 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <FiSettings className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                    <span className="font-medium text-gray-900 dark:text-white">Settings</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Settings
+                    </span>
                   </button>
 
                   <button
-                    onClick={() => navigate('/feedback')}
-                    className="w-full md:w-1/3 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => navigate("/feedback")}
+                    className="w-full md:w-1/2 flex items-center justify-center gap-2 p-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <FiMessageSquare className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                    <span className="font-medium text-gray-900 dark:text-white">Feedback</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      Feedback
+                    </span>
                   </button>
-
                 </div>
               </div>
             </div>
