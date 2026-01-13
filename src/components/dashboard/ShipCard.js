@@ -148,7 +148,7 @@ const ShipCard = ({ ship }) => {
               >
                 Project Milestones
               </Link>
-              <button
+              {/* <button
                 className="flex-1 min-w-[120px] btn-secondary py-2 text-sm"
                 onClick={handleViewDetails}
               >
@@ -161,7 +161,7 @@ const ShipCard = ({ ship }) => {
                          hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Full Details
-              </Link>
+              </Link> */}
             </div>
           </div>
         </div>

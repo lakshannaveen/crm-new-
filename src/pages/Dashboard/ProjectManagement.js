@@ -652,7 +652,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
-import { getShipDetails } from "../../actions/shipActions";
+import { getShips } from "../../actions/shipActions";
 import {
   FiArrowLeft,
   FiCalendar,
@@ -681,9 +681,7 @@ const ProjectManagement = () => {
   const dispatch = useDispatch();
   const { currentProject, loading, milestones, milestonesLoading } =
     useSelector((state) => state.projects);
-  const { currentShip, loading: shipLoading } = useSelector(
-    (state) => state.ships
-  );
+  const { ships, loading: shipLoading } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
   const [showMoreActions, setShowMoreActions] = useState(false);
@@ -692,12 +690,9 @@ const ProjectManagement = () => {
     typeof window !== "undefined" ? window.pageYOffset : 0
   );
 
-  // Fetch ship details when component mounts
+  // Fetch ships when component mounts
   useEffect(() => {
-    const selectedJmain = localStorage.getItem("SELECTED_SHIP_JMAIN");
-    if (selectedJmain) {
-      dispatch(getShipDetails(selectedJmain));
-    }
+    dispatch(getShips());
   }, [dispatch]);
 
   // Toggle translucent header when scrolling up
@@ -720,7 +715,8 @@ const ProjectManagement = () => {
   }, []);
 
   // Build project name from ship name if available
-  const shipName = currentShip?.name || "Project";
+  const shipName =
+    ships && ships.length > 0 ? ships[0]?.name || "Project" : "Project";
   const projectName = currentProject?.name || `${shipName} `;
 
   const project = currentProject || {
