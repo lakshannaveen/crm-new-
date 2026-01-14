@@ -670,8 +670,9 @@ import {
   FiMenu,
   FiX,
   FiChevronRight,
-  FiMoreVertical,
   FiFlag,
+  FiHome,
+  FiDatabase,
 } from "react-icons/fi";
 import { formatDate, formatCurrency } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
@@ -684,7 +685,6 @@ const ProjectManagement = () => {
   const { ships, loading: shipLoading } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
-  const [showMoreActions, setShowMoreActions] = useState(false);
   const [isScrollUp, setIsScrollUp] = useState(false);
   const lastScrollY = useRef(
     typeof window !== "undefined" ? window.pageYOffset : 0
@@ -801,7 +801,7 @@ const ProjectManagement = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="flex items-center justify-between p-4">
+        <div className="flex items-center justify-between p-4 relative">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
@@ -812,30 +812,10 @@ const ProjectManagement = () => {
               <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             )}
           </button>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white truncate max-w-[50%]">
+          <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-semibold text-gray-900 dark:text-white truncate max-w-[70%] text-center">
             {project.name}
           </h1>
-          <div className="relative">
-            <button
-              onClick={() => setShowMoreActions(!showMoreActions)}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
-            >
-              <FiMoreVertical className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-            </button>
-            {showMoreActions && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                {/* Share Project removed per request */}
-                <button className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
-                  <FiDownload className="mr-3" />
-                  Export Data
-                </button>
-                <button className="w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center">
-                  <FiSettings className="mr-3" />
-                  Settings
-                </button>
-              </div>
-            )}
-          </div>
+          {/* removed mobile 'More' button per request */}
         </div>
         <div className="px-4 pb-4">
           <span
@@ -847,32 +827,64 @@ const ProjectManagement = () => {
       </div>
 
       {/* Mobile Sidebar Overlay */}
-      <div
-        className={`fixed inset-0 z-40 transition-transform duration-300 ease-in-out ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div
-          className="absolute inset-0 bg-black bg-opacity-50"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-        <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 ease-in-out">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Menu
-              </h2>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div
+            className="absolute inset-0 bg-black bg-opacity-50"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl flex flex-col h-full overflow-hidden z-50">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Menu
+                </h2>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
             </div>
+            <nav className="flex-1 overflow-y-auto px-3 py-4">
+              {/* Navigation Items for Mobile */}
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiHome className="w-5 h-5 mr-3" />
+                <span>Dashboard</span>
+              </Link>
+              {/* <Link 
+                to="/vessels" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiDatabase className="w-5 h-5 mr-3" />
+                <span>Vessels</span>
+              </Link> */}
+              <Link
+                to="/feedback"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiMessageSquare className="w-5 h-5 mr-3" />
+                <span>Feedback</span>
+              </Link>
+              <Link
+                to="/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiSettings className="w-5 h-5 mr-3" />
+                <span>Settings</span>
+              </Link>
+            </nav>
           </div>
-          <Sidebar />
         </div>
-      </div>
+      )}
 
       <div className="flex pt-16 md:pt-0">
         {/* Desktop Sidebar */}
