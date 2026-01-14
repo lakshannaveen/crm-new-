@@ -682,7 +682,7 @@ const ProjectManagement = () => {
   const dispatch = useDispatch();
   const { currentProject, loading, milestones, milestonesLoading } =
     useSelector((state) => state.projects);
-  const { ships, loading: shipLoading } = useSelector((state) => state.ships);
+  const { ships } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
   const [isScrollUp, setIsScrollUp] = useState(false);
@@ -690,7 +690,7 @@ const ProjectManagement = () => {
     typeof window !== "undefined" ? window.pageYOffset : 0
   );
 
-  // Fetch ships when component mounts
+  // Fetch ships when component mounts to get ship names from API
   useEffect(() => {
     dispatch(getShips());
   }, [dispatch]);
@@ -714,10 +714,26 @@ const ProjectManagement = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Build project name from ship name if available
-  const shipName =
-    ships && ships.length > 0 ? ships[0]?.name || "Project" : "Project";
-  const projectName = currentProject?.name || `${shipName} `;
+  // Get ship name from ships array by matching ID, or use project name
+  const getShipNameFromAPI = () => {
+    // Try to find matching ship from the ships array (loaded from API with SHIP_VESSEL_NAME)
+    if (ships && ships.length > 0) {
+      const matchingShip = ships.find(
+        (ship) => ship.id === id || ship.jmainNo === id
+      );
+      if (matchingShip && matchingShip.name) {
+        return matchingShip.name;
+      }
+    }
+    // Use currentProject name if available
+    if (currentProject?.name) {
+      return currentProject.name;
+    }
+    // If no match found, return empty string and it will be populated once ships load
+    return "";
+  };
+
+  const projectName = getShipNameFromAPI();
 
   const project = currentProject || {
     id: id,

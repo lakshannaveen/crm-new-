@@ -464,7 +464,7 @@ const Header = () => {
                   {user?.name || "User"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {user?.role === "admin" ? "Administrator" : "Ship Owner"}
+                  {user?.role === "admin" ? "Administrator" : "Employee"}
                 </p>
               </div>
             </div>

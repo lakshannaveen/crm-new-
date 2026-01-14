@@ -292,7 +292,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { getShips } from "../../actions/shipActions";
+import { getShips, fetchOwnerShips } from "../../actions/shipActions";
+import { getJmain } from "../../actions/feedbackActions";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import ProfileSection from "../../components/dashboard/ProfileSection";
@@ -313,15 +314,38 @@ const OwnerDashboard = () => {
   const dispatch = useDispatch();
   const { ships, loading } = useSelector((state) => state.ships);
   const { user } = useSelector((state) => state.auth);
+  const { jmainList = [], jmainLoading = false } = useSelector(
+    (state) => state.feedback || {}
+  );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showAllShips, setShowAllShips] = useState(false);
+  const [jobCategory, setJobCategory] = useState("");
+  const [projectNumber, setProjectNumber] = useState("");
   const navigate = useNavigate();
 
+  const jobCategoryOptions = [
+    { value: "", label: "Select Job Category" },
+    { value: "SR", label: "SR" },
+    { value: "NC", label: "NC" },
+    { value: "PMC", label: "PMC" },
+  ];
+
+  // Fetch jmain list when job category changes
   useEffect(() => {
-    dispatch(getShips());
-  }, [dispatch]);
+    if (jobCategory) {
+      dispatch(getJmain(jobCategory));
+      setProjectNumber(""); // Reset project number when category changes
+    }
+  }, [jobCategory, dispatch]);
+
+  // Fetch ships when both job category and project number are selected
+  useEffect(() => {
+    if (jobCategory && projectNumber) {
+      dispatch(fetchOwnerShips(jobCategory, projectNumber));
+    }
+  }, [jobCategory, projectNumber, dispatch]);
 
   const filteredShips = ships.filter((ship) => {
     if (activeFilter === "all") return true;
@@ -407,7 +431,7 @@ const OwnerDashboard = () => {
 
             {/* Stats Cards - Updated for mobile responsiveness */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
+              {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
                   <div className="p-2 md:p-3 bg-blue-100 dark:bg-blue-900 rounded-lg flex-shrink-0">
                     <FiAnchor className="w-4 h-4 md:w-6 md:h-6 text-blue-600 dark:text-blue-300" />
@@ -421,7 +445,7 @@ const OwnerDashboard = () => {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-3 md:p-4">
                 <div className="flex items-center">
@@ -466,6 +490,58 @@ const OwnerDashboard = () => {
               </div> */}
             </div>
 
+            {/* Dropdowns Section */}
+            <div className="card mb-8">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                Filter Ships by Category & Project
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Job Category Dropdown */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Job Category
+                  </label>
+                  <select
+                    value={jobCategory}
+                    onChange={(e) => setJobCategory(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
+                  >
+                    {jobCategoryOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Project Number Dropdown */}
+                <div className="flex flex-col">
+                  <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Project Number
+                  </label>
+                  <select
+                    value={projectNumber}
+                    onChange={(e) => setProjectNumber(e.target.value)}
+                    disabled={!jobCategory || jmainLoading}
+                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {jmainLoading
+                        ? "Loading projects..."
+                        : "Select Project Number"}
+                    </option>
+                    {jmainList.map((project) => (
+                      <option
+                        key={project.FEEDBACK_JMAIN}
+                        value={project.FEEDBACK_JMAIN}
+                      >
+                        {project.FEEDBACK_JMAIN}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
 
             {/* Ships Section */}
             <div className="card">
@@ -475,10 +551,10 @@ const OwnerDashboard = () => {
               >
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    My Ships
+                    Ships
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Manage and monitor all your vessels
+                    Manage and monitor all vessels
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -521,6 +597,22 @@ const OwnerDashboard = () => {
                     className="animate-spin rounded-full h-12 w-12 border-b-2 
                                 border-blue-600"
                   ></div>
+                </div>
+              ) : !jobCategory || !projectNumber ? (
+                <div className="text-center py-12">
+                  <div
+                    className="inline-block p-6 bg-gray-100 dark:bg-gray-800 
+                                rounded-full mb-4"
+                  >
+                    <FiAnchor className="w-12 h-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    Select Filters to View Ships
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Please select both a job category and project number above
+                    to view available ships.
+                  </p>
                 </div>
               ) : filteredShips.length > 0 ? (
                 <>

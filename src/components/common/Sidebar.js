@@ -380,7 +380,7 @@ const Sidebar = ({ embedded = false }) => {
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {user.role === "admin" ? "Administrator" : "Ship Owner"}
+                    {user.role === "admin" ? "Administrator" : "Employee"}
                   </p>
                 </div>
               </div>
@@ -406,7 +406,7 @@ const Sidebar = ({ embedded = false }) => {
                 >
                   <div className="font-medium">{user.name}</div>
                   <div className="text-gray-300 text-xs">
-                    {user.role === "admin" ? "Administrator" : "Ship Owner"}
+                    {user.role === "admin" ? "Administrator" : "Employee"}
                   </div>
                 </div>
               </div>
@@ -492,7 +492,7 @@ const Sidebar = ({ embedded = false }) => {
                         {user.name}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {user.role === "admin" ? "Administrator" : "Ship Owner"}
+                        {user.role === "admin" ? "Administrator" : "Employee"}
                       </p>
                     </div>
                   </div>
