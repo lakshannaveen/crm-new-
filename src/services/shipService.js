@@ -176,7 +176,13 @@ class ShipService {
   }
 
   async getShips(jcat, jmain) {
-    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
+    if (!jcat || !jmain) {
+      return [];
+    }
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetAllShips`,
       { params: { p_jcat: jcat, p_jmain_no: jmain }, headers }
@@ -187,7 +193,10 @@ class ShipService {
   }
 
   async getShipDetails(serviceNo, jmainNo) {
-    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetShipByJmainId`,
       {

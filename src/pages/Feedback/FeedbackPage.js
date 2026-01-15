@@ -711,6 +711,7 @@ import FeedbackForm from "../../components/feedback/FeedbackForm";
 import FeedbackHistory from "../../components/feedback/FeedbackHistory";
 import FeedbackDetailModal from "../../components/feedback/FeedbackDetailModal";
 import FeedbackConfirmation from "../../components/feedback/FeedbackConfirmation";
+import CustomDropdown from "../../components/common/Dropdown";
 import {
   FiArrowLeft,
   FiFileText,
@@ -722,7 +723,7 @@ import {
   FiDownload,
 } from "react-icons/fi";
 import { getShips } from "../../actions/shipActions";
-import { getAllFeedbacks } from "../../actions/feedbackActions";
+import { getAllFeedbacks, getJmain } from "../../actions/feedbackActions";
 
 // Feedbacks are loaded from the API. No hardcoded sample data.
 
@@ -746,12 +747,40 @@ const FeedbackPage = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const feedbackFormRef = useRef(null);
+  const hasRequestedShipsRef = useRef(false);
 
   // Filter state for View History - Auto-loaded from selected vessel
   const [selectedJobCategory, setSelectedJobCategory] = useState();
   const [selectedProjectNumber, setSelectedProjectNumber] = useState();
   const [jmainList, setJmainList] = useState([]);
   const [jmainLoading, setJmainLoading] = useState(false);
+
+  const jobCategoryOptions = [
+    { value: "", label: "Select Job Category" },
+    { value: "SR", label: "SR" },
+    { value: "NC", label: "NC" },
+    { value: "PMC", label: "PMC" },
+  ];
+
+  // Fetch jmain list when job category changes
+  useEffect(() => {
+    if (selectedJobCategory) {
+      setJmainLoading(true);
+      dispatch(getJmain(selectedJobCategory))
+        .then((result) => {
+          const jmainData = result?.ResultSet || result?.Result || [];
+          setJmainList(Array.isArray(jmainData) ? jmainData : []);
+          setSelectedProjectNumber(""); // Reset project number when category changes
+        })
+        .catch((error) => {
+          console.error("Failed to load jmain list:", error);
+          setJmainList([]);
+        })
+        .finally(() => {
+          setJmainLoading(false);
+        });
+    }
+  }, [selectedJobCategory, dispatch]);
 
   // Auto-set job category and project number from selected vessel
   useEffect(() => {
@@ -937,8 +966,13 @@ const FeedbackPage = () => {
 
   // Ensure ships are loaded so vessel selector and feedback form have data
   useEffect(() => {
-    // only dispatch if user is present and ships not yet loaded
-    if (user && (!ships || ships.length === 0)) {
+    // only dispatch once if user is present and ships not yet loaded
+    if (!user || hasRequestedShipsRef.current) {
+      return;
+    }
+
+    if (!ships || ships.length === 0) {
+      hasRequestedShipsRef.current = true;
       dispatch(getShips());
     }
   }, [dispatch, user, ships]);
@@ -1271,7 +1305,7 @@ const FeedbackPage = () => {
                     }`}
                   >
                     <FiList className="mr-2" />
-                    View History ({feedbacks.length})
+                    View History
                   </button>
                 </div>
               </div>
@@ -1295,24 +1329,26 @@ const FeedbackPage = () => {
               </div>
             )}
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="card">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Total Feedback
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.totalResponses}
-                    </p>
+            {/* Stats Cards - Only shown in View History */}
+            {showHistory && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="card">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                      <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Total Feedback
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {stats.totalResponses}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Confirmation Message */}
             {showConfirmation && recentFeedback && (
@@ -1363,6 +1399,59 @@ const FeedbackPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Filter Dropdowns */}
+                <div className="card mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                    Filter Feedback History
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Job Category Dropdown */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Job Category
+                      </label>
+                      <CustomDropdown
+                        value={selectedJobCategory || ""}
+                        onChange={(val) => setSelectedJobCategory(val)}
+                        placeholder="Select Job Category"
+                        options={jobCategoryOptions
+                          .map((option) => option.value)
+                          .filter((v) => v)}
+                        size="large"
+                      />
+                    </div>
+
+                    {/* Project Number Dropdown */}
+                    <div className="flex flex-col">
+                      <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Project Number
+                      </label>
+                      <CustomDropdown
+                        value={selectedProjectNumber || ""}
+                        onChange={(val) => setSelectedProjectNumber(val)}
+                        disabled={!selectedJobCategory || jmainLoading}
+                        placeholder={
+                          jmainLoading
+                            ? "Loading projects..."
+                            : "Select Project Number"
+                        }
+                        options={[...jmainList]
+                          .sort((a, b) => {
+                            const aVal = String(a.FEEDBACK_JMAIN).toLowerCase();
+                            const bVal = String(b.FEEDBACK_JMAIN).toLowerCase();
+                            return aVal.localeCompare(bVal, undefined, {
+                              numeric: true,
+                            });
+                          })
+                          .map((project) => project.FEEDBACK_JMAIN)}
+                        size="large"
+                        searchable
+                        searchPlaceholder="Search project number..."
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 <FeedbackHistory
                   feedbacks={feedbacks}
@@ -1479,39 +1568,8 @@ const FeedbackPage = () => {
                     )
                   )}
 
-                  {/* Vessel Info Card */}
-                  {selectedVessel && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="mb-4 md:mb-0">
-                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                            {selectedVessel.name}
-                          </h2>
-                          <div className="flex items-center text-gray-600 dark:text-gray-400">
-                            <span className="mr-4">
-                              {selectedVessel.imoNumber}
-                            </span>
-                            <span>{selectedVessel.type}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-                            Ready for Feedback
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Note:</strong> Your feedback will be
-                          automatically saved to your browser's local storage.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Feedback Form */}
-                  {selectedVessel && !showConfirmation && (
+                  {!showConfirmation && (
                     <div className="mb-6" ref={feedbackFormRef}>
                       <FeedbackForm
                         vessel={null}

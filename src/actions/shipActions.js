@@ -23,7 +23,12 @@ export const fetchOwnerShips = (jcat, jmain) => async (dispatch) => {
   dispatch({ type: FETCH_SHIPS_REQUEST });
 
   try {
-    const ships = await shipService.getShips(jcat || "SR", jmain || "1455");
+    if (!jcat || !jmain) {
+      dispatch({ type: FETCH_SHIPS_SUCCESS, payload: [] });
+      return;
+    }
+
+    const ships = await shipService.getShips(jcat, jmain);
     dispatch({ type: FETCH_SHIPS_SUCCESS, payload: ships });
   } catch (error) {
     dispatch({
@@ -44,12 +49,9 @@ export const getShips = () => async (dispatch, getState) => {
     const jmain = auth.user?.jmain;
 
     if (!jcat || !jmain) {
-      // Fallback to hardcoded values if not found
-      console.warn("User jcat or jmain not found, using fallback values");
-      const ships = await shipService.getShips("SR", "1455");
       dispatch({
         type: GET_SHIPS_SUCCESS,
-        payload: ships,
+        payload: [],
       });
       return;
     }
