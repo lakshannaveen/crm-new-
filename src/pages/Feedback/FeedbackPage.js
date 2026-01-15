@@ -722,7 +722,7 @@ import {
   FiStar,
   FiDownload,
 } from "react-icons/fi";
-import { getShips } from "../../actions/shipActions";
+import { getShips, fetchOwnerShips } from "../../actions/shipActions";
 import { getAllFeedbacks, getJmain } from "../../actions/feedbackActions";
 
 // Feedbacks are loaded from the API. No hardcoded sample data.
@@ -754,6 +754,8 @@ const FeedbackPage = () => {
   const [selectedProjectNumber, setSelectedProjectNumber] = useState();
   const [jmainList, setJmainList] = useState([]);
   const [jmainLoading, setJmainLoading] = useState(false);
+  const [filterShips, setFilterShips] = useState([]);
+  const [filterShipsLoading, setFilterShipsLoading] = useState(false);
 
   const jobCategoryOptions = [
     { value: "", label: "Select Job Category" },
@@ -781,6 +783,37 @@ const FeedbackPage = () => {
         });
     }
   }, [selectedJobCategory, dispatch]);
+
+  // Fetch ships when both job category and project number are selected (for View History)
+  useEffect(() => {
+    if (selectedJobCategory && selectedProjectNumber) {
+      setFilterShipsLoading(true);
+      dispatch(fetchOwnerShips(selectedJobCategory, selectedProjectNumber))
+        .then(() => {
+          // Ships will be in redux state, component will re-render
+          setFilterShipsLoading(false);
+        })
+        .catch((error) => {
+          console.error("Failed to load ships:", error);
+          setFilterShips([]);
+          setFilterShipsLoading(false);
+        });
+    } else {
+      setFilterShips([]);
+    }
+  }, [selectedJobCategory, selectedProjectNumber, dispatch]);
+
+  // Sync fetched ships from redux state to local state
+  useEffect(() => {
+    if (selectedJobCategory && selectedProjectNumber) {
+      setFilterShips(Array.isArray(ships) ? ships : []);
+    }
+  }, [ships, selectedJobCategory, selectedProjectNumber]);
+
+  const selectedHistoryShip = filterShips.find(
+    (ship) =>
+      String(ship?.jmainNo || ship?.id) === String(selectedProjectNumber)
+  );
 
   // Auto-set job category and project number from selected vessel
   useEffect(() => {
@@ -1375,7 +1408,8 @@ const FeedbackPage = () => {
             {showHistory ? (
               <div className="mb-8">
                 {/* Ship Info Banner */}
-                {selectedVessel && (
+                {(selectedVessel ||
+                  (selectedJobCategory && selectedProjectNumber)) && (
                   <div className="card mb-6 bg-blue-50 dark:bg-blue-900/20">
                     <div className="flex items-center">
                       <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg mr-4">
@@ -1383,7 +1417,14 @@ const FeedbackPage = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          Feedback History for {selectedVessel.name}
+                          Feedback History
+                          {selectedVessel?.name
+                            ? ` for ${selectedVessel.name}`
+                            : selectedHistoryShip?.name
+                            ? ` for ${selectedHistoryShip.name}`
+                            : selectedProjectNumber
+                            ? ` for Vessel ${selectedProjectNumber}`
+                            : ""}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           Job Category:{" "}
@@ -1472,102 +1513,6 @@ const FeedbackPage = () => {
             ) : (
               !showConfirmation && (
                 <>
-                  {/* Info banner removed per request */}
-
-                  {/* Vessel Selection */}
-                  {shipsLoading ? (
-                    <div className="card mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Select Vessel for Feedback
-                      </h3>
-                      <div className="flex items-center justify-center p-6">
-                        <svg
-                          className="animate-spin h-6 w-6 text-blue-600 mr-3"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                          />
-                        </svg>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Loading vessels...
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    ships.length > 1 && (
-                      <div className="card mb-8">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                          Select Vessel for Feedback
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {ships.slice(0, shipVisibleCount).map((ship) => (
-                            <button
-                              key={ship.id}
-                              onClick={() => setSelectedVessel(ship)}
-                              className={`p-4 border rounded-lg transition-all ${
-                                selectedVessel?.id === ship.id
-                                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                  : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                              }`}
-                            >
-                              <div className="flex items-center">
-                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                                  <FiFileText className="text-blue-600 dark:text-blue-300" />
-                                </div>
-                                <div className="text-left">
-                                  <p className="font-medium text-gray-900 dark:text-white">
-                                    {ship.name}
-                                  </p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {ship.imoNumber}
-                                  </p>
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                        {ships.length > baseShipVisibleCount && (
-                          <div className="mt-4 flex justify-center">
-                            {!showAllShips ? (
-                              <button
-                                onClick={() => {
-                                  setShowAllShips(true);
-                                  setShipVisibleCount(ships.length);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 font-medium"
-                              >
-                                Load more
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  setShowAllShips(false);
-                                  setShipVisibleCount(baseShipVisibleCount);
-                                }}
-                                className="text-gray-600 hover:text-gray-800 font-medium"
-                              >
-                                Show less
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )
-                  )}
-
                   {/* Feedback Form */}
                   {!showConfirmation && (
                     <div className="mb-6" ref={feedbackFormRef}>
