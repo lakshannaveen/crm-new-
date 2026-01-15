@@ -299,6 +299,7 @@ import Sidebar from "../../components/common/Sidebar";
 import ProfileSection from "../../components/dashboard/ProfileSection";
 import ShipCard from "../../components/dashboard/ShipCard";
 import StatsCard from "../../components/dashboard/StatsCard";
+import CustomDropdown from "../../components/common/Dropdown";
 import {
   FiAnchor,
   FiClock,
@@ -501,17 +502,15 @@ const OwnerDashboard = () => {
                   <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Job Category
                   </label>
-                  <select
+                  <CustomDropdown
                     value={jobCategory}
-                    onChange={(e) => setJobCategory(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600"
-                  >
-                    {jobCategoryOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setJobCategory(val)}
+                    placeholder="Select Job Category"
+                    options={jobCategoryOptions
+                      .map((option) => option.value)
+                      .filter((v) => v)}
+                    size="large"
+                  />
                 </div>
 
                 {/* Project Number Dropdown */}
@@ -519,26 +518,28 @@ const OwnerDashboard = () => {
                   <label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     Project Number
                   </label>
-                  <select
+                  <CustomDropdown
                     value={projectNumber}
-                    onChange={(e) => setProjectNumber(e.target.value)}
+                    onChange={(val) => setProjectNumber(val)}
                     disabled={!jobCategory || jmainLoading}
-                    className="px-4 py-2 border border-gray-300 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {jmainLoading
+                    placeholder={
+                      jmainLoading
                         ? "Loading projects..."
-                        : "Select Project Number"}
-                    </option>
-                    {jmainList.map((project) => (
-                      <option
-                        key={project.FEEDBACK_JMAIN}
-                        value={project.FEEDBACK_JMAIN}
-                      >
-                        {project.FEEDBACK_JMAIN}
-                      </option>
-                    ))}
-                  </select>
+                        : "Select Project Number"
+                    }
+                    options={[...jmainList]
+                      .sort((a, b) => {
+                        const aVal = String(a.FEEDBACK_JMAIN).toLowerCase();
+                        const bVal = String(b.FEEDBACK_JMAIN).toLowerCase();
+                        return aVal.localeCompare(bVal, undefined, {
+                          numeric: true,
+                        });
+                      })
+                      .map((project) => project.FEEDBACK_JMAIN)}
+                    size="large"
+                    searchable
+                    searchPlaceholder="Search project number..."
+                  />
                 </div>
               </div>
             </div>
@@ -609,7 +610,7 @@ const OwnerDashboard = () => {
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     Select Filters to View Ships
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
                     Please select both a job category and project number above
                     to view available ships.
                   </p>

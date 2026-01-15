@@ -686,6 +686,7 @@ const ProjectManagement = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
   const [isScrollUp, setIsScrollUp] = useState(false);
+  const [resolvedProjectName, setResolvedProjectName] = useState("");
   const lastScrollY = useRef(
     typeof window !== "undefined" ? window.pageYOffset : 0
   );
@@ -718,9 +719,14 @@ const ProjectManagement = () => {
   const getShipNameFromAPI = () => {
     // Try to find matching ship from the ships array (loaded from API with SHIP_VESSEL_NAME)
     if (ships && ships.length > 0) {
-      const matchingShip = ships.find(
-        (ship) => ship.id === id || ship.jmainNo === id
-      );
+      const matchingShip = ships.find((ship) => {
+        const shipId = ship?.id;
+        const shipJmain =
+          ship?.jmainNo || ship?.raw?.SHIP_JMAIN || ship?.raw?.SHIP_JOB_NO;
+        return (
+          String(shipId) === String(id) || String(shipJmain) === String(id)
+        );
+      });
       if (matchingShip && matchingShip.name) {
         return matchingShip.name;
       }
@@ -735,9 +741,15 @@ const ProjectManagement = () => {
 
   const projectName = getShipNameFromAPI();
 
+  useEffect(() => {
+    if (projectName) {
+      setResolvedProjectName(projectName);
+    }
+  }, [projectName]);
+
   const project = currentProject || {
     id: id,
-    name: projectName,
+    name: projectName || resolvedProjectName,
     // description:
     //   "Complete hull repair and engine overhaul with system upgrades",
     status: "on_track",

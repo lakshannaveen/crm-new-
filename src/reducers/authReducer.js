@@ -20,7 +20,9 @@ import { CLEAR_AUTH_ERRORS } from "../constants/uiActionTypes";
 
 const tokenFromStorage = localStorage.getItem("token");
 const tokenExpiryFromStorage = localStorage.getItem("tokenExpiry");
-const isTokenValid = tokenFromStorage && (!tokenExpiryFromStorage || Number(tokenExpiryFromStorage) > Date.now());
+const isTokenValid =
+  tokenFromStorage &&
+  (!tokenExpiryFromStorage || Number(tokenExpiryFromStorage) > Date.now());
 
 const initialState = {
   token: tokenFromStorage,
@@ -32,7 +34,7 @@ const initialState = {
   phoneNumber: "",
   otpResent: false,
   registrationSuccess: false,
-  postLoginRedirect: "/feedback",
+  postLoginRedirect: "/dashboard",
 };
 
 const authReducer = (state = initialState, action) => {
@@ -55,7 +57,11 @@ const authReducer = (state = initialState, action) => {
         otpSent: true,
         phoneNumber: action.payload.phoneNumber,
         // If backend provided user details or at least serviceNo, keep it in state
-        user: action.payload.userDetails || (action.payload.serviceNo ? { serviceNo: action.payload.serviceNo } : state.user),
+        user:
+          action.payload.userDetails ||
+          (action.payload.serviceNo
+            ? { serviceNo: action.payload.serviceNo }
+            : state.user),
         error: null,
         otpResent: false,
       };
@@ -74,7 +80,7 @@ const authReducer = (state = initialState, action) => {
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       // Persist the service number separately so service-only flows can read it
       if (action.payload.user && action.payload.user.serviceNo) {
-        localStorage.setItem('serviceNo', action.payload.user.serviceNo);
+        localStorage.setItem("serviceNo", action.payload.user.serviceNo);
       }
       return {
         ...state,
@@ -132,7 +138,7 @@ const authReducer = (state = initialState, action) => {
     case LOGOUT:
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      localStorage.removeItem('serviceNo');
+      localStorage.removeItem("serviceNo");
       return {
         ...state,
         token: null,

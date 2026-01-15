@@ -25,12 +25,29 @@ export default function CustomDropdown({
   disabled = false,
   placeholder = "Select...",
   openDownward = false,
+  size = "small",
+  searchable = false,
+  searchPlaceholder = "Search...",
 }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef(null);
   const dropdownRef = useRef(null);
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const isMobile = useMobile();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const sizeClasses = {
+    small: {
+      button: "h-[28px] px-2 py-0 leading-[28px] text-xs",
+      list: `${isMobile ? "max-h-[200px]" : "max-h-40"} text-xs`,
+    },
+    large: {
+      button: "h-10 px-4 py-2 leading-10 text-sm",
+      list: `${isMobile ? "max-h-[300px]" : "max-h-64"} text-sm`,
+    },
+  };
+
+  const currentSize = sizeClasses[size] || sizeClasses.small;
 
   const computePosition = () => {
     const btn = buttonRef.current;
@@ -89,6 +106,18 @@ export default function CustomDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) setSearchTerm("");
+  }, [open]);
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredOptions =
+    searchable && normalizedSearch
+      ? options.filter((opt) =>
+          String(opt).toLowerCase().includes(normalizedSearch)
+        )
+      : options;
+
   return (
     <div className="w-full text-xs">
       {/* Trigger Button */}
@@ -98,15 +127,15 @@ export default function CustomDropdown({
         disabled={disabled}
         onClick={() => setOpen((p) => !p)}
         className={`w-full flex items-center justify-between
-          h-[28px] px-2 py-0 leading-[28px]
           rounded border
           bg-white dark:bg-gray-700
           border-gray-300 dark:border-gray-600
-          text-gray-700 dark:text-gray-300 text-xs
+          text-gray-700 dark:text-gray-300
+          ${currentSize.button}
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
-        <span className="truncate leading-[28px]">{value || placeholder}</span>
+        <span className="truncate">{value || placeholder}</span>
         <ArrowIcon open={open} />
       </button>
 
@@ -118,8 +147,7 @@ export default function CustomDropdown({
             rounded border shadow
             bg-white dark:bg-gray-700
             border-gray-300 dark:border-gray-600
-            ${isMobile ? "max-h-[200px]" : "max-h-40"}
-            text-xs
+            ${currentSize.list}
           `}
           style={{
             top: `${pos.top}px`,
@@ -127,21 +155,38 @@ export default function CustomDropdown({
             width: `${pos.width}px`,
           }}
         >
-          {options.map((opt) => (
-            <li
-              key={opt}
-              onClick={() => {
-                onChange(opt);
-                setOpen(false);
-              }}
-              className={`cursor-pointer px-2 py-1
-                hover:bg-gray-100 dark:hover:bg-gray-600
-                ${opt === value ? "bg-gray-100 dark:bg-gray-600" : ""}
-              `}
-            >
-              {opt}
+          {searchable && (
+            <li className="sticky top-0 bg-white dark:bg-gray-700 p-2 border-b border-gray-200 dark:border-gray-600">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </li>
-          ))}
+          )}
+          {filteredOptions.length === 0 ? (
+            <li className="px-3 py-2 text-xs text-gray-500 dark:text-gray-300">
+              No results
+            </li>
+          ) : (
+            filteredOptions.map((opt) => (
+              <li
+                key={opt}
+                onClick={() => {
+                  onChange(opt);
+                  setOpen(false);
+                }}
+                className={`cursor-pointer px-3 py-2
+                  hover:bg-gray-100 dark:hover:bg-gray-600
+                  ${opt === value ? "bg-gray-100 dark:bg-gray-600" : ""}
+                `}
+              >
+                {opt}
+              </li>
+            ))
+          )}
         </ul>
       )}
     </div>

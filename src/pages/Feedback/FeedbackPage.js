@@ -1514,7 +1514,7 @@ const FeedbackPage = () => {
                   {selectedVessel && !showConfirmation && (
                     <div className="mb-6" ref={feedbackFormRef}>
                       <FeedbackForm
-                        vessel={selectedVessel}
+                        vessel={null}
                         onSubmit={handleFeedbackSubmit}
                       />
                     </div>
