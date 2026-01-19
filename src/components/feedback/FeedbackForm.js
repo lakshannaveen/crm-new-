@@ -52,6 +52,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
+  const [feedbackSubmissionSuccess, setFeedbackSubmissionSuccess] =
+    useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropdownRef = useRef(null);
@@ -894,6 +896,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       if (currentStep === 3) {
         setMilestonesSubmitted(false);
       }
+      // Reset feedback submission success flag when going back from Complete step
+      if (currentStep === 4) {
+        setFeedbackSubmissionSuccess(false);
+      }
     }
   };
 
@@ -952,14 +958,24 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     try {
       await addFeedback(feedbackPayload);
-      setCurrentStep(9);
+      // Mark submission as successful only after successful API call
+      setFeedbackSubmissionSuccess(true);
+      // Move to Complete step only on successful submission
+      setCurrentStep(4);
+      if (onSubmit) {
+        onSubmit(feedbackPayload);
+      }
+      toast.success("Feedback submitted successfully!");
     } catch (error) {
       console.error("Failed to submit feedback:", error);
+      setFeedbackSubmissionSuccess(false);
+      // Show error toast to user
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to submit feedback. Please try again."
+      );
     }
-    if (onSubmit) {
-      onSubmit(feedbackPayload);
-    }
-    setCurrentStep(4);
   };
 
   // Mobile Progress Indicator
@@ -1637,7 +1653,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.jobStatus ? "border-red-500" : ""
                     }`}
-                    
                   >
                     {jobStatusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -3289,11 +3304,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               <button
                 onClick={handleSubmit}
+                disabled={feedbackSubmissionSuccess}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
-                } btn-primary`}
+                } btn-primary ${
+                  feedbackSubmissionSuccess
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               >
-                Submit Feedback
+                {feedbackSubmissionSuccess
+                  ? "Feedback Submitted"
+                  : "Submit Feedback"}
               </button>
             </div>
           </div>
@@ -3503,6 +3525,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           {steps.map((step, index) => {
             // Check if all previous steps are validated
             const canNavigate = () => {
+              // Complete step (step 4) can only be accessed if feedback was successfully submitted
+              if (index === 4) {
+                return feedbackSubmissionSuccess;
+              }
               if (index <= currentStep) return true; // Can always go back
               // Check all steps from current to target are valid
               for (let i = currentStep; i < index; i++) {
@@ -3523,6 +3549,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     }
                   }}
                   disabled={!isClickable}
+                  title={
+                    index === 4 && !feedbackSubmissionSuccess
+                      ? "Submit feedback first to complete"
+                      : ""
+                  }
                   className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                     index === currentStep
                       ? "bg-blue-600 text-white scale-110"

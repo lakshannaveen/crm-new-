@@ -85,7 +85,7 @@ const ShipCard = ({ ship }) => {
                   {ship.type} • {ship.dwt} DWT • Built {ship.yearBuilt}
                 </p>
               </div>
-              <button
+              {/* <button
                 onClick={handleViewDetails}
                 className="mt-2 md:mt-0 px-4 py-2 bg-blue-50 text-blue-600 
                          dark:bg-blue-900/30 dark:text-blue-400 rounded-lg 
@@ -93,7 +93,7 @@ const ShipCard = ({ ship }) => {
                          transition-colors text-sm font-medium"
               >
                 View Details
-              </button>
+              </button> */}
             </div>
 
             {/* Progress Bar */}

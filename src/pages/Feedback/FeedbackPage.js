@@ -1108,7 +1108,7 @@ const FeedbackPage = () => {
             feedback.observations
               ? `
             <div class="info-row">
-              <span class="label">Observations:</span>
+              <span class="label">Remarks:</span>
               <div class="observations">${feedback.observations}</div>
             </div>
           `
@@ -1577,7 +1577,7 @@ const FeedbackPage = () => {
                             {feedback.observations && (
                               <div className="mt-2">
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Observations
+                                  Remarks
                                 </div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                                   {feedback.observations}
