@@ -1693,19 +1693,6 @@ const ShipDetailsPage = () => {
                   {currentShip.name}
                 </span>
               </div>
-              <div className="flex items-center space-x-3">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${statusColor}`}
-                >
-                  {statusText}
-                </span>
-                <Link
-                  to={`/projects/${id}`}
-                  className="btn-primary text-sm px-3 py-1.5 sm:px-4 sm:py-2 whitespace-nowrap"
-                >
-                  View Project
-                </Link>
-              </div>
             </div>
 
             {/* Ship Header */}
