@@ -369,7 +369,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                 className="px-6 py-2 btn-primary inline-block text-center"
                 style={{ minWidth: 120 }}
               >
-                View Full Project
+                View Milestones
               </Link>
             </div>
           </div>

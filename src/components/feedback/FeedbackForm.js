@@ -2270,7 +2270,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value={val}
                                   checked={row.evaluation === val}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2461,7 +2461,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value="P"
                                   checked={row.evaluation === "P"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2477,7 +2477,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value="A"
                                   checked={row.evaluation === "A"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2493,7 +2493,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value="G"
                                   checked={row.evaluation === "G"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2509,7 +2509,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value="E"
                                   checked={row.evaluation === "E"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2525,7 +2525,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                   name={`deck-eval-${index}`}
                                   value="N"
                                   checked={row.evaluation === "N"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",

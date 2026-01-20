@@ -17,16 +17,21 @@ const FeedbackHistory = ({
   useEffect(() => {
     let result = [...feedbacks];
 
-    // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(
-        (fb) =>
-          fb.vesselName.toLowerCase().includes(term) ||
-          fb.feedbackRef.toLowerCase().includes(term) ||
-          fb.submittedBy.toLowerCase().includes(term) ||
-          fb.observations?.toLowerCase().includes(term)
-      );
+    // Apply search filter (null-safe, trim input)
+    if (searchTerm && searchTerm.trim() !== "") {
+      const term = searchTerm.trim().toLowerCase();
+      result = result.filter((fb) => {
+        const vessel = (fb.vesselName || "").toString().toLowerCase();
+        const ref = (fb.feedbackRef || "").toString().toLowerCase();
+        const submit = (fb.submittedBy || "").toString().toLowerCase();
+        const obs = (fb.observations || "").toString().toLowerCase();
+        return (
+          vessel.includes(term) ||
+          ref.includes(term) ||
+          submit.includes(term) ||
+          obs.includes(term)
+        );
+      });
     }
 
     // Apply rating filter
@@ -54,6 +59,11 @@ const FeedbackHistory = ({
 
     setSortedFeedbacks(result);
   }, [feedbacks, filter, searchTerm, sortBy]);
+
+  // Clear search input when feedback list length changes (e.g., after submit)
+  useEffect(() => {
+    setSearchTerm("");
+  }, [feedbacks.length]);
 
   const getScoreColor = (score) => {
     if (score >= 75)
