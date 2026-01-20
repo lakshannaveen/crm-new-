@@ -32,10 +32,7 @@ const FeedbackConfirmation = ({ formData }) => {
             <div><strong>Vessel:</strong> ${formData?.vesselName || ''}</div>
             <div><strong>Submitted On:</strong> ${submittedOn.toLocaleString()}</div>
           </div>
-          <div>
-            <strong>Remarks:</strong> ${formData?.remarks || ''}<br/>
-            <strong>Action Taken:</strong> ${formData?.actionTaken || ''}
-          </div>
+         
           <h2 style="margin-top:18px">Feedback Items</h2>
           <table>
             <thead>
