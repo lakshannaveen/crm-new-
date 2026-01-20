@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { FiCalendar, FiAnchor, FiFlag } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
-import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { setSelectedShipJmain } from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
 import ShipDetailsModal from "./ShipDetailsModal";
@@ -11,9 +10,6 @@ import ShipDetailsModal from "./ShipDetailsModal";
 const ShipCard = ({ ship }) => {
   const dispatch = useDispatch();
   const [showDetails, setShowDetails] = useState(false);
-
-  const statusColor = getStatusColor(ship.status);
-  const statusText = getStatusText(ship.status);
 
   const handleViewDetails = () => {
     // Store the ship's JMAIN in localStorage before showing details
@@ -58,13 +54,6 @@ const ShipCard = ({ ship }) => {
                 alt={ship.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-3 right-3">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}
-                >
-                  {statusText}
-                </span>
-              </div>
             </div>
           </div>
 
@@ -105,7 +94,7 @@ const ShipCard = ({ ship }) => {
               <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full ${getProgressColor(
-                    ship.progress
+                    ship.progress,
                   )} rounded-full 
                            transition-all duration-300`}
                   style={{ width: `${ship.progress}%` }}

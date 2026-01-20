@@ -1,34 +1,41 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import CountryCodeSelect from './CountryCodeSelect';
-import { login, verifyOTP } from '../../actions/authActions';
-import { validatePhoneNumber, validateOTP } from '../../utils/validators';
-import { FiSmartphone, FiArrowRight, FiArrowLeft } from 'react-icons/fi';
-import dockyardLogo from '../../assets/image/logo512.png';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import CountryCodeSelect from "./CountryCodeSelect";
+import { login, verifyOTP } from "../../actions/authActions";
+import { validatePhoneNumber, validateOTP } from "../../utils/validators";
+import { FiSmartphone, FiArrowRight, FiArrowLeft } from "react-icons/fi";
+import { countryCodes } from "../../constants/countries";
+import { LOGIN_FAILURE } from "../../constants/authActionTypes";
+import dockyardLogo from "../../assets/image/logo512.png";
 
 const LoginForm = () => {
   const dispatch = useDispatch();
-  const { otpSent, phoneNumber: storedPhone, loading } = useSelector(
-    (state) => state.auth
-  );
+  const {
+    otpSent,
+    phoneNumber: storedPhone,
+    loading,
+  } = useSelector((state) => state.auth);
 
-  const [countryCode, setCountryCode] = useState('+94');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '']);
+  const [countryCode, setCountryCode] = useState("+94");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", ""]);
   const [errors, setErrors] = useState({});
   const [otpResent, setOtpResent] = useState(false);
+
+  const selectedCountry = countryCodes.find((c) => c.code === countryCode);
+  const phonePlaceholder = selectedCountry?.placeholder || "77 123 4567";
 
   const handlePhoneSubmit = (e) => {
     e.preventDefault();
     setErrors({});
-    const cleaned = phoneNumber.replace(/\D/g, '');
+    const cleaned = phoneNumber.replace(/\D/g, "");
     let fullPhoneNumber = cleaned;
 
     // If user entered leading 0 (local format), send as-is (backend expects 0-prefixed)
-    if (!cleaned.startsWith('0') && !cleaned.startsWith('+')) {
+    if (!cleaned.startsWith("0") && !cleaned.startsWith("+")) {
       // Prepend country code if provided (remove +)
-      if (countryCode && countryCode.startsWith('+')) {
+      if (countryCode && countryCode.startsWith("+")) {
         fullPhoneNumber = countryCode + cleaned;
       } else {
         fullPhoneNumber = cleaned;
@@ -36,7 +43,7 @@ const LoginForm = () => {
     }
 
     if (!validatePhoneNumber(fullPhoneNumber)) {
-      setErrors({ phone: 'Please enter a valid phone number' });
+      setErrors({ phone: "Please enter a valid phone number" });
       return;
     }
 
@@ -46,9 +53,9 @@ const LoginForm = () => {
   const handleOTPSubmit = (e) => {
     e.preventDefault();
     setErrors({});
-    const otpString = otp.join('');
+    const otpString = otp.join("");
     if (!validateOTP(otpString)) {
-      setErrors({ otp: 'Please enter a valid 5-digit OTP' });
+      setErrors({ otp: "Please enter a valid 5-digit OTP" });
       return;
     }
     dispatch(verifyOTP(otpString, storedPhone));
@@ -71,30 +78,33 @@ const LoginForm = () => {
   };
 
   const handleBackToPhone = () => {
-    setOtp(['', '', '', '', '', '']);
+    setOtp(["", "", "", "", ""]);
     setErrors({});
     setOtpResent(false);
-    // Reset the redux auth state to go back to phone form
-    window.location.reload();
+    // Dispatch LOGIN_FAILURE to reset otpSent state without page reload
+    dispatch({ type: LOGIN_FAILURE, payload: "" });
   };
 
   return (
     <div className="w-full max-w-md rounded-3xl bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8">
-
       {/* Header */}
       <div className="text-center mb-6">
         <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
-          <img src={dockyardLogo} alt="Colombo Dockyard" className="w-full h-full object-contain" />
+          <img
+            src={dockyardLogo}
+            alt="Colombo Dockyard"
+            className="w-full h-full object-contain"
+          />
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {otpSent ? 'Verify OTP' : 'Welcome Back'}
+          {otpSent ? "Verify OTP" : "Welcome Back"}
         </h1>
 
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {otpSent
             ? `Code sent to ${storedPhone}`
-            : 'Sign in using your mobile number'}
+            : "Sign in using your mobile number"}
         </p>
       </div>
 
@@ -120,7 +130,10 @@ const LoginForm = () => {
 
             <div className="mt-2 flex gap-2">
               <div className="w-28">
-                <CountryCodeSelect value={countryCode} onChange={setCountryCode} />
+                <CountryCodeSelect
+                  value={countryCode}
+                  onChange={setCountryCode}
+                />
               </div>
 
               <div className="relative flex-1">
@@ -129,10 +142,10 @@ const LoginForm = () => {
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/[^0-9]/g, '');
+                    const value = e.target.value.replace(/[^0-9]/g, "");
                     setPhoneNumber(value);
                   }}
-                  placeholder="77 123 4567"
+                  placeholder={phonePlaceholder}
                   inputMode="numeric"
                   pattern="[0-9]*"
                   className="h-11 w-full pl-10 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
@@ -146,7 +159,7 @@ const LoginForm = () => {
             disabled={loading}
             className="w-full btn-primary h-11 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? 'Sending OTP...' : 'Send code'}
+            {loading ? "Sending OTP..." : "Send code"}
             {!loading && <FiArrowRight />}
           </button>
 
@@ -182,7 +195,7 @@ const LoginForm = () => {
             disabled={loading}
             className="w-full btn-primary h-11 rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Verifying...' : 'Verify & Continue'}
+            {loading ? "Verifying..." : "Verify & Continue"}
           </button>
 
           <div className="space-y-3">
@@ -193,10 +206,10 @@ const LoginForm = () => {
                 disabled={otpResent || loading}
                 className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-500 disabled:opacity-50 transition-colors"
               >
-                {otpResent ? 'OTP sent' : 'Resend code'}
+                {otpResent ? "OTP sent" : "Resend code"}
               </button>
               <span className="text-gray-500">
-                {otpResent ? 'Wait 30s' : 'Check SMS'}
+                {otpResent ? "Wait 30s" : "Check SMS"}
               </span>
             </div>
 

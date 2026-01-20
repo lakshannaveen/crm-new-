@@ -468,7 +468,7 @@ const OwnerDashboard = () => {
                   >
                     All Ships
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setActiveFilter('active')}
                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-sm ${
                       activeFilter === 'active'
@@ -487,7 +487,7 @@ const OwnerDashboard = () => {
                     }`}
                   >
                     Planned
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
