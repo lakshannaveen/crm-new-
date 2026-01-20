@@ -746,6 +746,7 @@ const FeedbackPage = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const feedbackFormRef = useRef(null);
+  const shipSelectionRef = useRef(null);
 
   // Filter state for View History - Auto-loaded from selected vessel
   const [selectedJobCategory, setSelectedJobCategory] = useState();
@@ -789,7 +790,7 @@ const FeedbackPage = () => {
       try {
         // Use Redux action to fetch feedbacks with selected parameters
         const res = await dispatch(
-          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
         const rows = res?.ResultSet || res?.Result || [];
 
@@ -809,7 +810,7 @@ const FeedbackPage = () => {
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
-            JSON.stringify(apiFeedbacks)
+            JSON.stringify(apiFeedbacks),
           );
         } catch (e) {
           /* ignore storage errors */
@@ -881,7 +882,7 @@ const FeedbackPage = () => {
       try {
         // Use Redux action to fetch feedbacks with selected parameters
         const res = await dispatch(
-          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
         const rows = res?.ResultSet || res?.Result || [];
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
@@ -898,7 +899,7 @@ const FeedbackPage = () => {
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
-            JSON.stringify(apiFeedbacks)
+            JSON.stringify(apiFeedbacks),
           );
         } catch (e) {}
         const saved = localStorage.getItem("cdplc_feedbacks");
@@ -931,7 +932,7 @@ const FeedbackPage = () => {
   // Save only user-submitted feedbacks to localStorage whenever they change
   useEffect(() => {
     const userFeedbacks = feedbacks.filter(
-      (fb) => typeof fb.id === "string" && fb.id.startsWith("feedback_")
+      (fb) => typeof fb.id === "string" && fb.id.startsWith("feedback_"),
     );
     localStorage.setItem("cdplc_feedbacks", JSON.stringify(userFeedbacks));
   }, [feedbacks]);
@@ -940,8 +941,6 @@ const FeedbackPage = () => {
     if (shipId) {
       const vessel = ships.find((ship) => ship.id === parseInt(shipId));
       setSelectedVessel(vessel);
-    } else if (ships.length > 0) {
-      setSelectedVessel(ships[0]);
     }
   }, [shipId, ships]);
 
@@ -982,18 +981,18 @@ const FeedbackPage = () => {
     const ratingValues = Object.values(ratings).filter((r) => r > 0);
     if (ratingValues.length === 0) return 0;
     return Math.round(
-      ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+      ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length,
     );
   };
 
   const handleDeleteFeedback = (feedbackToDelete) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this feedback? This action cannot be undone."
+        "Are you sure you want to delete this feedback? This action cannot be undone.",
       )
     ) {
       setFeedbacks((prev) =>
-        prev.filter((fb) => fb.id !== feedbackToDelete.id)
+        prev.filter((fb) => fb.id !== feedbackToDelete.id),
       );
     }
   };
@@ -1060,7 +1059,7 @@ const FeedbackPage = () => {
           <div class="info-row">
             <span class="label">Submitted On:</span>
             <span class="value">${new Date(
-              feedback.submittedAt
+              feedback.submittedAt,
             ).toLocaleDateString()}</span>
           </div>
 
@@ -1076,15 +1075,15 @@ const FeedbackPage = () => {
               feedback.overallScore >= 75
                 ? "rating-excellent"
                 : feedback.overallScore >= 50
-                ? "rating-good"
-                : "rating-needs"
+                  ? "rating-good"
+                  : "rating-needs"
             }">
               ${
                 feedback.overallScore >= 75
                   ? "Excellent"
                   : feedback.overallScore >= 50
-                  ? "Good"
-                  : ""
+                    ? "Good"
+                    : ""
               }
             </span>
           </div>
@@ -1148,7 +1147,7 @@ const FeedbackPage = () => {
             (
               feedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
               feedbacks.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0,
     userAverageRating:
@@ -1157,7 +1156,7 @@ const FeedbackPage = () => {
             (
               userFeedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
               userFeedbacks.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0,
   };
@@ -1235,30 +1234,32 @@ const FeedbackPage = () => {
                   </p>
                 </div>
 
-                <div className="mt-4 md:mt-0 flex space-x-3">
-                  <button
-                    onClick={handleNewFeedback}
-                    className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      !showHistory
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <FiMessageSquare className="mr-2" />
-                    New Feedback
-                  </button>
-                  <button
-                    onClick={handleViewHistory}
-                    className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      showHistory
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <FiList className="mr-2" />
-                    View History ({feedbacks.length})
-                  </button>
-                </div>
+                {selectedVessel && (
+                  <div className="mt-4 md:mt-0 flex space-x-3">
+                    <button
+                      onClick={handleNewFeedback}
+                      className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                        !showHistory
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <FiMessageSquare className="mr-2" />
+                      New Feedback
+                    </button>
+                    <button
+                      onClick={handleViewHistory}
+                      className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                        showHistory
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
+                          : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <FiList className="mr-2" />
+                      View History ({feedbacks.length})
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1281,23 +1282,25 @@ const FeedbackPage = () => {
             )}
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div className="card">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                    <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Total Feedback
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {stats.totalResponses}
-                    </p>
+            {selectedVessel && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div className="card">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                      <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Total Feedback
+                      </p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {stats.totalResponses}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Confirmation Message */}
             {showConfirmation && recentFeedback && (
@@ -1371,122 +1374,123 @@ const FeedbackPage = () => {
                   {/* Info banner removed per request */}
 
                   {/* Vessel Selection */}
-                  {shipsLoading ? (
-                    <div className="card mb-8">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Select Vessel for Feedback
-                      </h3>
-                      <div className="flex items-center justify-center p-6">
-                        <svg
-                          className="animate-spin h-6 w-6 text-blue-600 mr-3"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                          />
-                        </svg>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Loading vessels...
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    ships.length > 1 && (
+                  <div ref={shipSelectionRef}>
+                    {shipsLoading ? (
                       <div className="card mb-8">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                           Select Vessel for Feedback
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {ships.slice(0, shipVisibleCount).map((ship) => (
-                            <button
-                              key={ship.id}
-                              onClick={() => setSelectedVessel(ship)}
-                              className={`p-4 border rounded-lg transition-all ${
-                                selectedVessel?.id === ship.id
-                                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                  : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                              }`}
-                            >
-                              <div className="flex items-start">
-                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 flex-shrink-0">
-                                  <FiFileText className="text-blue-600 dark:text-blue-300" />
-                                </div>
-                                <div className="text-left flex-1 min-w-0">
-                                  <p className="font-medium text-gray-900 dark:text-white truncate">
-                                    {ship.name}
-                                  </p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                    {ship.imoNumber}
-                                  </p>
-                                  <div className="mt-3 space-y-2 text-xs">
-                                    <div>
-                                      <span className="text-gray-500 dark:text-gray-400">
-                                        Category:
-                                      </span>
-                                      <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                        {ship.raw?.SHIP_JCAT ||
-                                          ship.raw?.SHIP_JOB_CATEGORY ||
-                                          "N/A"}
-                                      </p>
-                                    </div>
-                                    <div>
-                                      <span className="text-gray-500 dark:text-gray-400">
-                                        Project Number:
-                                      </span>
-                                      <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                        {ship.raw?.SHIP_JMAIN ||
-                                          ship.jmainNo ||
-                                          ship.id ||
-                                          "N/A"}
-                                      </p>
+                        <div className="flex items-center justify-center p-6">
+                          <svg
+                            className="animate-spin h-6 w-6 text-blue-600 mr-3"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                          </svg>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Loading vessels...
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      ships.length > 1 && (
+                        <div className="card mb-8">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Select Vessel for Feedback
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {ships.slice(0, shipVisibleCount).map((ship) => (
+                              <button
+                                key={ship.id}
+                                onClick={() => setSelectedVessel(ship)}
+                                className={`p-4 border rounded-lg transition-all ${
+                                  selectedVessel?.id === ship.id
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                                    : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
+                                }`}
+                              >
+                                <div className="flex items-start">
+                                  <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 flex-shrink-0">
+                                    <FiFileText className="text-blue-600 dark:text-blue-300" />
+                                  </div>
+                                  <div className="text-left flex-1 min-w-0">
+                                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                                      {ship.name}
+                                    </p>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                                      {ship.imoNumber}
+                                    </p>
+                                    <div className="mt-3 space-y-2 text-xs">
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">
+                                          Category:
+                                        </span>
+                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                          {ship.raw?.SHIP_JCAT ||
+                                            ship.raw?.SHIP_JOB_CATEGORY ||
+                                            "N/A"}
+                                        </p>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-500 dark:text-gray-400">
+                                          Project Number:
+                                        </span>
+                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                          {ship.raw?.SHIP_JMAIN ||
+                                            ship.jmainNo ||
+                                            ship.id ||
+                                            "N/A"}
+                                        </p>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                        {ships.length > baseShipVisibleCount && (
-                          <div className="mt-4 flex justify-center">
-                            {!showAllShips ? (
-                              <button
-                                onClick={() => {
-                                  setShowAllShips(true);
-                                  setShipVisibleCount(ships.length);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 font-medium"
-                              >
-                                Load more
                               </button>
-                            ) : (
-                              <button
-                                onClick={() => {
-                                  setShowAllShips(false);
-                                  setShipVisibleCount(baseShipVisibleCount);
-                                }}
-                                className="text-gray-600 hover:text-gray-800 font-medium"
-                              >
-                                Show less
-                              </button>
-                            )}
+                            ))}
                           </div>
-                        )}
-                      </div>
-                    )
-                  )}
-
+                          {ships.length > baseShipVisibleCount && (
+                            <div className="mt-4 flex justify-center">
+                              {!showAllShips ? (
+                                <button
+                                  onClick={() => {
+                                    setShowAllShips(true);
+                                    setShipVisibleCount(ships.length);
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  Load more
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setShowAllShips(false);
+                                    setShipVisibleCount(baseShipVisibleCount);
+                                  }}
+                                  className="text-gray-600 hover:text-gray-800 font-medium"
+                                >
+                                  Show less
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </div>
                   {/* Vessel Info Card */}
                   {selectedVessel && (
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
@@ -1524,6 +1528,7 @@ const FeedbackPage = () => {
                       <FeedbackForm
                         vessel={selectedVessel}
                         onSubmit={handleFeedbackSubmit}
+                        shipSelectionRef={shipSelectionRef}
                       />
                     </div>
                   )}
@@ -1567,7 +1572,7 @@ const FeedbackPage = () => {
                                   </div>
                                   <p className="text-sm text-gray-600 dark:text-gray-400">
                                     {new Date(
-                                      feedback.submittedAt
+                                      feedback.submittedAt,
                                     ).toLocaleDateString()}
                                   </p>
                                 </div>

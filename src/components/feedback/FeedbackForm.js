@@ -27,7 +27,7 @@ import {
 } from "../../actions/feedbackActions";
 import CustomDropdown from "../common/Dropdown";
 
-const FeedbackForm = ({ vessel, onSubmit }) => {
+const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const {
@@ -69,7 +69,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         description: "",
         evaluation: "",
         yesNo: "",
-      }))
+      })),
   );
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
@@ -220,7 +220,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     { value: "UCT", label: "UCT" },
     { value: "PVQ", label: "PVQ" },
     { value: "BQ", label: "BQ" },
-    { value: "TANKER BERTH", label: "TANKER BERTH" },
+    { value: "TANKBERTH", label: "TANKER BERTH" },
     { value: "GATEWAY", label: "GATEWAY" },
     { value: "PASSTERM", label: "PASSENGER TERMINAL" },
     { value: "GALLE", label: "GALLE" },
@@ -341,7 +341,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   useEffect(() => {
     if (autoProjectForVessel) {
       const match = (jmainList || []).find(
-        (p) => String(p.FEEDBACK_JMAIN) === String(autoProjectForVessel)
+        (p) => String(p.FEEDBACK_JMAIN) === String(autoProjectForVessel),
       );
       if (match) {
         // use existing handler to ensure projectName and related state update
@@ -424,7 +424,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const handleProjectNumberChange = (value) => {
     // Find the selected project from jmainList
     const selectedProject = jmainList.find(
-      (project) => project.FEEDBACK_JMAIN === value
+      (project) => project.FEEDBACK_JMAIN === value,
     );
 
     // Update both project number and project name
@@ -532,7 +532,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           const matchingItem = unitsDescriptions.find(
             (item) =>
               item.FEEDBACK_CRITERIA_CODE === criteriaCode &&
-              item.FEEDBACK_UNIT_CODE === unitCode
+              item.FEEDBACK_UNIT_CODE === unitCode,
           );
 
           if (matchingItem) {
@@ -727,7 +727,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         // Validate that at least one milestone with milestone name is provided
         const hasValidMilestone = formData.milestones.some(
           (milestone) =>
-            milestone.milestone && milestone.milestone.trim() !== ""
+            milestone.milestone && milestone.milestone.trim() !== "",
         );
         if (!hasValidMilestone) {
           errors.milestones = "At least one milestone is required";
@@ -815,7 +815,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             style: {
               maxWidth: "500px",
             },
-          }
+          },
         );
         return;
       }
@@ -834,7 +834,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           if (firstErrorKey === "evaluationRows") {
             // Scroll to evaluation section
             errorElement = document.querySelector(
-              '[class*="bg-red-50"][class*="border-red-500"]'
+              '[class*="bg-red-50"][class*="border-red-500"]',
             );
           } else if (
             firstErrorKey.startsWith("criteriaCode_") ||
@@ -931,6 +931,21 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const handleSubmit = async () => {
+    // Validate that a vessel has been selected
+    if (!vessel) {
+      toast.error("Please select a vessel before submitting feedback");
+
+      // Auto-scroll to ship selection section
+      if (shipSelectionRef?.current) {
+        const el = shipSelectionRef.current;
+        const rect = el.getBoundingClientRect();
+        const offset = 120; // adjust for top nav + any sticky headers
+        const top = window.pageYOffset + rect.top - offset;
+        window.scrollTo({ top, behavior: "smooth" });
+      }
+      return;
+    }
+
     // Only send the required JSON structure for feedback
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
@@ -973,7 +988,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       toast.error(
         error.response?.data?.message ||
           error.message ||
-          "Failed to submit feedback. Please try again."
+          "Failed to submit feedback. Please try again.",
       );
     }
   };
@@ -1147,12 +1162,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 {score === 0
                   ? "P"
                   : score === 25
-                  ? "P/A"
-                  : score === 50
-                  ? "A"
-                  : score === 75
-                  ? "G"
-                  : "E"}
+                    ? "P/A"
+                    : score === 50
+                      ? "A"
+                      : score === 75
+                        ? "G"
+                        : "E"}
               </button>
             ))}
           </div>
@@ -1258,12 +1273,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 {score === 0
                   ? "Poor"
                   : score === 25
-                  ? "Poor/Avg"
-                  : score === 50
-                  ? "Average"
-                  : score === 75
-                  ? "Good"
-                  : "Excellent"}
+                    ? "Poor/Avg"
+                    : score === 50
+                      ? "Average"
+                      : score === 75
+                        ? "Good"
+                        : "Excellent"}
               </button>
             ))}
           </div>
@@ -1523,7 +1538,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleSelectChange(
                         "customerFeedbackStatus",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
@@ -1588,7 +1603,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             const selectedMilestone = milestoneTypes.find(
               (mt) =>
                 (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
-                value
+                value,
             );
             if (selectedMilestone) {
               updatedMilestones[index] = {
@@ -1658,7 +1673,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         const removeMilestone = (index) => {
           if (formData.milestones.length > 1) {
             const updatedMilestones = formData.milestones.filter(
-              (_, i) => i !== index
+              (_, i) => i !== index,
             );
             setFormData((prev) => ({
               ...prev,
@@ -1679,7 +1694,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             // Scroll to first error
             setTimeout(() => {
               const errorElement = document.querySelector(
-                '[class*="text-red-600"]'
+                '[class*="text-red-600"]',
               );
               if (errorElement) {
                 errorElement.scrollIntoView({
@@ -1698,7 +1713,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             MilestoneList: formData.milestones
               .filter(
                 (milestone) =>
-                  milestone.milestone && milestone.milestone.trim() !== ""
+                  milestone.milestone && milestone.milestone.trim() !== "",
               )
               .map((milestone) => ({
                 p_milestone_code: milestone.code,
@@ -1786,7 +1801,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           type="button"
                           onClick={() =>
                             setOpenMilestoneIndex(
-                              openMilestoneIndex === index ? null : index
+                              openMilestoneIndex === index ? null : index,
                             )
                           }
                           disabled={milestoneTypesLoading}
@@ -1802,8 +1817,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             {milestone.code
                               ? milestone.code
                               : milestoneTypesLoading
-                              ? "Loading codes..."
-                              : "Select milestone code"}
+                                ? "Loading codes..."
+                                : "Select milestone code"}
                           </span>
                           <svg
                             className="w-4 h-4 ml-2 text-gray-500"
@@ -1841,7 +1856,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 const nb = parseInt(bCode, 10);
                                 if (!isNaN(na) && !isNaN(nb)) return na - nb;
                                 return String(aCode).localeCompare(
-                                  String(bCode)
+                                  String(bCode),
                                 );
                               })
                               .map((mt, idx) => {
@@ -1856,7 +1871,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       handleMilestoneChange(
                                         index,
                                         "code",
-                                        code
+                                        code,
                                       );
                                       setOpenMilestoneIndex(null);
                                     }}
@@ -1945,7 +1960,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           type="button"
                           onClick={() =>
                             setOpenLocationIndex(
-                              openLocationIndex === index ? null : index
+                              openLocationIndex === index ? null : index,
                             )
                           }
                           className={`w-full text-left input-field flex items-center justify-between ${
@@ -1960,7 +1975,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             {milestone.location
                               ? (
                                   milestoneLocationOptions.find(
-                                    (o) => o.value === milestone.location
+                                    (o) => o.value === milestone.location,
                                   ) || { label: milestone.location }
                                 ).label
                               : "Select Location"}
@@ -1993,7 +2008,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   handleMilestoneChange(
                                     index,
                                     "location",
-                                    option.value
+                                    option.value,
                                   );
                                   setOpenLocationIndex(null);
                                 }}
@@ -2024,7 +2039,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           handleMilestoneChange(
                             index,
                             "remarks",
-                            e.target.value
+                            e.target.value,
                           )
                         }
                         className={`input-field ${
@@ -2172,7 +2187,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 handleEvaluationRowChange(
                                   index,
                                   "criteriaCode",
-                                  val
+                                  val,
                                 )
                               }
                               openDownward={true}
@@ -2200,7 +2215,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               value={row.unitCode}
                               options={getUnitCodesForCriteria(
                                 row.criteriaCode,
-                                index
+                                index,
                               )
                                 .filter((item) => !item.disabled)
                                 .map((item) => item.code)}
@@ -2212,7 +2227,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 handleEvaluationRowChange(
                                   index,
                                   "unitCode",
-                                  val
+                                  val,
                                 )
                               }
                               openDownward={true}
@@ -2259,7 +2274,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2396,7 +2411,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "criteriaCode",
-                                      val
+                                      val,
                                     )
                                   }
                                   disabled={unitsDescriptionsLoading}
@@ -2408,7 +2423,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   value={row.unitCode}
                                   options={getUnitCodesForCriteria(
                                     row.criteriaCode,
-                                    index
+                                    index,
                                   )
                                     .filter((i) => !i.disabled)
                                     .map((i) => i.code)}
@@ -2416,7 +2431,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "unitCode",
-                                      val
+                                      val,
                                     )
                                   }
                                   disabled={
@@ -2450,7 +2465,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2466,7 +2481,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2482,7 +2497,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2498,7 +2513,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2514,7 +2529,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
-                                      e.target.value
+                                      e.target.value,
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
@@ -2727,7 +2742,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleInputChange(
                         "afloatDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0
+                        e.target.value ? parseInt(e.target.value, 10) : 0,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -2750,7 +2765,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     onChange={(e) =>
                       handleInputChange(
                         "indockDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0
+                        e.target.value ? parseInt(e.target.value, 10) : 0,
                       )
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
@@ -2844,7 +2859,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {jobCategoryOptions.find(
-                            (opt) => opt.value === formData.jobCategory
+                            (opt) => opt.value === formData.jobCategory,
                           )?.label || formData.jobCategory}
                         </span>
                       </div>
@@ -2916,7 +2931,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     <span className="break-words">
                                       {milestone.date
                                         ? new Date(
-                                            milestone.date
+                                            milestone.date,
                                           ).toLocaleDateString()
                                         : "No date set"}
                                     </span>
@@ -2957,7 +2972,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               {/* Evaluation Details Ratings */}
               {evaluationRows.filter(
-                (row) => row.evaluation && row.evaluation !== "N"
+                (row) => row.evaluation && row.evaluation !== "N",
               ).length > 0 && (
                 <>
                   <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
@@ -2995,7 +3010,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
-                                  score
+                                  score,
                                 )}`}
                               >
                                 {row.evaluation} ({score})
@@ -3007,8 +3022,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   score >= 75
                                     ? "bg-green-500"
                                     : score >= 50
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
+                                      ? "bg-yellow-500"
+                                      : "bg-red-500"
                                 }`}
                                 style={{ width: `${score}%` }}
                               />
@@ -3067,7 +3082,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
-                                  score
+                                  score,
                                 )}`}
                               >
                                 {score}
@@ -3079,8 +3094,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   score >= 75
                                     ? "bg-green-500"
                                     : score >= 50
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
+                                      ? "bg-yellow-500"
+                                      : "bg-red-500"
                                 }`}
                                 style={{ width: `${score}%` }}
                               />
@@ -3094,7 +3109,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                 {evaluationRows.filter(
-                  (row) => row.evaluation && row.evaluation !== "N"
+                  (row) => row.evaluation && row.evaluation !== "N",
                 ).length +
                   Object.values(formData.ratings).filter((r) => r > 0)
                     .length}{" "}
@@ -3250,7 +3265,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         .toUpperCase()}`,
                       ratings: Object.keys(formData.ratings).reduce(
                         (acc, key) => ({ ...acc, [key]: 0 }),
-                        {}
+                        {},
                       ),
                       valueForMoney: null,
                       recommend: null,
@@ -3276,7 +3291,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           description: "",
                           evaluation: "",
                           yesNo: "",
-                        }))
+                        })),
                     );
                     setCurrentStep(0);
                   }}
@@ -3403,10 +3418,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     index === currentStep
                       ? "bg-blue-600 text-white scale-110"
                       : index < currentStep
-                      ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
-                      : isClickable
-                      ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
-                      : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
+                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
+                        : isClickable
+                          ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
+                          : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
                   }`}
                 >
                   {index < currentStep ? <FiCheck /> : step.icon}
