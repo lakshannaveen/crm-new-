@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiStar, FiCalendar, FiDownload, FiSearch } from "react-icons/fi";
+import { FiStar, FiCalendar, FiSearch } from "react-icons/fi";
 
 const FeedbackHistory = ({
   feedbacks = [],
@@ -17,21 +17,16 @@ const FeedbackHistory = ({
   useEffect(() => {
     let result = [...feedbacks];
 
-    // Apply search filter (null-safe, trim input)
-    if (searchTerm && searchTerm.trim() !== "") {
-      const term = searchTerm.trim().toLowerCase();
-      result = result.filter((fb) => {
-        const vessel = (fb.vesselName || "").toString().toLowerCase();
-        const ref = (fb.feedbackRef || "").toString().toLowerCase();
-        const submit = (fb.submittedBy || "").toString().toLowerCase();
-        const obs = (fb.observations || "").toString().toLowerCase();
-        return (
-          vessel.includes(term) ||
-          ref.includes(term) ||
-          submit.includes(term) ||
-          obs.includes(term)
-        );
-      });
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (fb) =>
+          fb.vesselName.toLowerCase().includes(term) ||
+          fb.feedbackRef.toLowerCase().includes(term) ||
+          fb.submittedBy.toLowerCase().includes(term) ||
+          fb.observations?.toLowerCase().includes(term)
+      );
     }
 
     // Apply rating filter
@@ -59,11 +54,6 @@ const FeedbackHistory = ({
 
     setSortedFeedbacks(result);
   }, [feedbacks, filter, searchTerm, sortBy]);
-
-  // Clear search input when feedback list length changes (e.g., after submit)
-  useEffect(() => {
-    setSearchTerm("");
-  }, [feedbacks.length]);
 
   const getScoreColor = (score) => {
     if (score >= 75)
@@ -125,7 +115,7 @@ const FeedbackHistory = ({
 
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
-    const rows = [
+    const allRows = [
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
       ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
@@ -138,6 +128,9 @@ const FeedbackHistory = ({
       ],
       ["Completion Date", getFieldValue(feedback, "FEEDBACK_COMPLETION_DATE")],
     ];
+
+    // Filter out empty fields (NA or empty values)
+    const rows = allRows.filter(([label, value]) => value !== "NA" && value.trim() !== "");
 
     const html =
       `<!doctype html><html><head><meta charset="utf-8"><title>Feedback ${
@@ -411,13 +404,6 @@ const FeedbackHistory = ({
 
                 {/* Right Section - Actions */}
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleDownload(feedback)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    title="Print / Save as PDF"
-                  >
-                    <FiDownload className="w-5 h-5" />
-                  </button>
                 </div>
               </div>
 

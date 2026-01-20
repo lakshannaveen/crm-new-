@@ -719,7 +719,6 @@ import {
   FiMessageSquare,
   FiBarChart2,
   FiStar,
-  FiDownload,
 } from "react-icons/fi";
 import { getShips } from "../../actions/shipActions";
 import { getAllFeedbacks } from "../../actions/feedbackActions";
@@ -1578,13 +1577,6 @@ const FeedbackPage = () => {
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => downloadFeedbackPDF(feedback)}
-                                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                                  title="Download as PDF"
-                                >
-                                  <FiDownload className="w-4 h-4" />
-                                </button>
                               </div>
                             </div>
                             {feedback.observations && (
