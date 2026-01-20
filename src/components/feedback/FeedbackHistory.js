@@ -122,10 +122,6 @@ const FeedbackHistory = ({
       ["Evaluation", getFieldValue(feedback, "FEEDBACK_EVAL")],
       ["Answer", getFieldValue(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
       ["Remarks", getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS")],
-      [
-        "Action Taken",
-        getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN", "P_ACTION_TAKEN"),
-      ],
       ["Completion Date", getFieldValue(feedback, "FEEDBACK_COMPLETION_DATE")],
     ];
 
