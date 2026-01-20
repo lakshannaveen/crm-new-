@@ -94,7 +94,7 @@ const ShipCard = ({ ship }) => {
               <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className={`h-full ${getProgressColor(
-                    ship.progress
+                    ship.progress,
                   )} rounded-full 
                            transition-all duration-300`}
                   style={{ width: `${ship.progress}%` }}
