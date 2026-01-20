@@ -90,12 +90,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                 {ship.name}
               </h3>
               <div className="flex items-center mt-1">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
-                >
-                  {statusText}
-                </span>
-                <span className="ml-3 text-gray-600 dark:text-gray-400">
+                <span className="text-gray-600 dark:text-gray-400">
                   IMO: {ship.imoNumber}
                 </span>
               </div>
