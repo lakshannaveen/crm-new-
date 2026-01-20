@@ -115,7 +115,7 @@ const FeedbackHistory = ({
 
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
-    const rows = [
+    const allRows = [
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
       ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
@@ -128,6 +128,9 @@ const FeedbackHistory = ({
       ],
       ["Completion Date", getFieldValue(feedback, "FEEDBACK_COMPLETION_DATE")],
     ];
+
+    // Filter out empty fields (NA or empty values)
+    const rows = allRows.filter(([label, value]) => value !== "NA" && value.trim() !== "");
 
     const html =
       `<!doctype html><html><head><meta charset="utf-8"><title>Feedback ${
