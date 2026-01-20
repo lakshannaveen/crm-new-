@@ -388,7 +388,7 @@ const FeedbackHistory = ({
                       {observationsVal && (
                         <div className="mt-3">
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Observations
+                            Remarks
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                             {observationsVal}

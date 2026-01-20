@@ -226,7 +226,7 @@ const ProfilePage = () => {
                         {activeTab === 'preferences' && 'Set your application preferences'}
                       </p>
                     </div>
-                    {activeTab === 'personal' && (
+                    {/* {activeTab === 'personal' && (
                       <button
                         onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                         className="btn-primary flex items-center"
@@ -240,7 +240,7 @@ const ProfilePage = () => {
                           'Edit Profile'
                         )}
                       </button>
-                    )}
+                    )} */}
                   </div>
 
                   {/* Tab Content */}

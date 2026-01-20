@@ -52,6 +52,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
+  const [feedbackSubmissionSuccess, setFeedbackSubmissionSuccess] =
+    useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropdownRef = useRef(null);
@@ -894,6 +896,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       if (currentStep === 3) {
         setMilestonesSubmitted(false);
       }
+      // Reset feedback submission success flag when going back from Complete step
+      if (currentStep === 4) {
+        setFeedbackSubmissionSuccess(false);
+      }
     }
   };
 
@@ -952,14 +958,24 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     try {
       await addFeedback(feedbackPayload);
-      setCurrentStep(9);
+      // Mark submission as successful only after successful API call
+      setFeedbackSubmissionSuccess(true);
+      // Move to Complete step only on successful submission
+      setCurrentStep(4);
+      if (onSubmit) {
+        onSubmit(feedbackPayload);
+      }
+      toast.success("Feedback submitted successfully!");
     } catch (error) {
       console.error("Failed to submit feedback:", error);
+      setFeedbackSubmissionSuccess(false);
+      // Show error toast to user
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to submit feedback. Please try again."
+      );
     }
-    if (onSubmit) {
-      onSubmit(feedbackPayload);
-    }
-    setCurrentStep(4);
   };
 
   // Mobile Progress Indicator
@@ -1364,161 +1380,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
 
             <div className="space-y-3">
-              {/* Job Category and Project Number on the same horizontal line */}
-              <div
-                className={
-                  isMobile
-                    ? "flex flex-col gap-2"
-                    : "flex flex-row gap-6 items-end"
-                }
-              >
-                <div className={isMobile ? "w-full" : "w-1/2"}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Job Category
-                  </label>
-                  <select
-                    value={formData.jobCategory}
-                    onChange={(e) =>
-                      handleSelectChange("jobCategory", e.target.value)
-                    }
-                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                      validationErrors.jobCategory ? "border-red-500" : ""
-                    }`}
-                  >
-                    {jobCategoryOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="min-h-[20px]">
-                    {validationErrors.jobCategory && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {validationErrors.jobCategory}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className={isMobile ? "w-full" : "w-1/2"}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Project Number
-                  </label>
-                  <div className="relative" ref={projectDropdownRef}>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={
-                          projectSearchTerm ||
-                          (formData.projectNumber
-                            ? jmainList.find(
-                                (p) =>
-                                  p.FEEDBACK_JMAIN === formData.projectNumber
-                              )?.FEEDBACK_JMAIN || formData.projectNumber
-                            : "")
-                        }
-                        onChange={(e) => {
-                          setProjectSearchTerm(e.target.value);
-                          setShowProjectDropdown(true);
-                        }}
-                        onFocus={() => setShowProjectDropdown(true)}
-                        placeholder={
-                          jmainLoading
-                            ? "Loading..."
-                            : !formData.jobCategory
-                            ? "Select job category first"
-                            : "Search or select project..."
-                        }
-                        disabled={!formData.jobCategory || jmainLoading}
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors.projectNumber ? "border-red-500" : ""
-                        } pr-10`}
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        {jmainLoading ? (
-                          <svg
-                            className="animate-spin h-4 w-4 text-blue-500"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                            />
-                          </svg>
-                        ) : (
-                          <FiSearch className="w-4 h-4 text-gray-400" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Dropdown list */}
-                    {showProjectDropdown &&
-                      formData.jobCategory &&
-                      !jmainLoading && (
-                        <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
-                          {filteredProjects.length === 0 ? (
-                            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                              No projects found
-                            </div>
-                          ) : (
-                            filteredProjects
-                              .sort((a, b) => {
-                                const aVal = parseInt(a.FEEDBACK_JMAIN) || 0;
-                                const bVal = parseInt(b.FEEDBACK_JMAIN) || 0;
-                                return aVal - bVal;
-                              })
-                              .map((project) => {
-                                const jmainValue = project.FEEDBACK_JMAIN;
-                                const jmainDesc = project.FEEDBACK_DESC;
-                                return (
-                                  <div
-                                    key={jmainValue}
-                                    onClick={() =>
-                                      handleProjectNumberChange(jmainValue)
-                                    }
-                                    className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                                      formData.projectNumber === jmainValue
-                                        ? "bg-blue-50 dark:bg-blue-900/30"
-                                        : ""
-                                    }`}
-                                  >
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {jmainValue}
-                                    </div>
-                                    {/* {jmainDesc && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      {jmainDesc}
-                                    </div>
-                                  )} */}
-                                  </div>
-                                );
-                              })
-                          )}
-                        </div>
-                      )}
-                  </div>
-                  <div className="min-h-[20px]">
-                    {validationErrors.projectNumber && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {validationErrors.projectNumber}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
               {/* Project Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1637,7 +1498,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.jobStatus ? "border-red-500" : ""
                     }`}
-                    
                   >
                     {jobStatusOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -3289,11 +3149,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
               <button
                 onClick={handleSubmit}
+                disabled={feedbackSubmissionSuccess}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
-                } btn-primary`}
+                } btn-primary ${
+                  feedbackSubmissionSuccess
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
               >
-                Submit Feedback
+                {feedbackSubmissionSuccess
+                  ? "Feedback Submitted"
+                  : "Submit Feedback"}
               </button>
             </div>
           </div>
@@ -3503,6 +3370,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           {steps.map((step, index) => {
             // Check if all previous steps are validated
             const canNavigate = () => {
+              // Complete step (step 4) can only be accessed if feedback was successfully submitted
+              if (index === 4) {
+                return feedbackSubmissionSuccess;
+              }
               if (index <= currentStep) return true; // Can always go back
               // Check all steps from current to target are valid
               for (let i = currentStep; i < index; i++) {
@@ -3523,6 +3394,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     }
                   }}
                   disabled={!isClickable}
+                  title={
+                    index === 4 && !feedbackSubmissionSuccess
+                      ? "Submit feedback first to complete"
+                      : ""
+                  }
                   className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
                     index === currentStep
                       ? "bg-blue-600 text-white scale-110"
