@@ -768,26 +768,11 @@ const FeedbackPage = () => {
     }
   }, [selectedVessel]);
 
-  // Compute how many ships to show (3 rows) based on current breakpoint
+  // Compute how many ships to show (6 ships initially)
   useEffect(() => {
-    const getCols = () => {
-      if (typeof window === "undefined") return 3;
-      const w = window.innerWidth;
-      if (w >= 1024) return 3; // lg
-      if (w >= 768) return 2; // md
-      return 1; // sm
-    };
-
-    const updateCounts = () => {
-      const cols = getCols();
-      const base = cols * 3; // 3 rows
-      setBaseShipVisibleCount(base);
-      if (!showAllShips) setShipVisibleCount(base);
-    };
-
-    updateCounts();
-    window.addEventListener("resize", updateCounts);
-    return () => window.removeEventListener("resize", updateCounts);
+    const base = 6; // Show 6 ships initially
+    setBaseShipVisibleCount(base);
+    if (!showAllShips) setShipVisibleCount(base);
   }, [showAllShips]);
 
   // Load feedbacks from API on component mount (fallback to local sample data)
@@ -1434,17 +1419,40 @@ const FeedbackPage = () => {
                                   : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
                               }`}
                             >
-                              <div className="flex items-center">
-                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                              <div className="flex items-start">
+                                <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 flex-shrink-0">
                                   <FiFileText className="text-blue-600 dark:text-blue-300" />
                                 </div>
-                                <div className="text-left">
-                                  <p className="font-medium text-gray-900 dark:text-white">
+                                <div className="text-left flex-1 min-w-0">
+                                  <p className="font-medium text-gray-900 dark:text-white truncate">
                                     {ship.name}
                                   </p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                                     {ship.imoNumber}
                                   </p>
+                                  <div className="mt-3 space-y-2 text-xs">
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">
+                                        Category:
+                                      </span>
+                                      <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                        {ship.raw?.SHIP_JCAT ||
+                                          ship.raw?.SHIP_JOB_CATEGORY ||
+                                          "N/A"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-500 dark:text-gray-400">
+                                        Project Number:
+                                      </span>
+                                      <p className="text-gray-700 dark:text-gray-300 font-medium">
+                                        {ship.raw?.SHIP_JMAIN ||
+                                          ship.jmainNo ||
+                                          ship.id ||
+                                          "N/A"}
+                                      </p>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </button>
