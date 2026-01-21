@@ -703,8 +703,6 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
         if (!formData.customerFeedbackStatus)
           errors.customerFeedbackStatus =
             "Customer Feedback Status is required";
-        if (!formData.projectHandleLocation)
-          errors.projectHandleLocation = "Project Handle Location is required";
         break;
       case 1: // Evaluation Details
         // Check each row that has been started
@@ -1586,16 +1584,18 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                 </label>
                 <input
                   type="text"
-                  value={formData.projectHandleLocation}
-                  onChange={(e) =>
-                    handleInputChange("projectHandleLocation", e.target.value)
+                  value={
+                    formData.projectHandleLocation === null
+                      ? "null"
+                      : formData.projectHandleLocation
                   }
+                  readOnly
                   className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                     validationErrors.projectHandleLocation
                       ? "border-red-500"
                       : ""
                   }`}
-                  placeholder="Enter project location"
+                  placeholder="Project Handle Location"
                 />
                 <div className="min-h-[20px]">
                   {validationErrors.projectHandleLocation && (
