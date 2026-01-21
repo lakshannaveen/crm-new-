@@ -47,6 +47,22 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
 
+  // Format various incoming date values to YYYY-MM-DD for consistent display
+  const formatISOToYMD = (val) => {
+    if (!val) return "";
+    if (typeof val === "string") {
+      // If string already contains a YYYY-MM-DD pattern, return it
+      const m = val.match(/\d{4}-\d{2}-\d{2}/);
+      if (m) return m[0];
+    }
+    const d = new Date(val);
+    if (isNaN(d)) return String(val);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   const questionSectionRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
@@ -1439,8 +1455,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     )}
                   </label>
                   <input
-                    type="date"
-                    value={formData.startingDate}
+                    type="text"
+                    value={formatISOToYMD(formData.startingDate)}
                     readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.startingDate ? "border-red-500" : ""
@@ -1466,8 +1482,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     )}
                   </label>
                   <input
-                    type="date"
-                    value={formData.endingDate}
+                    type="text"
+                    value={formatISOToYMD(formData.endingDate)}
                     readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.endingDate ? "border-red-500" : ""
