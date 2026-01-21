@@ -855,10 +855,8 @@ const FeedbackPage = () => {
   useEffect(() => {
     let mounted = true;
     const fetchFeedbacks = async () => {
-      // Only fetch if we have both category and project number
-      if (!selectedJobCategory || !selectedProjectNumber) {
-        return;
-      }
+      // Attempt to fetch feedbacks from API even if no job category/project selected.
+      // This allows showing saved user feedbacks and also tries the backend when available.
 
       setIsLoadingFeedbacks(true);
       setApiError(null);
@@ -879,6 +877,8 @@ const FeedbackPage = () => {
           overallScore: 0,
           observations: r.FEEDBACK_REMARKS || "",
           raw: r,
+          // Also expose API fields at top-level so consumers can easily render them
+          ...r,
         }));
 
         // persist API cache for offline/fallback use
@@ -970,6 +970,8 @@ const FeedbackPage = () => {
           overallScore: 0,
           observations: r.FEEDBACK_REMARKS || "",
           raw: r,
+          // Also expose API fields at top-level so consumers can easily render them
+          ...r,
         }));
         try {
           localStorage.setItem(
