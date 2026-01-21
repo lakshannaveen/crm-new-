@@ -952,14 +952,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     try {
       await addFeedback(feedbackPayload);
-      setCurrentStep(9);
+      setCurrentStep(4); // Success step
     } catch (error) {
       console.error("Failed to submit feedback:", error);
+      // Show error message for 500 internal server error
+      toast.error("Failed to submit feedback. Please try again later.", {
+        duration: 5000,
+        position: "top-center",
+      });
+      // Do not proceed to next step on error
+      return;
     }
     if (onSubmit) {
       onSubmit(feedbackPayload);
     }
-    setCurrentStep(4);
   };
 
   // Mobile Progress Indicator
@@ -2395,7 +2401,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value={val}
                                   checked={row.evaluation === val}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2586,7 +2592,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="P"
                                   checked={row.evaluation === "P"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2602,7 +2608,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="A"
                                   checked={row.evaluation === "A"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2618,7 +2624,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="G"
                                   checked={row.evaluation === "G"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2634,7 +2640,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="E"
                                   checked={row.evaluation === "E"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
@@ -2650,7 +2656,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   name={`deck-eval-${index}`}
                                   value="N"
                                   checked={row.evaluation === "N"}
-                                  onClick={(e) =>
+                                  onChange={(e) =>
                                     handleEvaluationRowChange(
                                       index,
                                       "evaluation",
