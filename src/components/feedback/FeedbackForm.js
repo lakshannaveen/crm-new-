@@ -1942,8 +1942,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         Date
                       </label>
                       <input
-                        type="date"
-                        value={milestone.date}
+                        type="text"
+                        value={formatISOToYMD(milestone.date)}
                         onChange={(e) =>
                           handleMilestoneChange(index, "date", e.target.value)
                         }
@@ -2946,9 +2946,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                     <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
                                     <span className="break-words">
                                       {milestone.date
-                                        ? new Date(
-                                            milestone.date,
-                                          ).toLocaleDateString()
+                                        ? formatISOToYMD(milestone.date)
                                         : "No date set"}
                                     </span>
                                   </div>
