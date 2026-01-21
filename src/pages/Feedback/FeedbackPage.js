@@ -720,7 +720,6 @@ import {
   FiMessageSquare,
   FiBarChart2,
   FiStar,
-  FiDownload,
 } from "react-icons/fi";
 import { getShips, fetchOwnerShips } from "../../actions/shipActions";
 import { getAllFeedbacks, getJmain } from "../../actions/feedbackActions";
@@ -1548,33 +1547,22 @@ const FeedbackPage = () => {
                                 : "border-gray-200 dark:border-gray-700"
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex-1">
-                                <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Vessel
-                                  </div>
-                                  <h4 className="font-medium text-gray-900 dark:text-white">
-                                    {feedback.vesselName}
-                                  </h4>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Date
-                                  </div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {new Date(
-                                      feedback.submittedAt
-                                    ).toLocaleDateString()}
-                                  </p>
+                            <div className="mb-3">
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Vessel
                                 </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <button
-                                  onClick={() => downloadFeedbackPDF(feedback)}
-                                  className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                                  title="Download as PDF"
-                                >
-                                  <FiDownload className="w-4 h-4" />
-                                </button>
+                                <h4 className="font-medium text-gray-900 dark:text-white">
+                                  {feedback.vesselName}
+                                </h4>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                  Date
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {new Date(
+                                    feedback.submittedAt
+                                  ).toLocaleDateString()}
+                                </p>
                               </div>
                             </div>
                             {feedback.observations && (

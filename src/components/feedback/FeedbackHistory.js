@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiStar, FiCalendar, FiDownload, FiSearch } from "react-icons/fi";
+import { FiStar, FiCalendar, FiSearch } from "react-icons/fi";
 
 const FeedbackHistory = ({
   feedbacks = [],
@@ -399,17 +399,7 @@ const FeedbackHistory = ({
                   </div>
                 </div>
 
-                {/* Right Section - Actions */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleDownload(feedback)}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                    title="Print / Save as PDF"
-                  >
-                    <FiDownload className="w-5 h-5" />
-                  </button>
                 </div>
-              </div>
 
               {/* Categories Summary */}
               <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
