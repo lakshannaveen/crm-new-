@@ -1168,7 +1168,7 @@ const ShipDetailsPage = () => {
           "SHIP_CURRENCY",
           "CURRENCY",
           "CURRENCY_CODE",
-          "CURR_CODE"
+          "CURR_CODE",
         ) ?? "N/A",
       icon: FiDollarSign,
     },
@@ -1181,7 +1181,7 @@ const ShipDetailsPage = () => {
           "CURRENCY_RATE",
           "EXCHANGE_RATE",
           "CURR_RATE",
-          "CURRENCY_EXCHANGE_RATE"
+          "CURRENCY_EXCHANGE_RATE",
         ) ?? "N/A",
       icon: FiPercent,
     },
@@ -1194,7 +1194,7 @@ const ShipDetailsPage = () => {
           "FOREIGN_VALUE",
           "FOREIGN_AMOUNT",
           "FC_VALUE",
-          "FC_AMOUNT"
+          "FC_AMOUNT",
         ) ?? "N/A",
       icon: FiDollarSign,
     },
@@ -1207,7 +1207,7 @@ const ShipDetailsPage = () => {
           "LOCAL_VALUE",
           "LOCAL_AMOUNT",
           "LC_VALUE",
-          "LC_AMOUNT"
+          "LC_AMOUNT",
         ) ?? "N/A",
       icon: FiDollarSign,
     },
@@ -1220,7 +1220,7 @@ const ShipDetailsPage = () => {
           "EXPECTED_REVENUE",
           "EXP_REVENUE",
           "ESTIMATE_VALUE",
-          "SHIP_ESTIMATE_VALUE"
+          "SHIP_ESTIMATE_VALUE",
         );
         return revenue != null && revenue !== "" ? `$${revenue}` : "N/A";
       })(),
@@ -1238,7 +1238,7 @@ const ShipDetailsPage = () => {
           "SHIP_MANAGER",
           "MANAGER",
           "SHIP_MANAGER_NAME",
-          "SHIP_SHIP_MANAGER"
+          "SHIP_SHIP_MANAGER",
         ) || "N/A",
       icon: FiUser,
     },
@@ -1249,7 +1249,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "ESTIMATE_ENGINEER",
           "EST_ENGINEER",
-          "SHIP_ESTIMATE_ENGINEER"
+          "SHIP_ESTIMATE_ENGINEER",
         ) || "N/A",
       icon: FiTool,
     },
@@ -1260,7 +1260,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "PROJECT_MANAGER",
           "PROJ_MANAGER",
-          "SHIP_PROJECT_MANAGER"
+          "SHIP_PROJECT_MANAGER",
         ) || "N/A",
       icon: FiBriefcase,
     },
@@ -1271,7 +1271,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "INVOICE_ENGINEER",
           "INV_ENGINEER",
-          "SHIP_INVOICE_ENGINEER"
+          "SHIP_INVOICE_ENGINEER",
         ) || "N/A",
       icon: FiCreditCard,
     },
@@ -1282,7 +1282,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "PROJECT_ENGINEER",
           "PROJ_ENGINEER",
-          "SHIP_PROJECT_ENGINEER"
+          "SHIP_PROJECT_ENGINEER",
         ) || "N/A",
       icon: FiServer,
     },
@@ -1298,7 +1298,7 @@ const ShipDetailsPage = () => {
           "SHIP_CATEGORY",
           "JOB_CATEGORY",
           "SHIP_JOB_CATEGORY",
-          "SHIP_JCAT"
+          "SHIP_JCAT",
         ) || "N/A",
       icon: FiPackage,
     },
@@ -1310,7 +1310,7 @@ const ShipDetailsPage = () => {
           "JOB_MAIN",
           "SHIP_JOB_MAIN",
           "SHIP_JOB_MAIN_DESC",
-          "SHIP_JMAIN"
+          "SHIP_JMAIN",
         ) || "N/A",
       icon: FiLayers,
     },
@@ -1345,7 +1345,7 @@ const ShipDetailsPage = () => {
           "AFLOAT_DURATION",
           "SHIP_AFLOAT_DURATION",
           "AFLOAT_DAYS",
-          "SHIP_AFLOT_DURATION"
+          "SHIP_AFLOT_DURATION",
         );
         return duration ? `${duration} days` : "N/A";
       })(),
@@ -1359,7 +1359,7 @@ const ShipDetailsPage = () => {
           "IN_DOCK_DURATION",
           "SHIP_INDOCK_DURATION",
           "DOCK_DURATION",
-          "DOCK_DAYS"
+          "DOCK_DAYS",
         );
         return duration ? `${duration} days` : "N/A";
       })(),
@@ -1376,7 +1376,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "CLASS_NOTATION",
           "SHIP_CLASS_NOTATION",
-          "CLASS_NOT"
+          "CLASS_NOT",
         ) || "N/A",
       icon: FiShield,
     },
@@ -1387,7 +1387,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "CLASSIFICATION_DUAL",
           "SHIP_CLASSIFICATION_DUAL",
-          "CLASS_DUAL"
+          "CLASS_DUAL",
         ) || "N/A",
       icon: FiCpu,
     },
@@ -1398,7 +1398,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "ESTIMATE_LABOR_RATE",
           "EST_LABOR_RATE",
-          "SHIP_EST_LABOR_RATE"
+          "SHIP_EST_LABOR_RATE",
         ) || "N/A",
       icon: FiPercent,
     },
@@ -1427,7 +1427,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "PAYMENT_CODE",
           "SHIP_PAYMENT_CODE",
-          "PAY_CODE"
+          "PAY_CODE",
         ) || "N/A",
       icon: FiCreditCard,
     },
@@ -1442,7 +1442,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "COATING_INSPECTOR",
           "SHIP_COATING_INSPECTOR",
-          "COAT_INSPECTOR"
+          "COAT_INSPECTOR",
         ) || "N/A",
       icon: FiCheckCircle,
     },
@@ -1453,7 +1453,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "COATING_PROVIDER",
           "SHIP_COATING_PROVIDER",
-          "COAT_PROVIDER"
+          "COAT_PROVIDER",
         ) || "N/A",
       icon: FiPackage,
     },
@@ -1469,7 +1469,7 @@ const ShipDetailsPage = () => {
           "WORK_DONE_STATUS",
           "SHIP_WORK_DONE_STATUS",
           "WD_STATUS",
-          "SHIP_WD_STATUS"
+          "SHIP_WD_STATUS",
         ) || "N/A",
       icon: FiActivity,
     },
@@ -1480,7 +1480,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "BILL_STATUS",
           "SHIP_BILL_STATUS",
-          "BILLING_STATUS"
+          "BILLING_STATUS",
         ) || "N/A",
       icon: FiFileText,
     },
@@ -1491,7 +1491,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "INVOICE_STATUS",
           "SHIP_INVOICE_STATUS",
-          "INV_STATUS"
+          "INV_STATUS",
         ) || "N/A",
       icon: FiCreditCard,
     },
@@ -1503,7 +1503,7 @@ const ShipDetailsPage = () => {
           "DOCK_NUMBER",
           "SHIP_DOCK_NUMBER",
           "DOCK_NO",
-          "SHIP_DOCKNO"
+          "SHIP_DOCKNO",
         ) || "N/A",
       icon: FiMapPin,
     },
@@ -1514,7 +1514,7 @@ const ShipDetailsPage = () => {
           currentShip.raw,
           "COMPLETION_DATE",
           "SHIP_COMPLETION_DATE",
-          "COMPLETE_DATE"
+          "COMPLETE_DATE",
         ) || "N/A",
       icon: FiCalendar,
     },
@@ -1543,7 +1543,7 @@ const ShipDetailsPage = () => {
           "PREVIOUS_NAME",
           "SHIP_PREVIOUS_NAME",
           "PREV_NAME",
-          "SHIP_VESSEL_EXNAME"
+          "SHIP_VESSEL_EXNAME",
         ) || "N/A",
       icon: FiBook,
     },
@@ -1732,7 +1732,7 @@ const ShipDetailsPage = () => {
                       "PREVIOUS_NAME",
                       "SHIP_PREVIOUS_NAME",
                       "PREV_NAME",
-                      "SHIP_VESSEL_EXNAME"
+                      "SHIP_VESSEL_EXNAME",
                     ) && (
                       <p className="text-gray-300 text-xs mt-1">
                         Previous:{" "}
@@ -1741,7 +1741,7 @@ const ShipDetailsPage = () => {
                           "PREVIOUS_NAME",
                           "SHIP_PREVIOUS_NAME",
                           "PREV_NAME",
-                          "SHIP_VESSEL_EXNAME"
+                          "SHIP_VESSEL_EXNAME",
                         )}
                       </p>
                     )}
@@ -1779,7 +1779,7 @@ const ShipDetailsPage = () => {
                           "IN_DOCK_DURATION",
                           "SHIP_INDOCK_DURATION",
                           "DOCK_DURATION",
-                          "DOCK_DAYS"
+                          "DOCK_DAYS",
                         ) || "0"}
                       </p>
                     </div>
@@ -1797,7 +1797,7 @@ const ShipDetailsPage = () => {
                         "EXPECTED_REVENUE",
                         "EXP_REVENUE",
                         "ESTIMATE_VALUE",
-                        "SHIP_ESTIMATE_VALUE"
+                        "SHIP_ESTIMATE_VALUE",
                       ) ?? "0"}
                     </p>
                   </div>
@@ -1812,7 +1812,7 @@ const ShipDetailsPage = () => {
                         "SHIP_CATEGORY",
                         "JOB_CATEGORY",
                         "SHIP_JOB_CATEGORY",
-                        "SHIP_JCAT"
+                        "SHIP_JCAT",
                       ) || "N/A"}
                     </p>
                   </div>
@@ -1908,7 +1908,7 @@ const ShipDetailsPage = () => {
                   {renderInfoSection(
                     "Basic Information",
                     basicSpecifications.slice(0, 6),
-                    3
+                    3,
                   )}
                   {renderInfoSection("Financial Overview", financialInfo, 3)}
                   {renderInfoSection("Management Team", managementInfo, 3)}
@@ -1944,7 +1944,7 @@ const ShipDetailsPage = () => {
                   {renderInfoSection(
                     "Ship Specifications",
                     basicSpecifications,
-                    3
+                    3,
                   )}
                   {renderInfoSection("Contact Information", contactInfo, 2)}
                   {renderInfoSection("Duration Information", durationInfo, 2)}
@@ -1971,7 +1971,7 @@ const ShipDetailsPage = () => {
                               "SHIP_CURRENCY",
                               "CURRENCY",
                               "CURRENCY_CODE",
-                              "CURR_CODE"
+                              "CURR_CODE",
                             ) || "N/A"}
                           </p>
                         </div>
@@ -1986,7 +1986,7 @@ const ShipDetailsPage = () => {
                               "CURRENCY_RATE",
                               "EXCHANGE_RATE",
                               "CURR_RATE",
-                              "CURRENCY_EXCHANGE_RATE"
+                              "CURRENCY_EXCHANGE_RATE",
                             ) ?? "N/A"}
                           </p>
                         </div>
@@ -2010,7 +2010,7 @@ const ShipDetailsPage = () => {
                   {renderInfoSection(
                     "Classification & Survey",
                     classificationInfo,
-                    2
+                    2,
                   )}
                   {renderInfoSection("Duration Information", durationInfo, 2)}
 
@@ -2079,7 +2079,7 @@ const ShipDetailsPage = () => {
                               "WORK_DONE_STATUS",
                               "SHIP_WORK_DONE_STATUS",
                               "WD_STATUS",
-                              "SHIP_WD_STATUS"
+                              "SHIP_WD_STATUS",
                             ) || "N/A"}
                           </span>
                         </div>
@@ -2095,7 +2095,7 @@ const ShipDetailsPage = () => {
                               currentShip.raw,
                               "BILL_STATUS",
                               "SHIP_BILL_STATUS",
-                              "BILLING_STATUS"
+                              "BILLING_STATUS",
                             ) || "N/A"}
                           </span>
                         </div>
@@ -2168,8 +2168,8 @@ const ShipDetailsPage = () => {
                                 doc.status === "approved"
                                   ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                                   : doc.status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                    : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
                               }`}
                             >
                               {doc.status}

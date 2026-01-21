@@ -36,7 +36,7 @@ export const getFeedbackDates =
 
       const data = await feedbackService.getFeedbackDates(
         jobCategory,
-        projectNumber
+        projectNumber,
       );
 
       dispatch({

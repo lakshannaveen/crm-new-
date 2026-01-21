@@ -811,7 +811,7 @@ const FeedbackPage = () => {
 
   const selectedHistoryShip = filterShips.find(
     (ship) =>
-      String(ship?.jmainNo || ship?.id) === String(selectedProjectNumber)
+      String(ship?.jmainNo || ship?.id) === String(selectedProjectNumber),
   );
 
   // Auto-set job category and project number from selected vessel
@@ -863,7 +863,7 @@ const FeedbackPage = () => {
       try {
         // Use Redux action to fetch feedbacks with selected parameters
         const res = await dispatch(
-          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
         const rows = res?.ResultSet || res?.Result || [];
 
@@ -885,7 +885,7 @@ const FeedbackPage = () => {
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
-            JSON.stringify(apiFeedbacks)
+            JSON.stringify(apiFeedbacks),
           );
         } catch (e) {
           /* ignore storage errors */
@@ -957,7 +957,7 @@ const FeedbackPage = () => {
       try {
         // Use Redux action to fetch feedbacks with selected parameters
         const res = await dispatch(
-          getAllFeedbacks(selectedJobCategory, selectedProjectNumber)
+          getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
         const rows = res?.ResultSet || res?.Result || [];
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
@@ -976,7 +976,7 @@ const FeedbackPage = () => {
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
-            JSON.stringify(apiFeedbacks)
+            JSON.stringify(apiFeedbacks),
           );
         } catch (e) {}
         const saved = localStorage.getItem("cdplc_feedbacks");
@@ -1014,7 +1014,7 @@ const FeedbackPage = () => {
   // Save only user-submitted feedbacks to localStorage whenever they change
   useEffect(() => {
     const userFeedbacks = feedbacks.filter(
-      (fb) => typeof fb.id === "string" && fb.id.startsWith("feedback_")
+      (fb) => typeof fb.id === "string" && fb.id.startsWith("feedback_"),
     );
     localStorage.setItem("cdplc_feedbacks", JSON.stringify(userFeedbacks));
   }, [feedbacks]);
@@ -1065,18 +1065,18 @@ const FeedbackPage = () => {
     const ratingValues = Object.values(ratings).filter((r) => r > 0);
     if (ratingValues.length === 0) return 0;
     return Math.round(
-      ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+      ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length,
     );
   };
 
   const handleDeleteFeedback = (feedbackToDelete) => {
     if (
       window.confirm(
-        "Are you sure you want to delete this feedback? This action cannot be undone."
+        "Are you sure you want to delete this feedback? This action cannot be undone.",
       )
     ) {
       setFeedbacks((prev) =>
-        prev.filter((fb) => fb.id !== feedbackToDelete.id)
+        prev.filter((fb) => fb.id !== feedbackToDelete.id),
       );
     }
   };
@@ -1143,7 +1143,7 @@ const FeedbackPage = () => {
           <div class="info-row">
             <span class="label">Submitted On:</span>
             <span class="value">${new Date(
-              feedback.submittedAt
+              feedback.submittedAt,
             ).toLocaleDateString()}</span>
           </div>
 
@@ -1159,15 +1159,15 @@ const FeedbackPage = () => {
               feedback.overallScore >= 75
                 ? "rating-excellent"
                 : feedback.overallScore >= 50
-                ? "rating-good"
-                : "rating-needs"
+                  ? "rating-good"
+                  : "rating-needs"
             }">
               ${
                 feedback.overallScore >= 75
                   ? "Excellent"
                   : feedback.overallScore >= 50
-                  ? "Good"
-                  : ""
+                    ? "Good"
+                    : ""
               }
             </span>
           </div>
@@ -1231,7 +1231,7 @@ const FeedbackPage = () => {
             (
               feedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
               feedbacks.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0,
     userAverageRating:
@@ -1240,7 +1240,7 @@ const FeedbackPage = () => {
             (
               userFeedbacks.reduce((sum, fb) => fb.overallScore || 0, 0) /
               userFeedbacks.length
-            ).toFixed(1)
+            ).toFixed(1),
           )
         : 0,
   };
@@ -1294,6 +1294,10 @@ const FeedbackPage = () => {
             <div className="mb-6 flex items-center">
               <Link
                 to="/dashboard"
+                state={{
+                  jobCategory: selectedJobCategory,
+                  projectNumber: selectedProjectNumber,
+                }}
                 className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
                 <FiArrowLeft className="mr-2" />
@@ -1422,10 +1426,10 @@ const FeedbackPage = () => {
                           {selectedVessel?.name
                             ? ` for ${selectedVessel.name}`
                             : selectedHistoryShip?.name
-                            ? ` for ${selectedHistoryShip.name}`
-                            : selectedProjectNumber
-                            ? ` for Vessel ${selectedProjectNumber}`
-                            : ""}
+                              ? ` for ${selectedHistoryShip.name}`
+                              : selectedProjectNumber
+                                ? ` for Vessel ${selectedProjectNumber}`
+                                : ""}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           Job Category:{" "}
@@ -1549,22 +1553,24 @@ const FeedbackPage = () => {
                                 : "border-gray-200 dark:border-gray-700"
                             }`}
                           >
-                            <div className="mb-3">
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Vessel
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex-1">
+                                <div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Vessel
+                                  </div>
+                                  <h4 className="font-medium text-gray-900 dark:text-white">
+                                    {feedback.vesselName}
+                                  </h4>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                    Date
+                                  </div>
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {new Date(
+                                      feedback.submittedAt,
+                                    ).toLocaleDateString()}
+                                  </p>
                                 </div>
-                                <h4 className="font-medium text-gray-900 dark:text-white">
-                                  {feedback.vesselName}
-                                </h4>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                  Date
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  {new Date(
-                                    feedback.submittedAt
-                                  ).toLocaleDateString()}
-                                </p>
                               </div>
                             </div>
                             {feedback.observations && (

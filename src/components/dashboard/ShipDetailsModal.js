@@ -45,7 +45,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
     { label: "Length", value: ship.length },
     { label: "Beam", value: ship.beam },
     { label: "Draft", value: ship.draft },
-    { label: "Year Built", value: ship.yearBuilt },
+    // { label: "Year Built", value: ship.yearBuilt },
   ];
 
   const maintenance = [

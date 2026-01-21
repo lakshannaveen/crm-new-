@@ -289,8 +289,8 @@
 
 // export default OwnerDashboard;
 
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getShips, fetchOwnerShips } from "../../actions/shipActions";
 import { getJmain } from "../../actions/feedbackActions";
@@ -316,7 +316,7 @@ const OwnerDashboard = () => {
   const { ships, loading } = useSelector((state) => state.ships);
   const { user } = useSelector((state) => state.auth);
   const { jmainList = [], jmainLoading = false } = useSelector(
-    (state) => state.feedback || {}
+    (state) => state.feedback || {},
   );
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -325,6 +325,8 @@ const OwnerDashboard = () => {
   const [jobCategory, setJobCategory] = useState("");
   const [projectNumber, setProjectNumber] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const skipProjectResetRef = useRef(false);
 
   const jobCategoryOptions = [
     { value: "", label: "Select Job Category" },
@@ -337,9 +339,56 @@ const OwnerDashboard = () => {
   useEffect(() => {
     if (jobCategory) {
       dispatch(getJmain(jobCategory));
-      setProjectNumber(""); // Reset project number when category changes
+      if (skipProjectResetRef.current) {
+        skipProjectResetRef.current = false;
+      } else {
+        setProjectNumber(""); // Reset project number when category changes
+      }
     }
   }, [jobCategory, dispatch]);
+
+  useEffect(() => {
+    const stateJobCategory = location.state?.jobCategory;
+    const stateProjectNumber = location.state?.projectNumber;
+
+    const persistedFilters = (() => {
+      try {
+        const raw = localStorage.getItem("ownerDashboardFilters");
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        return null;
+      }
+    })();
+
+    const initialJobCategory =
+      stateJobCategory || persistedFilters?.jobCategory;
+    const initialProjectNumber =
+      stateProjectNumber || persistedFilters?.projectNumber;
+
+    if (initialJobCategory) {
+      setJobCategory(initialJobCategory);
+    }
+
+    if (initialProjectNumber) {
+      setProjectNumber(initialProjectNumber);
+      skipProjectResetRef.current = true;
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    try {
+      if (jobCategory || projectNumber) {
+        localStorage.setItem(
+          "ownerDashboardFilters",
+          JSON.stringify({ jobCategory, projectNumber }),
+        );
+      } else {
+        localStorage.removeItem("ownerDashboardFilters");
+      }
+    } catch (error) {
+      // Ignore storage errors (e.g., private mode)
+    }
+  }, [jobCategory, projectNumber]);
 
   // Fetch ships when both job category and project number are selected
   useEffect(() => {
@@ -364,11 +413,11 @@ const OwnerDashboard = () => {
   const stats = {
     total: ships.length,
     active: ships.filter(
-      (s) => s.status === "under_repair" || s.status === "in_dock"
+      (s) => s.status === "under_repair" || s.status === "in_dock",
     ).length,
     completed: ships.filter((s) => s.progress === 100).length,
     delayed: ships.filter(
-      (s) => s.progress < 50 && new Date(s.endDate) < new Date()
+      (s) => s.progress < 50 && new Date(s.endDate) < new Date(),
     ).length,
   };
 
@@ -569,7 +618,7 @@ const OwnerDashboard = () => {
                   >
                     All Ships
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setActiveFilter("active")}
                     className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg transition-colors text-sm ${
                       activeFilter === "active"
@@ -588,7 +637,7 @@ const OwnerDashboard = () => {
                     }`}
                   >
                     Planned
-                  </button>
+                  </button> */}
                 </div>
               </div>
 

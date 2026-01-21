@@ -15,6 +15,7 @@ import {
   RESEND_OTP_REQUEST,
   RESEND_OTP_SUCCESS,
   RESEND_OTP_FAILURE,
+  RESET_OTP_STATE,
 } from "../constants/authActionTypes";
 import { CLEAR_AUTH_ERRORS } from "../constants/uiActionTypes";
 
@@ -154,6 +155,14 @@ const authReducer = (state = initialState, action) => {
     case CLEAR_AUTH_ERRORS:
       return {
         ...state,
+        error: null,
+      };
+
+    case RESET_OTP_STATE:
+      return {
+        ...state,
+        otpSent: false,
+        phoneNumber: "",
         error: null,
       };
 

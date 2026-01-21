@@ -172,7 +172,7 @@ const feedbackReducer = (state = initialState, action) => {
         "Parsed durations - Afloat:",
         afloatDays,
         "Indock:",
-        indockDays
+        indockDays,
       );
 
       return {
