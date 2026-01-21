@@ -3028,12 +3028,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         Overall Score:
                       </span>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {calculateOverallScore()}
-                        </div>
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                          /100
-                        </span>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {calculateOverallScore()}
+                            </div>
                       </div>
                     </div>
                   </div>
@@ -3366,7 +3363,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       Score:
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {calculateOverallScore()}/100
+                      {calculateOverallScore()}
                     </span>
                   </div>
                   <div className="flex justify-between">

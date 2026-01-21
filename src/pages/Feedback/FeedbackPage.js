@@ -1149,7 +1149,7 @@ const FeedbackPage = () => {
 
           <div class="info-row">
             <span class="label">Overall Score:</span>
-            <span class="score-box">${feedback.overallScore}/100</span>
+            <span class="score-box">${feedback.overallScore}</span>
           </div>
 
           <div class="info-row">
