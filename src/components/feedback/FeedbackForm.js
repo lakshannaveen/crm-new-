@@ -52,6 +52,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropdownRef = useRef(null);
@@ -218,7 +219,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     { value: "UCT", label: "UCT" },
     { value: "PVQ", label: "PVQ" },
     { value: "BQ", label: "BQ" },
-    { value: "TANKER BERTH", label: "TANKER BERTH" },
+    { value: "TANKBERTH", label: "TANKER BERTH" },
     { value: "GATEWAY", label: "GATEWAY" },
     { value: "PASSTERM", label: "PASSENGER TERMINAL" },
     { value: "GALLE", label: "GALLE" },
@@ -757,6 +758,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
+      if (currentStep === 3 && !feedbackSubmitted) {
+        toast.error("Please submit your feedback before completing.", {
+          duration: 4000,
+          position: "top-center",
+        });
+        return;
+      }
       // Check if on milestone step and milestones not submitted
       if (currentStep === 2 && !milestonesSubmitted) {
         toast(
@@ -925,6 +933,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const handleSubmit = async () => {
+    setFeedbackSubmitted(false);
     // Only send the required JSON structure for feedback
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
@@ -952,9 +961,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     try {
       await addFeedback(feedbackPayload);
+      setFeedbackSubmitted(true);
       setCurrentStep(4); // Success step
     } catch (error) {
       console.error("Failed to submit feedback:", error);
+      setFeedbackSubmitted(false);
       // Show error message for 500 internal server error
       toast.error("Failed to submit feedback. Please try again later.", {
         duration: 5000,
@@ -3284,7 +3295,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               }`}
             >
               <button
-                onClick={() => setCurrentStep(0)}
+                onClick={() => {
+                  setFeedbackSubmitted(false);
+                  setCurrentStep(0);
+                }}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
                 } btn-secondary`}
@@ -3416,6 +3430,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           yesNo: "",
                         })),
                     );
+                    setFeedbackSubmitted(false);
                     setCurrentStep(0);
                   }}
                   className={`${
@@ -3472,7 +3487,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </p>
 
               <button
-                onClick={() => setCurrentStep(0)}
+                onClick={() => {
+                  setFeedbackSubmitted(false);
+                  setCurrentStep(0);
+                }}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
                 } btn-primary`}
@@ -3509,6 +3527,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             // Check if all previous steps are validated
             const canNavigate = () => {
               if (index <= currentStep) return true; // Can always go back
+              if (index === steps.length - 1 && !feedbackSubmitted)
+                return false;
               // Check all steps from current to target are valid
               for (let i = currentStep; i < index; i++) {
                 const errors = validateStep(i);
