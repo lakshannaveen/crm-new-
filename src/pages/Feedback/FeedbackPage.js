@@ -1582,8 +1582,8 @@ const FeedbackPage = () => {
                                 : "border-gray-200 dark:border-gray-700"
                             }`}
                           >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex-1">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-3">
+                              <div className="flex-1 mb-4 lg:mb-0">
                                 <div>
                                   <div className="text-xs text-gray-500 dark:text-gray-400">
                                     Vessel
@@ -1601,67 +1601,75 @@ const FeedbackPage = () => {
                                   </p>
                                 </div>
                               </div>
-                                  <div className="ml-6 text-sm text-gray-700 dark:text-gray-300">
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_JCAT') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_JCAT')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_JMAIN') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_JMAIN')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_CODE') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CODE')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_ANSWER') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_ANSWER')}</div>
-                                      </div>
-                                    )}
-                                    {getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN') !== 'NA' && (
-                                      <div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
-                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN')}</div>
-                                      </div>
-                                    )}
-                                  </div>
-                              <div className="flex items-center space-x-2">
+                              
+                              {/* Feedback Details Grid */}
+                              <div className="flex-1 lg:ml-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_JCAT') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_JCAT')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_JMAIN') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_JMAIN')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
+                                      <div className="font-medium text-gray-900 dark:text-white text-sm">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_CODE') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_CODE')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
+                                      <div className="font-medium text-gray-900 dark:text-white text-sm">{getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_ANSWER') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_ANSWER')}</div>
+                                    </div>
+                                  )}
+                                  {getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN') !== 'NA' && (
+                                    <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                      <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
+                                      <div className="font-medium text-gray-900 dark:text-white">{getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN')}</div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2 lg:ml-4">
                               </div>
                             </div>
+                            {/* Remarks Section */}
                             {feedback.observations && (
-                              <div className="mt-2">
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Remarks
+                              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                    Remarks
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                                    {feedback.observations}
+                                  </p>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                  {feedback.observations}
-                                </p>
                               </div>
                             )}
                           </div>
