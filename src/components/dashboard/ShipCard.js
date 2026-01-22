@@ -58,13 +58,13 @@ const ShipCard = ({ ship }) => {
                 alt={ship.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-3 right-3">
+              {/* <div className="absolute top-3 right-3">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor}`}
                 >
                   {statusText}
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
 

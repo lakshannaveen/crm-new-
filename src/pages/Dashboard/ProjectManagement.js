@@ -1122,14 +1122,14 @@ const ProjectManagement = () => {
                   Project Milestones
                 </span>
               </div>
-              <div className="hidden sm:flex items-center space-x-3">
+              {/* <div className="hidden sm:flex items-center space-x-3">
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-medium ${statusColor}`}
                 >
                   {statusText}
                 </span>
-                {/* Share button removed per request */}
-              </div>
+                
+              </div> */}
             </div>
 
             {/* Project Header */}
