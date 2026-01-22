@@ -262,17 +262,31 @@ const FeedbackHistory = ({
       {/* Feedback List */}
       <div className="space-y-4">
         {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
-          const vesselName =
-            feedback.vesselName &&
-            String(feedback.vesselName).trim() !== "" &&
-            String(feedback.vesselName) !== "NA"
-              ? feedback.vesselName
-              : null;
+          const vesselName = getFieldValue(
+            feedback,
+            "FEEDBACK_VESSEL_NAME",
+            "vesselName",
+            "vessel_name"
+          );
+          const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT", "P_JCAT");
           const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
+          const criteriaCodeVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CRITERIA_CODE"
+          );
+          const criteriaDescVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CRITERIA_DESC"
+          );
           const descVal = getFieldValue(feedback, "FEEDBACK_DESC");
           const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
+          const codeDescVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CODE_DESC",
+            "P_CODE_DESC"
+          );
           const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
-          const answerVal = getFieldValue(
+          const answerVal = formatYesNo(
             feedback,
             "FEEDBACK_ANSWER",
             "P_ANSWER_TYPE"
@@ -281,12 +295,17 @@ const FeedbackHistory = ({
             feedback,
             "FEEDBACK_COMPLETION_DATE"
           );
-          const observationsVal =
-            feedback.observations &&
-            String(feedback.observations).trim() !== "" &&
-            String(feedback.observations) !== "NA"
-              ? feedback.observations
-              : null;
+          const remarksVal = getFieldValue(
+            feedback,
+            "FEEDBACK_REMARKS",
+            "P_REMARKS",
+            "observations"
+          );
+          const actionTakenVal = getFieldValue(
+            feedback,
+            "FEEDBACK_ACTION_TAKEN",
+            "P_ACTION_TAKEN"
+          );
           const submittedByVal = getFieldValue(
             feedback,
             "submittedBy",
@@ -324,60 +343,84 @@ const FeedbackHistory = ({
                             </>
                           )}
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            {jmainVal !== "NA" && (
+                          {/* JCAT and JMAIN */}
+                          <div className="flex items-center gap-4 mt-1">
+                            {jcatVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  JMAIN
-                                </div>
-                                <div className="font-medium">{jmainVal}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">JCAT</div>
+                                <div className="font-medium text-sm">{jcatVal}</div>
                               </div>
                             )}
 
-                            {descVal !== "NA" && (
+                            {jmainVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Description
-                                </div>
-                                <div className="font-medium">{descVal}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">JMAIN</div>
+                                <div className="font-medium text-sm">{jmainVal}</div>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            {criteriaCodeVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Code</div>
+                                <div className="font-medium">{criteriaCodeVal}</div>
+                              </div>
+                            )}
+
+                            {criteriaDescVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                                <div className="font-medium">{criteriaDescVal}</div>
                               </div>
                             )}
 
                             {codeVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Code
-                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
                                 <div className="font-medium">{codeVal}</div>
+                              </div>
+                            )}
+
+                            {codeDescVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Code Description</div>
+                                <div className="font-medium">{codeDescVal}</div>
+                              </div>
+                            )}
+
+                            {descVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Description</div>
+                                <div className="font-medium">{descVal}</div>
                               </div>
                             )}
 
                             {evalVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Evaluation
-                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
                                 <div className="font-medium">{evalVal}</div>
                               </div>
                             )}
 
                             {answerVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Answer
-                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
                                 <div className="font-medium">{answerVal}</div>
                               </div>
                             )}
 
                             {completionVal !== "NA" && (
                               <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Completion Date
-                                </div>
-                                <div className="font-medium">
-                                  {formatDate(completionVal)}
-                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
+                                <div className="font-medium">{formatDate(completionVal)}</div>
+                              </div>
+                            )}
+
+                            {actionTakenVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
+                                <div className="font-medium">{actionTakenVal}</div>
                               </div>
                             )}
                           </div>
@@ -385,13 +428,13 @@ const FeedbackHistory = ({
                       </div>
 
                       {/* Remarks Preview */}
-                      {observationsVal && (
+                      {remarksVal && remarksVal !== "NA" && (
                         <div className="mt-3">
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Remarks
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                            {observationsVal}
+                            {remarksVal}
                           </p>
                         </div>
                       )}
