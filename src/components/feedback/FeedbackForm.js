@@ -2453,6 +2453,34 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         {/* description removed - showing names via dropdown labels */}
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Action Taken
+                          </label>
+                          <textarea
+                            value={row.actionTaken || ""}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(index, "actionTaken", e.target.value)
+                            }
+                            placeholder="Action taken for this criteria"
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                            rows={isMobile ? "2" : "2"}
+                          />
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Remarks
+                          </label>
+                          <textarea
+                            value={row.remarks || ""}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(index, "remarks", e.target.value)
+                            }
+                            placeholder="Remarks for this criteria"
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                            rows={isMobile ? "2" : "2"}
+                          />
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                             Evaluation
                           </label>
                           <div className="flex flex-wrap gap-2">
@@ -2484,34 +2512,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               {validationErrors[`evaluation_${index}`]}
                             </p>
                           )}
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Action Taken
-                          </label>
-                          <textarea
-                            value={row.actionTaken || ""}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(index, "actionTaken", e.target.value)
-                            }
-                            placeholder="Action taken for this criteria"
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                            rows={isMobile ? "2" : "2"}
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Remarks
-                          </label>
-                          <textarea
-                            value={row.remarks || ""}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(index, "remarks", e.target.value)
-                            }
-                            placeholder="Remarks for this criteria"
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                            rows={isMobile ? "2" : "2"}
-                          />
                         </div>
                         {/*
                         <div className="mb-2">
@@ -2577,6 +2577,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </th>
                         <th
                           rowSpan="2"
+                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          Action Taken
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                        >
+                          Remarks
+                        </th>
+                        <th
+                          rowSpan="2"
                           className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
                         >
                           P
@@ -2604,18 +2616,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
                         >
                           N
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          Action Taken
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap"
-                        >
-                          Remarks
                         </th>
                       </tr>
                       <tr>
@@ -2675,6 +2675,29 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </td>
                               {/* description column removed; unit and criteria labels are shown in dropdowns */}
                               {/* ...existing code for radio buttons... */}
+                              {/* Action Taken column moved up to after Unit */}
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[200px]">
+                                <textarea
+                                  value={row.actionTaken || ""}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(index, "actionTaken", e.target.value)
+                                  }
+                                  placeholder="Action taken for this criteria"
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
+                                  rows={2}
+                                />
+                              </td>
+                              <td className="px-3 py-2 min-w-[200px] border-r border-gray-300 dark:border-gray-600">
+                                <textarea
+                                  value={row.remarks || ""}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(index, "remarks", e.target.value)
+                                  }
+                                  placeholder="Remarks for this criteria"
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
+                                  rows={2}
+                                />
+                              </td>
                               <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
                                   type="radio"
@@ -2753,28 +2776,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     )
                                   }
                                   className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[200px]">
-                                <textarea
-                                  value={row.actionTaken || ""}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(index, "actionTaken", e.target.value)
-                                  }
-                                  placeholder="Action taken for this criteria"
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
-                                  rows={2}
-                                />
-                              </td>
-                              <td className="px-3 py-2 min-w-[200px]">
-                                <textarea
-                                  value={row.remarks || ""}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(index, "remarks", e.target.value)
-                                  }
-                                  placeholder="Remarks for this criteria"
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
-                                  rows={2}
                                 />
                               </td>
                               {/*
