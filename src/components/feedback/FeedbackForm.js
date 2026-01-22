@@ -71,6 +71,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         description: "",
         evaluation: "",
         yesNo: "",
+        remarks: "",
+        actionTaken: "",
       })),
   );
   const [formData, setFormData] = useState({
@@ -2486,6 +2488,34 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Action Taken
+                          </label>
+                          <textarea
+                            value={row.actionTaken || ""}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(index, "actionTaken", e.target.value)
+                            }
+                            placeholder="Action taken for this criteria"
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                            rows={isMobile ? "2" : "2"}
+                          />
+                        </div>
+                        <div className="mb-2">
+                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                            Remarks
+                          </label>
+                          <textarea
+                            value={row.remarks || ""}
+                            onChange={(e) =>
+                              handleEvaluationRowChange(index, "remarks", e.target.value)
+                            }
+                            placeholder="Remarks for this criteria"
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                            rows={isMobile ? "2" : "2"}
+                          />
+                        </div>
                         {/*
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -2583,6 +2613,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
                         >
                           N
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          Action Taken
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                        >
+                          Remarks
                         </th>
                       </tr>
                       <tr>
@@ -2734,6 +2776,28 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   className="w-4 h-4 cursor-pointer"
                                 />
                               </td>
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[200px]">
+                                <textarea
+                                  value={row.actionTaken || ""}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(index, "actionTaken", e.target.value)
+                                  }
+                                  placeholder="Action taken for this criteria"
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
+                                  rows={2}
+                                />
+                              </td>
+                              <td className="px-3 py-2 min-w-[200px]">
+                                <textarea
+                                  value={row.remarks || ""}
+                                  onChange={(e) =>
+                                    handleEvaluationRowChange(index, "remarks", e.target.value)
+                                  }
+                                  placeholder="Remarks for this criteria"
+                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
+                                  rows={2}
+                                />
+                              </td>
                               {/*
                               <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
@@ -2770,12 +2834,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               */}
                             </tr>
                             {/* Inline error messages for desktop table */}
-                            {(validationErrors[`criteriaCode_${index}`] ||
+                              {(validationErrors[`criteriaCode_${index}`] ||
                               validationErrors[`unitCode_${index}`] ||
                               validationErrors[`evaluation_${index}`]) && (
                               <tr>
                                 <td
-                                  colSpan="10"
+                                  colSpan="12"
                                   className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
                                 >
                                   <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
@@ -2955,7 +3019,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     disabled
                     type="number"
                     min="0"
-                    placeholder="Days in dock (e.g. 2)"
+                    placeholder="Days in dock"
                     value={
                       formData.indockDuration === 0
                         ? "0"
