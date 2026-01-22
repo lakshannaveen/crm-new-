@@ -1135,7 +1135,7 @@ const ShipDetailsPage = () => {
     { label: "Length", value: currentShip.length, unit: "m" },
     { label: "Beam", value: currentShip.beam, unit: "m" },
     { label: "Draft", value: currentShip.draft, unit: "m" },
-    { label: "Year Built", value: currentShip.yearBuilt, icon: FiCalendar },
+    // { label: "Year Built", value: currentShip.yearBuilt, icon: FiCalendar },
     {
       label: "Depth",
       value:
@@ -1736,8 +1736,8 @@ const ShipDetailsPage = () => {
                 </div>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+                  {/* <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
                       Repair Progress
                     </p>
@@ -1752,7 +1752,7 @@ const ShipDetailsPage = () => {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
@@ -1824,7 +1824,7 @@ const ShipDetailsPage = () => {
                         </div>
                       </div>
 
-                      <div className="flex-1 text-center">
+                      {/* <div className="flex-1 text-center">
                         <div className="hidden sm:block h-1 w-24 bg-gray-300 dark:bg-gray-600 relative mx-auto">
                           <div
                             className="absolute inset-0 bg-blue-500"
@@ -1840,7 +1840,7 @@ const ShipDetailsPage = () => {
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           Progress
                         </p>
-                      </div>
+                      </div> */}
 
                       <div className="flex-1 text-right sm:text-left">
                         <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1">
@@ -1900,7 +1900,7 @@ const ShipDetailsPage = () => {
                   {renderInfoSection("Financial Overview", financialInfo, 3)}
                   {renderInfoSection("Management Team", managementInfo, 3)}
 
-                  <div className="space-y-4">
+                  {/* <div className="space-y-4">
                     <h4 className="text-base font-semibold text-gray-900 dark:text-white">
                       Maintenance Schedule
                     </h4>
@@ -1922,7 +1922,7 @@ const ShipDetailsPage = () => {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 

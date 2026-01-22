@@ -45,7 +45,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
     { label: "Length", value: ship.length },
     { label: "Beam", value: ship.beam },
     { label: "Draft", value: ship.draft },
-    { label: "Year Built", value: ship.yearBuilt },
+    // { label: "Year Built", value: ship.yearBuilt },
   ];
 
   const maintenance = [
@@ -119,7 +119,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
 
                 {/* Progress */}
                 <div className="mb-6">
-                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                  {/* <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
                     <span>Repair Progress</span>
                     <span className="font-medium">{ship.progress}%</span>
                   </div>
@@ -128,7 +128,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                       className="h-full bg-blue-500 rounded-full"
                       style={{ width: `${ship.progress}%` }}
                     />
-                  </div>
+                  </div> */}
                   <div className="flex justify-between mt-2 text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
                       Started: {formatDate(ship.startDate, "short")}
