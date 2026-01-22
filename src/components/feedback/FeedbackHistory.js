@@ -11,7 +11,8 @@ const FeedbackHistory = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
-  // Show all feedbacks by default (removed recent-3 limitation)
+  // Show 5 feedbacks by default and allow loading more
+  const [visibleCount, setVisibleCount] = useState(5);
 
   // Sort and filter feedbacks
   useEffect(() => {
@@ -273,7 +274,7 @@ const FeedbackHistory = ({
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {sortedFeedbacks.map((feedback, index) => {
+        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
           const vesselName =
             getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !== "NA"
               ? getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")
@@ -388,7 +389,30 @@ const FeedbackHistory = ({
         })}
       </div>
 
-      {/* All feedbacks shown — removed "recent 3" / load-more UI */}
+      {/* Load more / Show less */}
+      {sortedFeedbacks.length > 5 && (
+        <div className="mt-6 text-center">
+          {visibleCount < sortedFeedbacks.length ? (
+            <button
+              onClick={() =>
+                setVisibleCount((v) => Math.min(v + 5, sortedFeedbacks.length))
+              }
+              className="text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
+              aria-label="Load more feedbacks"
+            >
+              Load more
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisibleCount(5)}
+              className="text-gray-600 hover:text-gray-800 font-medium focus:outline-none"
+              aria-label="Show less feedbacks"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Empty State */}
       {sortedFeedbacks.length === 0 && (
