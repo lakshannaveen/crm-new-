@@ -960,7 +960,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
 
     try {
-      await addFeedback(feedbackPayload);
+      const response = await addFeedback(feedbackPayload);
+      
+      // Check if any criteria code and unit code already exist
+      if (response.ResultSet && response.ResultSet.some(item => item.Result === "EXISTS")) {
+        toast("Feedback for this criteria and unit code already exists.", {
+          duration: 5000,
+          position: "top-center",
+        });
+        return; // Do not proceed to success step
+      }
+      
       setFeedbackSubmitted(true);
       setCurrentStep(4); // Success step
     } catch (error) {
