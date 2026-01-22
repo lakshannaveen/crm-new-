@@ -1580,9 +1580,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     )}
                   </label>
                   <input
-                    type="date"
+                    type="text"
                     value={formData.startingDate}
                     readOnly
+                    placeholder="YYYY-MM-DD"
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.startingDate ? "border-red-500" : ""
                     }`}
@@ -1607,9 +1608,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     )}
                   </label>
                   <input
-                    type="date"
+                    type="text"
                     value={formData.endingDate}
                     readOnly
+                    placeholder="YYYY-MM-DD"
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.endingDate ? "border-red-500" : ""
                     }`}
