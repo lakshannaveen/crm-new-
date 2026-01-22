@@ -11,7 +11,7 @@ const FeedbackHistory = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(3);
+  // Show all feedbacks by default (removed recent-3 limitation)
 
   // Sort and filter feedbacks
   useEffect(() => {
@@ -97,7 +97,7 @@ const FeedbackHistory = ({
 
   const getFieldValue = (feedback, ...names) => {
     for (const name of names) {
-      const val = feedback?.[name];
+      const val = feedback?.[name] ?? feedback?.raw?.[name];
       if (val !== undefined && val !== null && String(val).trim() !== "")
         return String(val);
     }
@@ -273,11 +273,12 @@ const FeedbackHistory = ({
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
+        {sortedFeedbacks.map((feedback, index) => {
           const vesselName =
             getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !== "NA"
               ? getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")
               : null;
+          const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT");
           const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
           const criteriaCodeVal = getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE");
           const criteriaDescVal = getFieldValue(
@@ -322,178 +323,64 @@ const FeedbackHistory = ({
               key={feedback.id || index}
               className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
-                {/* Left Section */}
-                <div className="mb-4 md:mb-0 md:flex-1">
-                  <div className="flex items-start">
-                    {/* Score removed per request */}
-
-                    {/* Details */}
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="w-full">
-                          {vesselName && (
-                            <>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Vessel
-                              </div>
-                              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                {vesselName}
-                              </h3>
-                            </>
-                          )}
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            {jmainVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  JMAIN
-                                </div>
-                                <div className="font-medium">{jmainVal}</div>
-                              </div>
-                            )}
-
-                            {criteriaCodeVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Criteria Code
-                                </div>
-                                <div className="font-medium">{criteriaCodeVal}</div>
-                              </div>
-                            )}
-
-                            {criteriaDescVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Criteria Description
-                                </div>
-                                <div className="font-medium">{criteriaDescVal}</div>
-                              </div>
-                            )}
-
-                            {codeVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Code
-                                </div>
-                                <div className="font-medium">{codeVal}</div>
-                              </div>
-                            )}
-
-                            {codeDescVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Code Description
-                                </div>
-                                <div className="font-medium">{codeDescVal}</div>
-                              </div>
-                            )}
-
-                            {evalVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Evaluation
-                                </div>
-                                <div className="font-medium">{evalVal}</div>
-                              </div>
-                            )}
-
-                            {answerVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Answer
-                                </div>
-                                <div className="font-medium">{answerVal}</div>
-                              </div>
-                            )}
-
-                            {completionVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Completion Date
-                                </div>
-                                <div className="font-medium">
-                                  {formatDate(completionVal)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Observations Preview */}
-                      {observationsVal && (
-                        <div className="mt-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Remarks
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                            {observationsVal}
-                          </p>
-                        </div>
-                      )}
-
-                      {actionTakenVal && actionTakenVal !== "NA" && (
-                        <div className="mt-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Action Taken
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {actionTakenVal}
-                          </p>
-                        </div>
-                      )}
+              <div>
+                {/* Main compact layout showing requested fields only */}
+                {vesselName && (
+                  <>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Vessel
                     </div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {vesselName}
+                    </h3>
+                  </>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
+                    <div className="font-medium">{formatDate(feedback.submittedAt)}</div>
                   </div>
-                </div>
 
-                {/* Right Section - Actions */}
-                <div className="flex items-center space-x-2">
-                </div>
-              </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
+                    <div className="font-medium">{jcatVal}</div>
+                  </div>
 
-              {/* Categories Summary */}
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* Submitted By removed per request */}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
+                    <div className="font-medium">{jmainVal}</div>
+                  </div>
 
-                  {/* {formatTime(feedback.submittedAt) && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Submitted Time
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatTime(feedback.submittedAt)}
-                      </p>
-                    </div>
-                  )} */}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                    <div className="font-medium">{criteriaCodeVal}</div>
+                  </div>
 
-                  {Object.values(feedback.ratings || {}).filter((r) => r > 0)
-                    .length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Categories Rated
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {
-                          Object.values(feedback.ratings || {}).filter(
-                            (r) => r > 0
-                          ).length
-                        }
-                      </p>
-                    </div>
-                  )}
+                  <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
+                    <div className="font-medium text-sm">{criteriaDescVal}</div>
+                  </div>
 
-                  {vesselIMOVal !== "NA" && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Vessel IMO
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {vesselIMOVal}
-                      </p>
-                    </div>
-                  )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                    <div className="font-medium">{codeVal}</div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
+                    <div className="font-medium text-sm">{codeDescVal}</div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                    <div className="font-medium">{answerVal}</div>
+                  </div>
+
+                  <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Remarks</div>
+                    <div className="font-medium">{observationsVal || "NA"}</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -501,30 +388,7 @@ const FeedbackHistory = ({
         })}
       </div>
 
-      {/* Load more / Show less */}
-      {sortedFeedbacks.length > 3 && (
-        <div className="mt-6 text-center">
-          {visibleCount < sortedFeedbacks.length ? (
-            <button
-              onClick={() =>
-                setVisibleCount((v) => Math.min(v + 3, sortedFeedbacks.length))
-              }
-              className="text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
-              aria-label="Load more feedbacks"
-            >
-              Load more
-            </button>
-          ) : (
-            <button
-              onClick={() => setVisibleCount(3)}
-              className="text-gray-600 hover:text-gray-800 font-medium focus:outline-none"
-              aria-label="Show less feedbacks"
-            >
-              Show less
-            </button>
-          )}
-        </div>
-      )}
+      {/* All feedbacks shown — removed "recent 3" / load-more UI */}
 
       {/* Empty State */}
       {sortedFeedbacks.length === 0 && (
