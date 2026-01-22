@@ -2658,7 +2658,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     index,
                                   )
                                     .filter((i) => !i.disabled)
-                                    .map((i) => i.code)}
+                                    .map((i) => ({
+                                      value: i.value ?? i.code,
+                                      label: i.label ?? i.desc ?? i.value ?? i.code,
+                                      disabled: i.disabled,
+                                    }))}
                                   onChange={(val) =>
                                     handleEvaluationRowChange(
                                       index,
