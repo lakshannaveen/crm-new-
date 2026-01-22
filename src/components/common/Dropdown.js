@@ -111,12 +111,28 @@ export default function CustomDropdown({
   }, [open]);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
+  const normalizedOptions = options.map((opt) => {
+    if (opt && typeof opt === "object") {
+      return {
+        value: opt.value,
+        label: opt.label ?? opt.value ?? "",
+      };
+    }
+    return { value: opt, label: opt };
+  });
+
   const filteredOptions =
     searchable && normalizedSearch
-      ? options.filter((opt) =>
-          String(opt).toLowerCase().includes(normalizedSearch),
+      ? normalizedOptions.filter((opt) =>
+          String(opt.label).toLowerCase().includes(normalizedSearch),
         )
-      : options;
+      : normalizedOptions;
+
+  const selectedOption = normalizedOptions.find(
+    (opt) => String(opt.value) === String(value),
+  );
+  const displayValue =
+    value || value === 0 ? (selectedOption?.label ?? value) : "";
 
   return (
     <div className="w-full text-xs">
@@ -135,7 +151,9 @@ export default function CustomDropdown({
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
-        <span className="truncate">{value || placeholder}</span>
+        <span className="truncate" title={displayValue || placeholder}>
+          {displayValue || placeholder}
+        </span>
         <ArrowIcon open={open} />
       </button>
 
@@ -185,17 +203,18 @@ export default function CustomDropdown({
           ) : (
             filteredOptions.map((opt) => (
               <li
-                key={opt}
+                key={opt.value}
                 onClick={() => {
-                  onChange(opt);
+                  onChange(opt.value);
                   setOpen(false);
                 }}
                 className={`cursor-pointer px-3 py-2
                   hover:bg-gray-100 dark:hover:bg-gray-600
-                  ${opt === value ? "bg-gray-100 dark:bg-gray-600" : ""}
+                  ${opt.value === value ? "bg-gray-100 dark:bg-gray-600" : ""}
                 `}
+                title={opt.label}
               >
-                {opt}
+                <span className="block truncate">{opt.label}</span>
               </li>
             ))
           )}

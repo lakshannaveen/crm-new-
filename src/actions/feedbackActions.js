@@ -11,6 +11,9 @@ import {
   GET_UNITS_DESCRIPTIONS_REQUEST,
   GET_UNITS_DESCRIPTIONS_SUCCESS,
   GET_UNITS_DESCRIPTIONS_FAILURE,
+  GET_CRITERIAS_REQUEST,
+  GET_CRITERIAS_SUCCESS,
+  GET_CRITERIAS_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -131,6 +134,31 @@ export const getUnitsDescriptions = () => async (dispatch) => {
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch units descriptions",
+    });
+    throw error;
+  }
+};
+
+// Get criterias
+export const getCriterias = () => async (dispatch) => {
+  try {
+    dispatch({ type: GET_CRITERIAS_REQUEST });
+
+    const data = await feedbackService.getCriterias();
+
+    dispatch({
+      type: GET_CRITERIAS_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_CRITERIAS_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch criterias",
     });
     throw error;
   }

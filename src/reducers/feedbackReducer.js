@@ -11,6 +11,9 @@ import {
   GET_UNITS_DESCRIPTIONS_REQUEST,
   GET_UNITS_DESCRIPTIONS_SUCCESS,
   GET_UNITS_DESCRIPTIONS_FAILURE,
+  GET_CRITERIAS_REQUEST,
+  GET_CRITERIAS_SUCCESS,
+  GET_CRITERIAS_FAILURE,
   SUBMIT_FEEDBACK_REQUEST,
   SUBMIT_FEEDBACK_SUCCESS,
   SUBMIT_FEEDBACK_FAILURE,
@@ -41,6 +44,8 @@ const initialState = {
   jmainLoading: false,
   unitsDescriptions: [],
   unitsDescriptionsLoading: false,
+  criterias: [],
+  criteriasLoading: false,
   milestoneTypes: [],
   milestoneTypesLoading: false,
   allFeedbacks: [],
@@ -276,6 +281,29 @@ const feedbackReducer = (state = initialState, action) => {
         ...state,
         unitsDescriptionsLoading: false,
         unitsDescriptions: [],
+        error: action.payload,
+      };
+
+    case GET_CRITERIAS_REQUEST:
+      return {
+        ...state,
+        criteriasLoading: true,
+        error: null,
+      };
+
+    case GET_CRITERIAS_SUCCESS:
+      return {
+        ...state,
+        criteriasLoading: false,
+        criterias: action.payload?.ResultSet || action.payload || [],
+        error: null,
+      };
+
+    case GET_CRITERIAS_FAILURE:
+      return {
+        ...state,
+        criteriasLoading: false,
+        criterias: [],
         error: action.payload,
       };
 

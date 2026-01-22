@@ -20,6 +20,7 @@ import {
   getFeedbackDates,
   getJmain,
   getUnitsDescriptions,
+  getCriterias,
   getMilestoneTypes,
   submitMilestone,
   clearFeedbackDates,
@@ -39,6 +40,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    criterias = [],
+    criteriasLoading = false,
     milestoneTypes = [],
     milestoneTypesLoading = false,
     milestoneSubmitting = false,
@@ -242,6 +245,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Fetch units descriptions and milestone types on component mount
   useEffect(() => {
     dispatch(getUnitsDescriptions());
+    dispatch(getCriterias());
     dispatch(getMilestoneTypes());
   }, [dispatch]);
 
@@ -607,19 +611,49 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   // Get unique criteria codes
-  const getCriteriaCodes = () => {
-    const codes = [
-      ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
-    ];
-    return codes.filter(Boolean).sort((a, b) => {
-      // Convert to numbers for proper numeric sorting
+  const getCriteriaOptions = () => {
+    const source =
+      Array.isArray(criterias) && criterias.length > 0
+        ? criterias
+        : unitsDescriptions;
+
+    const map = new Map();
+    source.forEach((item) => {
+      const code =
+        item.FEEDBACK_CRITERIA_CODE ||
+        item.CRITERIA_CODE ||
+        item.CODE ||
+        item.CRITERIA ||
+        "";
+      if (!code) return;
+      const desc =
+        item.FEEDBACK_CRITERIA_DESC ||
+        item.FEEDBACK_CRITERIA_DESCRIPTION ||
+        item.CRITERIA_DESCRIPTION ||
+        item.CRITERIA_DESC ||
+        item.DESCRIPTION ||
+        item.FEEDBACK_DESC ||
+        "";
+      if (!map.has(code)) {
+        map.set(code, desc);
+      }
+    });
+
+    const codes = [...map.keys()].filter(Boolean).sort((a, b) => {
       const numA = parseInt(a, 10);
       const numB = parseInt(b, 10);
       if (!isNaN(numA) && !isNaN(numB)) {
         return numA - numB;
       }
-      // Fallback to string comparison
-      return a.localeCompare(b);
+      return String(a).localeCompare(String(b));
+    });
+
+    return codes.map((code) => {
+      const desc = map.get(code);
+      return {
+        value: code,
+        label: desc ? `${code} - ${desc}` : code,
+      };
     });
   };
 
@@ -686,8 +720,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         if (!formData.customerFeedbackStatus)
           errors.customerFeedbackStatus =
             "Customer Feedback Status is required";
-        if (!formData.projectHandleLocation)
-          errors.projectHandleLocation = "Project Handle Location is required";
         break;
       case 1: // Evaluation Details
         // Check each row that has been started
@@ -961,16 +993,19 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     try {
       const response = await addFeedback(feedbackPayload);
-      
+
       // Check if any criteria code and unit code already exist
-      if (response.ResultSet && response.ResultSet.some(item => item.Result === "EXISTS")) {
+      if (
+        response.ResultSet &&
+        response.ResultSet.some((item) => item.Result === "EXISTS")
+      ) {
         toast("Feedback for this criteria and unit code already exists.", {
           duration: 5000,
           position: "top-center",
         });
         return; // Do not proceed to success step
       }
-      
+
       setFeedbackSubmitted(true);
       setCurrentStep(4); // Success step
     } catch (error) {
@@ -1444,8 +1479,23 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             : "")
                         }
                         onChange={(e) => {
-                          setProjectSearchTerm(e.target.value);
+                          const nextValue = e.target.value;
+                          setProjectSearchTerm(nextValue);
                           setShowProjectDropdown(true);
+
+                          if (nextValue === "") {
+                            setFormData((prev) => ({
+                              ...prev,
+                              projectNumber: "",
+                              projectName: "",
+                            }));
+                            setValidationErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.projectNumber;
+                              delete newErrors.projectName;
+                              return newErrors;
+                            });
+                          }
                         }}
                         onFocus={() => setShowProjectDropdown(true)}
                         placeholder={
@@ -1723,24 +1773,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </label>
                 <input
                   type="text"
+                  disabled
                   value={formData.projectHandleLocation}
                   onChange={(e) =>
                     handleInputChange("projectHandleLocation", e.target.value)
                   }
-                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
-                    validationErrors.projectHandleLocation
-                      ? "border-red-500"
-                      : ""
-                  }`}
-                  placeholder="Enter project location"
+                  className={`input-field ${isMobile ? "py-2 text-sm" : ""} cursor-default`}
                 />
-                <div className="min-h-[20px]">
-                  {validationErrors.projectHandleLocation && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {validationErrors.projectHandleLocation}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -2288,7 +2327,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Provide detailed evaluation for each criteria
                 </p>
               </div>
-              {unitsDescriptionsLoading && (
+              {(unitsDescriptionsLoading || criteriasLoading) && (
                 <div className="text-sm text-blue-600 dark:text-blue-400 mt-2 md:mt-0">
                   Loading criteria...
                 </div>
@@ -2296,14 +2335,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
 
             {/* Debug Info */}
-            {!unitsDescriptionsLoading && unitsDescriptions.length === 0 && (
-              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  No criteria data loaded. Total items:{" "}
-                  {unitsDescriptions.length}
-                </p>
-              </div>
-            )}
+            {!unitsDescriptionsLoading &&
+              !criteriasLoading &&
+              unitsDescriptions.length === 0 &&
+              criterias.length === 0 && (
+                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    No criteria data loaded. Total items:{" "}
+                    {Math.max(unitsDescriptions.length, criterias.length)}
+                  </p>
+                </div>
+              )}
 
             {/* Validation Error for Evaluation Rows */}
             {validationErrors.evaluationRows && (
@@ -2333,9 +2375,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
                             <CustomDropdown
                               value={row.criteriaCode}
-                              options={getCriteriaCodes()}
+                              options={getCriteriaOptions()}
                               placeholder="Select.."
-                              disabled={unitsDescriptionsLoading}
+                              disabled={
+                                unitsDescriptionsLoading || criteriasLoading
+                              }
                               onChange={(val) =>
                                 handleEvaluationRowChange(
                                   index,
@@ -2542,10 +2586,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </th>
                       </tr>
                       <tr>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
                           Criteria Code
                         </th>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
                           Unit Code
                         </th>
                       </tr>
@@ -2556,10 +2600,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         .map((row, index) => (
                           <React.Fragment key={index}>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 w-[160px] max-w-[160px] overflow-hidden">
                                 <CustomDropdown
                                   value={row.criteriaCode}
-                                  options={getCriteriaCodes()}
+                                  options={getCriteriaOptions()}
                                   onChange={(val) =>
                                     handleEvaluationRowChange(
                                       index,
@@ -2567,11 +2611,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       val,
                                     )
                                   }
-                                  disabled={unitsDescriptionsLoading}
+                                  disabled={
+                                    unitsDescriptionsLoading || criteriasLoading
+                                  }
                                   openDownward={true}
                                 />
                               </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 w-[160px] max-w-[160px] overflow-hidden">
                                 <CustomDropdown
                                   value={row.unitCode}
                                   options={getUnitCodesForCriteria(
@@ -2594,7 +2640,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   openDownward={true}
                                 />
                               </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[320px]">
                                 <input
                                   type="text"
                                   value={row.description}
@@ -3038,9 +3084,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         Overall Score:
                       </span>
                       <div className="text-right">
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                              {calculateOverallScore()}
-                            </div>
+                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {calculateOverallScore()}
+                        </div>
                       </div>
                     </div>
                   </div>
