@@ -25,6 +25,9 @@ import {
   GET_ALL_FEEDBACKS_FAILURE,
   CLEAR_FEEDBACK_ERROR,
   CLEAR_FEEDBACK_DATES,
+  GET_CRITERIAS_REQUEST,
+  GET_CRITERIAS_SUCCESS,
+  GET_CRITERIAS_FAILURE,
 } from "../constants/feedbackActionTypes";
 import * as feedbackService from "../services/feedbackService";
 
@@ -36,7 +39,7 @@ export const getFeedbackDates =
 
       const data = await feedbackService.getFeedbackDates(
         jobCategory,
-        projectNumber
+        projectNumber,
       );
 
       dispatch({
@@ -131,6 +134,31 @@ export const getUnitsDescriptions = () => async (dispatch) => {
         error.response?.data?.message ||
         error.message ||
         "Failed to fetch units descriptions",
+    });
+    throw error;
+  }
+};
+
+// Get Criteria Descriptions
+export const getCriterias = () => async (dispatch) => {
+  try {
+    dispatch({ type: GET_CRITERIAS_REQUEST });
+
+    const data = await feedbackService.getCriterias();
+
+    dispatch({
+      type: GET_CRITERIAS_SUCCESS,
+      payload: data,
+    });
+
+    return data;
+  } catch (error) {
+    dispatch({
+      type: GET_CRITERIAS_FAILURE,
+      payload:
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to fetch criteria descriptions",
     });
     throw error;
   }

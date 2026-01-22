@@ -25,6 +25,9 @@ import {
   GET_ALL_FEEDBACKS_FAILURE,
   CLEAR_FEEDBACK_ERROR,
   CLEAR_FEEDBACK_DATES,
+  GET_CRITERIAS_REQUEST,
+  GET_CRITERIAS_SUCCESS,
+  GET_CRITERIAS_FAILURE,
 } from "../constants/feedbackActionTypes";
 
 const initialState = {
@@ -41,6 +44,8 @@ const initialState = {
   jmainLoading: false,
   unitsDescriptions: [],
   unitsDescriptionsLoading: false,
+  criterias: [],
+  criteriasLoading: false,
   milestoneTypes: [],
   milestoneTypesLoading: false,
   allFeedbacks: [],
@@ -172,7 +177,7 @@ const feedbackReducer = (state = initialState, action) => {
         "Parsed durations - Afloat:",
         afloatDays,
         "Indock:",
-        indockDays
+        indockDays,
       );
 
       return {
@@ -276,6 +281,49 @@ const feedbackReducer = (state = initialState, action) => {
         ...state,
         unitsDescriptionsLoading: false,
         unitsDescriptions: [],
+        error: action.payload,
+      };
+
+    case GET_CRITERIAS_REQUEST:
+      return {
+        ...state,
+        criteriasLoading: true,
+        error: null,
+      };
+
+    case GET_CRITERIAS_SUCCESS:
+      // Handle different possible response structures
+      let criteriasData = [];
+
+      if (action.payload) {
+        if (
+          action.payload.ResultSet &&
+          Array.isArray(action.payload.ResultSet)
+        ) {
+          criteriasData = action.payload.ResultSet;
+        } else if (Array.isArray(action.payload)) {
+          criteriasData = action.payload;
+        } else if (typeof action.payload === "object") {
+          criteriasData =
+            action.payload.data ||
+            action.payload.result ||
+            action.payload.items ||
+            [];
+        }
+      }
+
+      return {
+        ...state,
+        criteriasLoading: false,
+        criterias: Array.isArray(criteriasData) ? criteriasData : [],
+        error: null,
+      };
+
+    case GET_CRITERIAS_FAILURE:
+      return {
+        ...state,
+        criteriasLoading: false,
+        criterias: [],
         error: action.payload,
       };
 

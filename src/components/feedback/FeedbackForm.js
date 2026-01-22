@@ -24,6 +24,7 @@ import {
   submitMilestone,
   clearFeedbackDates,
   getDuration,
+  getCriterias,
 } from "../../actions/feedbackActions";
 import CustomDropdown from "../common/Dropdown";
 
@@ -39,6 +40,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    criterias = [],
+    criteriasLoading = false,
     milestoneTypes = [],
     milestoneTypesLoading = false,
     milestoneSubmitting = false,
@@ -260,6 +263,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   useEffect(() => {
     dispatch(getUnitsDescriptions());
     dispatch(getMilestoneTypes());
+    dispatch(getCriterias());
   }, [dispatch]);
 
   // Cleanup: Clear dates when component unmounts
@@ -623,21 +627,59 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     });
   };
 
-  // Get unique criteria codes
+  // Get unique criteria codes with descriptions
+  const truncateText = (text, maxLength = 28) => {
+    if (!text) return "";
+    const str = String(text);
+    return str.length > maxLength ? `${str.slice(0, maxLength - 1)}…` : str;
+  };
+
   const getCriteriaCodes = () => {
-    const codes = [
-      ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
-    ];
-    return codes.filter(Boolean).sort((a, b) => {
-      // Convert to numbers for proper numeric sorting
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      // Fallback to string comparison
-      return a.localeCompare(b);
-    });
+    if (!criterias || criterias.length === 0) {
+      return [];
+    }
+
+    // Create options array from criterias API data
+    const seenCodes = new Set(); // Track unique codes to avoid duplicates
+    const options = criterias
+      .filter((item) => item.FEEDBACK_CRITERIA_CODE) // Filter out items without code
+      .filter((item) => {
+        // Deduplicate by checking if we've already seen this code
+        if (seenCodes.has(item.FEEDBACK_CRITERIA_CODE)) {
+          return false;
+        }
+        seenCodes.add(item.FEEDBACK_CRITERIA_CODE);
+        return true;
+      })
+      .map((item) => {
+        const fullLabel =
+          item.FEEDBACK_CRITERIA_DESCRPTION ||
+          item.FEEDBACK_CRITERIA_DESCRIPTION ||
+          item.FEEDBACK_CRITERIA_CODE; // Use description if available, fallback to code
+        // Use longer truncation for mobile, shorter for desktop
+        const maxLength = isMobile ? 50 : 28;
+        const truncatedDescription = truncateText(fullLabel, maxLength);
+        // Show code with description (e.g., "001 - Description...")
+        const displayLabel = `${item.FEEDBACK_CRITERIA_CODE} - ${truncatedDescription}`;
+        const fullDisplayLabel = `${item.FEEDBACK_CRITERIA_CODE} - ${fullLabel}`;
+        return {
+          value: item.FEEDBACK_CRITERIA_CODE,
+          label: displayLabel,
+          title: fullDisplayLabel,
+        };
+      })
+      .sort((a, b) => {
+        // Convert to numbers for proper numeric sorting
+        const numA = parseInt(a.value, 10);
+        const numB = parseInt(b.value, 10);
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return numA - numB;
+        }
+        // Fallback to string comparison
+        return String(a.value).localeCompare(String(b.value));
+      });
+
+    return options;
   };
 
   // Get selected combinations excluding current row
@@ -2190,15 +2232,15 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                       >
                         <div className="mb-2">
                           <div className="mb-2">
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                              Criteria Code
-                            </label>
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1"></label>
 
                             <CustomDropdown
                               value={row.criteriaCode}
                               options={getCriteriaCodes()}
                               placeholder="Select.."
-                              disabled={unitsDescriptionsLoading}
+                              disabled={
+                                unitsDescriptionsLoading || criteriasLoading
+                              }
                               onChange={(val) =>
                                 handleEvaluationRowChange(
                                   index,
@@ -2363,7 +2405,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                       <tr>
                         <th
                           colSpan="2"
-                          className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap "
+                          className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap w-[360px]"
                         >
                           Criteria
                         </th>
@@ -2405,10 +2447,10 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         </th>
                       </tr>
                       <tr>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
-                          Criteria Code
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[180px] max-w-[180px]">
+                          Criteria
                         </th>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
+                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[180px] max-w-[180px]">
                           Unit Code
                         </th>
                       </tr>
@@ -2419,7 +2461,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         .map((row, index) => (
                           <React.Fragment key={index}>
                             <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[180px] w-[180px] max-w-[180px] overflow-hidden">
                                 <CustomDropdown
                                   value={row.criteriaCode}
                                   options={getCriteriaCodes()}
@@ -2430,11 +2472,13 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                                       val,
                                     )
                                   }
-                                  disabled={unitsDescriptionsLoading}
+                                  disabled={
+                                    unitsDescriptionsLoading || criteriasLoading
+                                  }
                                   openDownward={true}
                                 />
                               </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
+                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[180px] w-[180px] max-w-[180px] overflow-hidden">
                                 <CustomDropdown
                                   value={row.unitCode}
                                   options={getUnitCodesForCriteria(

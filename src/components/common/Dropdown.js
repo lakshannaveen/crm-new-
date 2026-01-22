@@ -32,6 +32,27 @@ export default function CustomDropdown({
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const isMobile = useMobile();
 
+  // Normalize options to handle both string arrays and object arrays
+  const normalizedOptions = options.map((opt) => {
+    if (typeof opt === "object" && opt !== null) {
+      return {
+        value: opt.value,
+        label: opt.label || opt.value,
+        title: opt.title || opt.label || opt.value,
+      };
+    }
+    return {
+      value: opt,
+      label: opt,
+      title: opt,
+    };
+  });
+
+  // Find the display label for the current value
+  const selectedOption = normalizedOptions.find((opt) => opt.value === value);
+  const displayValue = selectedOption?.label || value;
+  const displayTitle = selectedOption?.title || displayValue || placeholder;
+
   const computePosition = () => {
     const btn = buttonRef.current;
     if (!btn) return;
@@ -90,14 +111,14 @@ export default function CustomDropdown({
   }, [open]);
 
   return (
-    <div className="w-full text-xs">
+    <div className="w-full min-w-0 text-xs">
       {/* Trigger Button */}
       <button
         ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((p) => !p)}
-        className={`w-full flex items-center justify-between
+        className={`w-full min-w-0 flex items-center justify-between
           h-[28px] px-2 py-0 leading-[28px]
           rounded border
           bg-white dark:bg-gray-700
@@ -106,7 +127,9 @@ export default function CustomDropdown({
           ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         `}
       >
-        <span className="truncate leading-[28px]">{value || placeholder}</span>
+        <span className="truncate leading-[28px]" title={displayTitle}>
+          {displayValue || placeholder}
+        </span>
         <ArrowIcon open={open} />
       </button>
 
@@ -127,19 +150,20 @@ export default function CustomDropdown({
             width: `${pos.width}px`,
           }}
         >
-          {options.map((opt) => (
+          {normalizedOptions.map((opt) => (
             <li
-              key={opt}
+              key={opt.value}
               onClick={() => {
-                onChange(opt);
+                onChange(opt.value);
                 setOpen(false);
               }}
               className={`cursor-pointer px-2 py-1
                 hover:bg-gray-100 dark:hover:bg-gray-600
-                ${opt === value ? "bg-gray-100 dark:bg-gray-600" : ""}
+                ${opt.value === value ? "bg-gray-100 dark:bg-gray-600" : ""}
               `}
+              title={opt.title}
             >
-              {opt}
+              <span className="block truncate">{opt.label}</span>
             </li>
           ))}
         </ul>
