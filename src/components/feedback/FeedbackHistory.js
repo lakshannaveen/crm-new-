@@ -116,12 +116,25 @@ const FeedbackHistory = ({
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
     const allRows = [
+      ["JCAT", getFieldValue(feedback, "FEEDBACK_JCAT")],
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
-      ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
+      ["Vessel Name", getFieldValue(feedback, "FEEDBACK_VESSEL_NAME")],
+      ["Criteria Code", getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE")],
+      [
+        "Criteria Description",
+        getFieldValue(
+          feedback,
+          "FEEDBACK_CRITERIA_DESC",
+          "FEEDBACK_CRITERIA_DESCRIPTION",
+          "FEEDBACK_CRITERIA_DESCRPTION"
+        ),
+      ],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
+      ["Code Description", getFieldValue(feedback, "FEEDBACK_CODE_DESC")],
       ["Evaluation", getFieldValue(feedback, "FEEDBACK_EVAL")],
       ["Answer", getFieldValue(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
       ["Remarks", getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS")],
+      ["Action Taken", getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN")],
       ["Completion Date", getFieldValue(feedback, "FEEDBACK_COMPLETION_DATE")],
     ];
 
@@ -262,14 +275,20 @@ const FeedbackHistory = ({
       <div className="space-y-4">
         {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
           const vesselName =
-            feedback.vesselName &&
-            String(feedback.vesselName).trim() !== "" &&
-            String(feedback.vesselName) !== "NA"
-              ? feedback.vesselName
+            getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !== "NA"
+              ? getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")
               : null;
           const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
-          const descVal = getFieldValue(feedback, "FEEDBACK_DESC");
+          const criteriaCodeVal = getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE");
+          const criteriaDescVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CRITERIA_DESC",
+            "FEEDBACK_CRITERIA_DESCRIPTION",
+            "FEEDBACK_CRITERIA_DESCRPTION",
+            "FEEDBACK_DESC"
+          );
           const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
+          const codeDescVal = getFieldValue(feedback, "FEEDBACK_CODE_DESC");
           const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
           const answerVal = getFieldValue(
             feedback,
@@ -285,7 +304,8 @@ const FeedbackHistory = ({
             String(feedback.observations).trim() !== "" &&
             String(feedback.observations) !== "NA"
               ? feedback.observations
-              : null;
+              : getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS") || null;
+          const actionTakenVal = getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN");
           const submittedByVal = getFieldValue(
             feedback,
             "submittedBy",
@@ -333,12 +353,21 @@ const FeedbackHistory = ({
                               </div>
                             )}
 
-                            {descVal !== "NA" && (
+                            {criteriaCodeVal !== "NA" && (
                               <div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Description
+                                  Criteria Code
                                 </div>
-                                <div className="font-medium">{descVal}</div>
+                                <div className="font-medium">{criteriaCodeVal}</div>
+                              </div>
+                            )}
+
+                            {criteriaDescVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Criteria Description
+                                </div>
+                                <div className="font-medium">{criteriaDescVal}</div>
                               </div>
                             )}
 
@@ -348,6 +377,15 @@ const FeedbackHistory = ({
                                   Code
                                 </div>
                                 <div className="font-medium">{codeVal}</div>
+                              </div>
+                            )}
+
+                            {codeDescVal !== "NA" && (
+                              <div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Code Description
+                                </div>
+                                <div className="font-medium">{codeDescVal}</div>
                               </div>
                             )}
 
@@ -391,6 +429,17 @@ const FeedbackHistory = ({
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                             {observationsVal}
+                          </p>
+                        </div>
+                      )}
+
+                      {actionTakenVal && actionTakenVal !== "NA" && (
+                        <div className="mt-3">
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Action Taken
+                          </div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {actionTakenVal}
                           </p>
                         </div>
                       )}

@@ -775,6 +775,35 @@ const FeedbackPage = () => {
     if (!showAllShips) setShipVisibleCount(base);
   }, [showAllShips]);
 
+  // Helpers to normalize API/cached payloads to the app feedback shape
+  const mapApiRow = (r, i) => ({
+    id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
+    vesselName:
+      r.FEEDBACK_VESSEL_NAME || r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+    feedbackRef: r.FEEDBACK_CODE || "",
+    submittedBy: r.FEEDBACK_ANSWER || "API",
+    submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
+    overallScore: 0,
+    observations: r.FEEDBACK_REMARKS || r.FEEDBACK_REMARK || "",
+    raw: r,
+  });
+
+  const rowsFromSaved = (parsed) => {
+    if (!parsed) return [];
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed.ResultSet && Array.isArray(parsed.ResultSet)) return parsed.ResultSet;
+    if (parsed.Result && Array.isArray(parsed.Result)) return parsed.Result;
+    return [parsed];
+  };
+
+  const getFieldValueLocal = (feedback, ...names) => {
+    for (const name of names) {
+      const val = feedback?.[name] ?? feedback?.raw?.[name];
+      if (val !== undefined && val !== null && String(val).trim() !== "") return String(val);
+    }
+    return "NA";
+  };
+
   // Load feedbacks from API on component mount (fallback to local sample data)
   useEffect(() => {
     let mounted = true;
@@ -791,19 +820,8 @@ const FeedbackPage = () => {
         const res = await dispatch(
           getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
-        const rows = res?.ResultSet || res?.Result || [];
-
-        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
-          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
-          overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
-          raw: r,
-        }));
+        const rows = rowsFromSaved(res);
+        const apiFeedbacks = rows.map((r, i) => mapApiRow(r, i));
 
         // persist API cache for offline/fallback use
         try {
@@ -820,7 +838,12 @@ const FeedbackPage = () => {
           let savedFeedbacks = [];
           if (saved) {
             try {
-              savedFeedbacks = JSON.parse(saved);
+              const parsed = JSON.parse(saved);
+              const fromSavedRows = rowsFromSaved(parsed);
+              savedFeedbacks = fromSavedRows.map((item, idx) => {
+                if (item && (item.id || item.raw)) return item;
+                return mapApiRow(item, idx);
+              });
             } catch (e) {
               savedFeedbacks = [];
             }
@@ -835,17 +858,24 @@ const FeedbackPage = () => {
         const cached = localStorage.getItem("cdplc_feedbacks_api_cache");
         if (cached) {
           try {
-            const cachedApi = JSON.parse(cached);
-            const saved = localStorage.getItem("cdplc_feedbacks");
-            let savedFeedbacks = [];
-            if (saved) {
-              try {
-                savedFeedbacks = JSON.parse(saved);
-              } catch (e) {
-                savedFeedbacks = [];
-              }
-            }
-            if (mounted) setFeedbacks([...savedFeedbacks, ...cachedApi]);
+                const cachedApi = JSON.parse(cached);
+                const cachedRows = rowsFromSaved(cachedApi);
+                const cachedMapped = cachedRows.map((r, i) => mapApiRow(r, i));
+                const saved = localStorage.getItem("cdplc_feedbacks");
+                let savedFeedbacks = [];
+                if (saved) {
+                  try {
+                    const parsed = JSON.parse(saved);
+                    const fromSavedRows = rowsFromSaved(parsed);
+                    savedFeedbacks = fromSavedRows.map((item, idx) => {
+                      if (item && (item.id || item.raw)) return item;
+                      return mapApiRow(item, idx);
+                    });
+                  } catch (e) {
+                    savedFeedbacks = [];
+                  }
+                }
+                if (mounted) setFeedbacks([...savedFeedbacks, ...cachedMapped]);
             return;
           } catch (e) {
             // ignore parse errors
@@ -883,18 +913,8 @@ const FeedbackPage = () => {
         const res = await dispatch(
           getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
-        const rows = res?.ResultSet || res?.Result || [];
-        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
-          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
-          overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
-          raw: r,
-        }));
+        const rows = rowsFromSaved(res);
+        const apiFeedbacks = rows.map((r, i) => mapApiRow(r, i));
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
@@ -905,7 +925,12 @@ const FeedbackPage = () => {
         let savedFeedbacks = [];
         if (saved) {
           try {
-            savedFeedbacks = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            const fromSavedRows = rowsFromSaved(parsed);
+            savedFeedbacks = fromSavedRows.map((item, idx) => {
+              if (item && (item.id || item.raw)) return item;
+              return mapApiRow(item, idx);
+            });
           } catch (e) {
             savedFeedbacks = [];
           }
@@ -1576,6 +1601,56 @@ const FeedbackPage = () => {
                                   </p>
                                 </div>
                               </div>
+                                  <div className="ml-6 text-sm text-gray-700 dark:text-gray-300">
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_JCAT') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_JCAT')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_JMAIN') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_JMAIN')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_CODE')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CRITERIA_DESC', 'FEEDBACK_CRITERIA_DESCRIPTION')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_CODE') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CODE')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_CODE_DESC')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_ANSWER') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_ANSWER')}</div>
+                                      </div>
+                                    )}
+                                    {getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN') !== 'NA' && (
+                                      <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
+                                        <div className="font-medium">{getFieldValueLocal(feedback, 'FEEDBACK_ACTION_TAKEN')}</div>
+                                      </div>
+                                    )}
+                                  </div>
                               <div className="flex items-center space-x-2">
                               </div>
                             </div>
