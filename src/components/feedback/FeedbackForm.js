@@ -1028,7 +1028,20 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     };
 
     try {
-      await addFeedback(feedbackPayload);
+      const res = await addFeedback(feedbackPayload);
+
+      // If backend reports existing unit/criteria codes, show error and stop
+      const existsInResultSet = Array.isArray(res?.ResultSet)
+        && res.ResultSet.some((item) =>
+          (item?.Result || "").toString().toUpperCase().includes("EXIST")
+        );
+
+      if (existsInResultSet) {
+        setFeedbackSubmissionSuccess(false);
+        toast.error("Unit code or criteria code already used. Please use a different one.");
+        return;
+      }
+
       // Mark submission as successful only after successful API call
       setFeedbackSubmissionSuccess(true);
       // Move to Complete step only on successful submission
@@ -2945,12 +2958,9 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         Overall Score:
                       </span>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {calculateOverallScore()}
-                        </div>
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                          /100
-                        </span>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {calculateOverallScore()}
+                            </div>
                       </div>
                     </div>
                   </div>
@@ -3287,7 +3297,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                       Score:
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {calculateOverallScore()}/100
+                      {calculateOverallScore()}
                     </span>
                   </div>
                   <div className="flex justify-between">
