@@ -748,6 +748,24 @@ const FeedbackPage = () => {
   const feedbackFormRef = useRef(null);
   const hasRequestedShipsRef = useRef(false);
 
+  const getFieldValue = (feedback, ...names) => {
+    for (const name of names) {
+      const val = feedback?.[name];
+      if (val !== undefined && val !== null && String(val).trim() !== "")
+        return String(val);
+    }
+    return "NA";
+  };
+
+  const formatYesNo = (feedback, ...names) => {
+    const raw = getFieldValue(feedback, ...names);
+    if (raw === "NA") return "NA";
+    const lowered = String(raw).toLowerCase();
+    if (["true", "yes", "y", "1"].includes(lowered)) return "Yes";
+    if (["false", "no", "n", "0"].includes(lowered)) return "No";
+    return raw;
+  };
+
   // Filter state for View History - Auto-loaded from selected vessel
   const [selectedJobCategory, setSelectedJobCategory] = useState();
   const [selectedProjectNumber, setSelectedProjectNumber] = useState();
@@ -1544,47 +1562,140 @@ const FeedbackPage = () => {
                       </div>
 
                       <div className="space-y-3">
-                        {feedbacks.slice(0, 3).map((feedback, index) => (
-                          <div
-                            key={feedback.id}
-                            className={`p-4 border rounded-lg ${
-                              index === 0
-                                ? "border-blue-300 dark:border-blue-700"
-                                : "border-gray-200 dark:border-gray-700"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex-1">
-                                <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Vessel
+                        {feedbacks.slice(0, 3).map((feedback, index) => {
+                          const vesselName = getFieldValue(
+                            feedback,
+                            "FEEDBACK_VESSEL_NAME",
+                            "vesselName",
+                            "vessel_name"
+                          );
+                          const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT", "P_JCAT");
+                          const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
+                          const criteriaCodeVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_CRITERIA_CODE"
+                          );
+                          const criteriaDescVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_CRITERIA_DESC"
+                          );
+                          const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
+                          const codeDescVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_CODE_DESC",
+                            "P_CODE_DESC"
+                          );
+                          const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
+                          const answerVal = formatYesNo(
+                            feedback,
+                            "FEEDBACK_ANSWER",
+                            "P_ANSWER_TYPE"
+                          );
+                          const completionVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_COMPLETION_DATE"
+                          );
+                          const remarksVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_REMARKS",
+                            "P_REMARKS",
+                            "observations"
+                          );
+                          const actionTakenVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_ACTION_TAKEN",
+                            "P_ACTION_TAKEN"
+                          );
+
+                          return (
+                            <div
+                              key={feedback.id || index}
+                              className={`p-4 border rounded-lg ${
+                                index === 0
+                                  ? "border-blue-300 dark:border-blue-700"
+                                  : "border-gray-200 dark:border-gray-700"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex-1">
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Vessel</div>
+                                    <h4 className="font-medium text-gray-900 dark:text-white">{vesselName}</h4>
+
+                                    <div className="flex gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                      {jcatVal !== "NA" && <div className="text-xs"><strong>JCAT:</strong> {jcatVal}</div>}
+                                      {jmainVal !== "NA" && <div className="text-xs"><strong>JMAIN:</strong> {jmainVal}</div>}
+                                      {criteriaCodeVal !== "NA" && <div className="text-xs"><strong>Criteria:</strong> {criteriaCodeVal}</div>}
+                                    </div>
+
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Date</div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                      {feedback.submittedAt ? new Date(feedback.submittedAt).toLocaleDateString() : "NA"}
+                                    </p>
                                   </div>
-                                  <h4 className="font-medium text-gray-900 dark:text-white">
-                                    {feedback.vesselName}
-                                  </h4>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Date
-                                  </div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {new Date(
-                                      feedback.submittedAt,
-                                    ).toLocaleDateString()}
-                                  </p>
                                 </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                {criteriaDescVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Description</div>
+                                    <div className="font-medium">{criteriaDescVal}</div>
+                                  </div>
+                                )}
+
+                                {codeVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                                    <div className="font-medium">{codeVal}</div>
+                                  </div>
+                                )}
+
+                                {codeDescVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Code Description</div>
+                                    <div className="font-medium">{codeDescVal}</div>
+                                  </div>
+                                )}
+
+                                {evalVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
+                                    <div className="font-medium">{evalVal}</div>
+                                  </div>
+                                )}
+
+                                {answerVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                                    <div className="font-medium">{answerVal}</div>
+                                  </div>
+                                )}
+
+                                {completionVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
+                                    <div className="font-medium">{new Date(completionVal).toLocaleDateString()}</div>
+                                  </div>
+                                )}
+
+                                {actionTakenVal !== "NA" && (
+                                  <div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
+                                    <div className="font-medium">{actionTakenVal}</div>
+                                  </div>
+                                )}
+
+                                {remarksVal !== "NA" && (
+                                  <div className="sm:col-span-2">
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">Remarks</div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{remarksVal}</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            {feedback.observations && (
-                              <div className="mt-2">
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Observations
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                  {feedback.observations}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
