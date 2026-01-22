@@ -2513,7 +2513,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
-                        {/*
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                             Yes/No
@@ -2529,7 +2528,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   handleEvaluationRowChange(
                                     index,
                                     "yesNo",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className="w-4 h-4"
@@ -2546,7 +2545,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   handleEvaluationRowChange(
                                     index,
                                     "yesNo",
-                                    e.target.value
+                                    e.target.value,
                                   )
                                 }
                                 className="w-4 h-4"
@@ -2560,7 +2559,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
-                        */}
                       </div>
                     ))}
                 </div>
@@ -2616,6 +2614,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
                         >
                           N
+                        </th>
+                        <th
+                          rowSpan="2"
+                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-indigo-200 dark:bg-indigo-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
+                        >
+                          Yes/No
                         </th>
                       </tr>
                       <tr>
@@ -2702,7 +2706,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   rows={2}
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600 align-middle">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -2715,10 +2719,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-4 h-4 cursor-pointer"
+                                  className="w-4 h-4 cursor-pointer align-middle"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -2731,10 +2735,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-4 h-4 cursor-pointer"
+                                  className="w-4 h-4 cursor-pointer align-middle"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -2747,10 +2751,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-4 h-4 cursor-pointer"
+                                  className="w-4 h-4 cursor-pointer align-middle"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -2763,10 +2767,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-4 h-4 cursor-pointer"
+                                  className="w-4 h-4 cursor-pointer align-middle"
                                 />
                               </td>
-                              <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600">
+                              <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
                                 <input
                                   type="radio"
                                   name={`deck-eval-${index}`}
@@ -2779,8 +2783,44 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-4 h-4 cursor-pointer"
+                                  className="w-4 h-4 cursor-pointer align-middle"
                                 />
+                              </td>
+                              <td className="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 align-middle">
+                                <div className="flex items-center justify-center gap-4 h-full">
+                                  <label className="inline-flex items-center gap-1">
+                                    <input
+                                      type="radio"
+                                      name={`deck-yesno-${index}`}
+                                      value="YES"
+                                      checked={row.yesNo === "YES"}
+                                      onChange={(e) =>
+                                        handleEvaluationRowChange(
+                                          index,
+                                          "yesNo",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-4 h-4 cursor-pointer align-middle"
+                                    />
+                                  </label>
+                                  <label className="inline-flex items-center gap-1">
+                                    <input
+                                      type="radio"
+                                      name={`deck-yesno-${index}`}
+                                      value="NO"
+                                      checked={row.yesNo === "NO"}
+                                      onChange={(e) =>
+                                        handleEvaluationRowChange(
+                                          index,
+                                          "yesNo",
+                                          e.target.value,
+                                        )
+                                      }
+                                      className="w-4 h-4 cursor-pointer align-middle"
+                                    />
+                                  </label>
+                                </div>
                               </td>
                               {/*
                               <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
@@ -2823,7 +2863,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               validationErrors[`evaluation_${index}`]) && (
                               <tr>
                                 <td
-                                  colSpan="9"
+                                  colSpan="10"
                                   className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
                                 >
                                   <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
