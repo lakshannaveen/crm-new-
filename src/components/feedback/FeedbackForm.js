@@ -986,7 +986,20 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     };
 
     try {
-      await addFeedback(feedbackPayload);
+      const res = await addFeedback(feedbackPayload);
+
+      // If backend reports existing unit/criteria codes, show error and stop
+      const existsInResultSet = Array.isArray(res?.ResultSet)
+        && res.ResultSet.some((item) =>
+          (item?.Result || "").toString().toUpperCase().includes("EXIST")
+        );
+
+      if (existsInResultSet) {
+        setFeedbackSubmissionSuccess(false);
+        toast.error("Unit code or criteria code already used. Please use a different one.");
+        return;
+      }
+
       // Mark submission as successful only after successful API call
       setFeedbackSubmissionSuccess(true);
       // Move to Complete step only on successful submission
