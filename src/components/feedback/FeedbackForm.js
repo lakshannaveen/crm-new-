@@ -2567,68 +2567,24 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <table className="min-w-[700px] md:min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-xs md:text-sm">
                     <thead className="bg-gray-100 dark:bg-gray-800">
                       <tr>
-                        <th
-                          colSpan="2"
-                          className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap "
-                        >
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs w-[160px] align-middle">
                           Criteria
                         </th>
-                        <th
-                          rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          Action Taken
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap"
-                        >
-                          Remarks
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          P
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-orange-600 dark:bg-orange-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          A
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-yellow-600 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          G
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-green-600 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          E
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          N
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-indigo-200 dark:bg-indigo-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          Yes/No
-                        </th>
-                      </tr>
-                      <tr>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
-                          Criteria
-                        </th>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs w-[160px] align-middle">
                           Unit
                         </th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">
+                          Action Taken
+                        </th>
+                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap align-middle">
+                          Remarks
+                        </th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">P</th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-orange-600 dark:bg-orange-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">A</th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-yellow-600 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">G</th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-green-600 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">E</th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">N</th>
+                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-indigo-200 dark:bg-indigo-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">Yes/No</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
