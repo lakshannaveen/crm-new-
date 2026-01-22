@@ -654,7 +654,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       const desc = map.get(code);
       return {
         value: code,
-        label: desc ? `${code} - ${desc}` : code,
+        label: desc || code,
       };
     });
   };
@@ -684,8 +684,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (!criteriaCode) return [];
     const codes = unitsDescriptions
       .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
-      .map((item) => item.FEEDBACK_UNIT_CODE);
-    const uniqueCodes = [...new Set(codes)].filter(Boolean).sort((a, b) => {
+      .map((item) => ({
+        code: item.FEEDBACK_UNIT_CODE,
+        desc:
+          item.FEEDBACK_UNIT_DESCRIPTION ||
+          item.FEEDBACK_UNIT_DESC ||
+          item.FEEDBACK_DESC ||
+          item.DESCRIPTION ||
+          "",
+      }));
+    const uniqueCodesMap = new Map();
+    codes.forEach((c) => {
+      if (c && c.code) uniqueCodesMap.set(c.code, c.desc || c.code);
+    });
+    const uniqueCodes = [...uniqueCodesMap.keys()].filter(Boolean).sort((a, b) => {
       // Convert to numbers for proper numeric sorting
       const numA = parseInt(a, 10);
       const numB = parseInt(b, 10);
@@ -696,9 +708,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       return a.localeCompare(b);
     });
 
-    // Return objects with code and disabled status
+    // Return objects with code, label and disabled status
     return uniqueCodes.map((code) => ({
-      code,
+      value: code,
+      label: uniqueCodesMap.get(code) || code,
       disabled: isCombinationSelected(criteriaCode, code, currentIndex),
     }));
   };
@@ -2372,7 +2385,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         <div className="mb-2">
                           <div className="mb-2">
                             <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                              Criteria Code
+                              Criteria
                             </label>
 
                             <CustomDropdown
@@ -2406,18 +2419,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           )}
                         </div>
                         <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Unit Code
-                          </label>
+                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                              Unit
+                            </label>
                           <div className="mb-2">
                             <CustomDropdown
                               value={row.unitCode}
                               options={getUnitCodesForCriteria(
                                 row.criteriaCode,
                                 index,
-                              )
-                                .filter((item) => !item.disabled)
-                                .map((item) => item.code)}
+                              ).filter((item) => !item.disabled)}
                               placeholder="Select..."
                               disabled={
                                 !row.criteriaCode || unitsDescriptionsLoading
@@ -2439,21 +2450,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             </p>
                           )}
                         </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Description
-                          </label>
-                          <input
-                            type="text"
-                            value={row.description}
-                            readOnly
-                            placeholder="DESCRIPTION"
-                            title={
-                              row.description || "No description available"
-                            }
-                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                          />
-                        </div>
+                        {/* description removed - showing names via dropdown labels */}
                         <div className="mb-2">
                           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
                             Evaluation
@@ -2580,12 +2577,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </th>
                         <th
                           rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          Evaluation Type
-                        </th>
-                        <th
-                          rowSpan="2"
                           className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
                         >
                           P
@@ -2629,10 +2620,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </tr>
                       <tr>
                         <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
-                          Criteria Code
+                          Criteria
                         </th>
                         <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700 w-[160px]">
-                          Unit Code
+                          Unit
                         </th>
                       </tr>
                     </thead>
@@ -2682,19 +2673,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   openDownward={true}
                                 />
                               </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[320px]">
-                                <input
-                                  type="text"
-                                  value={row.description}
-                                  readOnly
-                                  placeholder="DESCRIPTION"
-                                  title={
-                                    row.description ||
-                                    "No description available"
-                                  }
-                                  className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                />
-                              </td>
+                              {/* description column removed; unit and criteria labels are shown in dropdowns */}
                               {/* ...existing code for radio buttons... */}
                               <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600">
                                 <input
@@ -2839,7 +2818,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               validationErrors[`evaluation_${index}`]) && (
                               <tr>
                                 <td
-                                  colSpan="12"
+                                  colSpan="9"
                                   className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
                                 >
                                   <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
@@ -2928,39 +2907,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             </div>
 
-            {/* Action Taken and Remarks */}
-            <div
-              className={`grid ${
-                isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
-              } gap-4 mb-6`}
-            >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Action Taken
-                </label>
-                <textarea
-                  value={formData.actionTaken}
-                  onChange={(e) =>
-                    handleInputChange("actionTaken", e.target.value)
-                  }
-                  placeholder="Describe the action taken (e.g., corrective steps)"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                  rows={isMobile ? "3" : "4"}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Remarks
-                </label>
-                <textarea
-                  value={formData.remarks}
-                  onChange={(e) => handleInputChange("remarks", e.target.value)}
-                  placeholder="Add any remarks or observations"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                  rows={isMobile ? "3" : "4"}
-                />
-              </div>
-            </div>
+            {/* Top-level Action Taken and Remarks removed — per-row fields used instead */}
 
             {/* Notes & Recommendation */}
             <div className="mb-6">
