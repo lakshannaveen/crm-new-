@@ -1750,7 +1750,7 @@ const ShipDetailsPage = () => {
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-                  <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                  {/* <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">
                       Repair Progress
                     </p>
@@ -1765,7 +1765,7 @@ const ShipDetailsPage = () => {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
                     <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-1 truncate">

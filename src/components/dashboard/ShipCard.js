@@ -97,7 +97,7 @@ const ShipCard = ({ ship }) => {
             </div>
 
             {/* Progress Bar */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-1">
                 <span>Repair Progress</span>
                 <span className="font-medium">{ship.progress}%</span>
@@ -111,7 +111,7 @@ const ShipCard = ({ ship }) => {
                   style={{ width: `${ship.progress}%` }}
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Timeline */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
