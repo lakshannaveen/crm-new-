@@ -26,7 +26,6 @@ import {
   clearFeedbackDates,
   getDuration,
 } from "../../actions/feedbackActions";
-import CustomDropdown from "../common/Dropdown";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -52,7 +51,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const questionSectionRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -62,21 +60,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const [openMilestoneIndex, setOpenMilestoneIndex] = useState(null);
   const milestoneDropdownRefs = useRef({});
   const [openLocationIndex, setOpenLocationIndex] = useState(null);
-  const [evaluationRows, setEvaluationRows] = useState(
-    Array(11)
-      .fill(null)
-      .map(() => ({
-        criteriaCode: "",
-        unitCode: "",
-        description: "",
-        evaluation: "",
-        yesNo: "",
-        remarks: "",
-        actionTaken: "",
-      })),
-  );
+  
+  // New state for evaluation
+  const [allCriteriaUnits, setAllCriteriaUnits] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedRows, setSelectedRows] = useState({});
+  const rowsPerPage = 5; // Show 5 rows per page
+
+  // Initialize form data
   const [formData, setFormData] = useState({
-    // Project Information (replacing vessel information)
+    // Project Information
     jobCategory: "",
     projectHandleLocation: "",
     startingDate: "",
@@ -167,7 +160,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Top-level remarks and action taken
     remarks: "",
     actionTaken: "",
-    // Removed vessel fields (vesselName, vesselIMO)
 
     // Milestones
     milestones: [
@@ -305,7 +297,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       duration &&
       (duration.afloatDays !== undefined || duration.indockDays !== undefined)
     ) {
-      console.log("Duration data loaded:", duration);
       setFormData((prev) => ({
         ...prev,
         afloatDuration:
@@ -366,6 +357,59 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
   }, [jmainList, autoProjectForVessel, vessel]);
 
+  // Prepare all criteria-unit combinations when unitsDescriptions loads
+  useEffect(() => {
+    if (unitsDescriptions.length > 0) {
+      const uniqueCombinations = [];
+      const seen = new Set();
+      
+      unitsDescriptions.forEach(item => {
+        const criteriaCode = item.FEEDBACK_CRITERIA_CODE;
+        const unitCode = item.FEEDBACK_UNIT_CODE;
+        const unitDescription = item.FEEDBACK_UNIT_DESCRIPTION || "";
+        const criteriaDescription = item.FEEDBACK_CRITERIA_DESC || "";
+        
+        if (criteriaCode && unitCode) {
+          const key = `${criteriaCode}-${unitCode}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueCombinations.push({
+              criteriaCode,
+              unitCode,
+              unitDescription,
+              criteriaDescription,
+              fullDescription: `${criteriaDescription} - ${unitDescription}`,
+            });
+          }
+        }
+      });
+      
+      // Sort by criteria code then unit code
+      uniqueCombinations.sort((a, b) => {
+        if (a.criteriaCode !== b.criteriaCode) {
+          return a.criteriaCode.localeCompare(b.criteriaCode);
+        }
+        return a.unitCode.localeCompare(b.unitCode);
+      });
+      
+      setAllCriteriaUnits(uniqueCombinations);
+      
+      // Initialize selected rows with empty evaluation
+      const initialSelectedRows = {};
+      uniqueCombinations.forEach((item, index) => {
+        initialSelectedRows[index] = {
+          criteriaCode: item.criteriaCode,
+          unitCode: item.unitCode,
+          evaluation: "",
+          yesNo: "",
+          remarks: "",
+          actionTaken: "",
+        };
+      });
+      setSelectedRows(initialSelectedRows);
+    }
+  }, [unitsDescriptions]);
+
   // Handle click outside project dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -400,6 +444,26 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       document.removeEventListener("mousedown", handleClickOutsideMilestones);
     };
   }, []);
+
+  // Calculate current page data
+  const totalRows = allCriteriaUnits.length;
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
+  const currentPageData = allCriteriaUnits.slice(startIndex, endIndex);
+
+  // Handle page change
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -498,222 +562,34 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   // Handle evaluation row changes
-  const handleEvaluationRowChange = (index, field, value) => {
-    setEvaluationRows((prev) => {
-      const newRows = [...prev];
-
-      // For evaluation field, toggle if clicking the same value
-      if (field === "evaluation" && newRows[index].evaluation === value) {
-        newRows[index] = {
-          ...newRows[index],
-          [field]: "",
-        };
-      } else if (field === "yesNo" && newRows[index].yesNo === value) {
-        // For yesNo field, toggle if clicking the same value
-        newRows[index] = {
-          ...newRows[index],
-          [field]: "",
-        };
-      } else {
-        newRows[index] = {
-          ...newRows[index],
-          [field]: value,
-        };
+  const handleEvaluationChange = (rowIndex, field, value) => {
+    const actualIndex = startIndex + rowIndex;
+    setSelectedRows(prev => ({
+      ...prev,
+      [actualIndex]: {
+        ...prev[actualIndex],
+        [field]: value,
       }
-
-      // If criteria or unit code changes, update description
-      if (field === "criteriaCode" || field === "unitCode") {
-        const criteriaCode =
-          field === "criteriaCode" ? value : newRows[index].criteriaCode;
-        const unitCode = field === "unitCode" ? value : newRows[index].unitCode;
-
-        // Clear unit code if criteria code changes
-        if (field === "criteriaCode") {
-          newRows[index].unitCode = "";
-          newRows[index].description = "";
-        }
-
-        if (criteriaCode && unitCode) {
-          const matchingItem = unitsDescriptions.find(
-            (item) =>
-              item.FEEDBACK_CRITERIA_CODE === criteriaCode &&
-              item.FEEDBACK_UNIT_CODE === unitCode,
-          );
-
-          if (matchingItem) {
-            newRows[index].description =
-              matchingItem.FEEDBACK_UNIT_DESCRIPTION ||
-              matchingItem.FEEDBACK_DESC ||
-              matchingItem.DESCRIPTION ||
-              "";
-          } else {
-            newRows[index].description = "";
-          }
-
-          // Show next row if both criteria and unit code are selected and we're on the last visible row
-          if (index === visibleRowsCount - 1 && visibleRowsCount < 11) {
-            setVisibleRowsCount((prev) => prev + 1);
-          }
-
-          // Clear evaluation validation error when user fills a row
-          if (validationErrors.evaluationRows) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors.evaluationRows;
-              return newErrors;
-            });
-          }
-        } else {
-          // Clear description if either dropdown is empty
-          if (field === "unitCode" && !unitCode) {
-            newRows[index].description = "";
-          }
-        }
-      }
-
-      // Clear specific field validation errors
-      if (field === "criteriaCode" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`criteriaCode_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "unitCode" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`unitCode_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "evaluation" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`evaluation_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "yesNo" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`yesNo_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      return newRows;
-    });
-  };
-
-  // Get unique criteria codes
-  const getCriteriaOptions = () => {
-    const source =
-      Array.isArray(criterias) && criterias.length > 0
-        ? criterias
-        : unitsDescriptions;
-
-    const map = new Map();
-    source.forEach((item) => {
-      const code =
-        item.FEEDBACK_CRITERIA_CODE ||
-        item.CRITERIA_CODE ||
-        item.CODE ||
-        item.CRITERIA ||
-        "";
-      if (!code) return;
-      const desc =
-        item.FEEDBACK_CRITERIA_DESC ||
-        item.FEEDBACK_CRITERIA_DESCRIPTION ||
-        item.CRITERIA_DESCRIPTION ||
-        item.CRITERIA_DESC ||
-        item.DESCRIPTION ||
-        item.FEEDBACK_DESC ||
-        "";
-      if (!map.has(code)) {
-        map.set(code, desc);
-      }
-    });
-
-    const codes = [...map.keys()].filter(Boolean).sort((a, b) => {
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      return String(a).localeCompare(String(b));
-    });
-
-    return codes.map((code) => {
-      const desc = map.get(code);
-      return {
-        value: code,
-        label: desc || code,
-      };
-    });
-  };
-
-  // Get selected combinations excluding current row
-  const getSelectedCombinations = (excludeIndex) => {
-    return evaluationRows
-      .map((row, index) => {
-        if (index === excludeIndex) return null;
-        if (row.criteriaCode && row.unitCode) {
-          return `${row.criteriaCode}-${row.unitCode}`;
-        }
-        return null;
-      })
-      .filter(Boolean);
-  };
-
-  // Check if a combination is already selected
-  const isCombinationSelected = (criteriaCode, unitCode, currentIndex) => {
-    const combination = `${criteriaCode}-${unitCode}`;
-    const selectedCombinations = getSelectedCombinations(currentIndex);
-    return selectedCombinations.includes(combination);
-  };
-
-  // Get unit codes for a specific criteria
-  const getUnitCodesForCriteria = (criteriaCode, currentIndex) => {
-    if (!criteriaCode) return [];
-    const codes = unitsDescriptions
-      .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
-      .map((item) => ({
-        code: item.FEEDBACK_UNIT_CODE,
-        desc:
-          item.FEEDBACK_UNIT_DESCRIPTION ||
-          item.FEEDBACK_UNIT_DESC ||
-          item.FEEDBACK_DESC ||
-          item.DESCRIPTION ||
-          "",
-      }));
-    const uniqueCodesMap = new Map();
-    codes.forEach((c) => {
-      if (c && c.code) uniqueCodesMap.set(c.code, c.desc || c.code);
-    });
-    const uniqueCodes = [...uniqueCodesMap.keys()].filter(Boolean).sort((a, b) => {
-      // Convert to numbers for proper numeric sorting
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      // Fallback to string comparison
-      return a.localeCompare(b);
-    });
-
-    // Return objects with code, label and disabled status
-    return uniqueCodes.map((code) => ({
-      value: code,
-      label: uniqueCodesMap.get(code) || code,
-      disabled: isCombinationSelected(criteriaCode, code, currentIndex),
     }));
+  };
+
+  // Validation for evaluation step
+  const validateEvaluationStep = () => {
+    const errors = {};
+    let hasAtLeastOneEvaluation = false;
+    
+    // Check if at least one row has evaluation
+    Object.values(selectedRows).forEach((row, index) => {
+      if (row.evaluation && row.evaluation.trim() !== "") {
+        hasAtLeastOneEvaluation = true;
+      }
+    });
+    
+    if (!hasAtLeastOneEvaluation) {
+      errors.evaluationRows = "At least one evaluation must be provided";
+    }
+    
+    return errors;
   };
 
   // Validation for each step
@@ -722,63 +598,28 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     switch (step) {
       case 0: // Project Details
-        if (!formData.jobCategory)
-          errors.jobCategory = "Job Category is required";
-        if (!formData.projectNumber)
-          errors.projectNumber = "Project Number is required";
-        if (!formData.projectName)
-          errors.projectName = "Project Name is required";
-        if (!formData.startingDate)
-          errors.startingDate = "Starting Date is required";
+        if (!formData.jobCategory) errors.jobCategory = "Job Category is required";
+        if (!formData.projectNumber) errors.projectNumber = "Project Number is required";
+        if (!formData.projectName) errors.projectName = "Project Name is required";
+        if (!formData.startingDate) errors.startingDate = "Starting Date is required";
         if (!formData.endingDate) errors.endingDate = "Ending Date is required";
         if (!formData.jobStatus) errors.jobStatus = "Job Status is required";
         if (!formData.customerFeedbackStatus)
-          errors.customerFeedbackStatus =
-            "Customer Feedback Status is required";
+          errors.customerFeedbackStatus = "Customer Feedback Status is required";
         break;
+        
       case 1: // Evaluation Details
-        // Check each row that has been started
-        let hasAtLeastOneCompleteRow = false;
-        evaluationRows.forEach((row, index) => {
-          const hasCriteria = !!row.criteriaCode;
-          const hasUnit = !!row.unitCode;
-          const hasAnyField = hasCriteria || hasUnit || row.evaluation;
-
-          // If any field is filled, all required fields must be filled
-          if (hasAnyField) {
-            if (!row.criteriaCode) {
-              errors[`criteriaCode_${index}`] = "Criteria code is required";
-            }
-            if (!row.unitCode) {
-              errors[`unitCode_${index}`] = "Unit code is required";
-            }
-            if (!row.evaluation) {
-              errors[`evaluation_${index}`] = "Evaluation rating is required";
-            }
-
-            // Check if this row is complete
-            if (row.criteriaCode && row.unitCode && row.evaluation) {
-              hasAtLeastOneCompleteRow = true;
-            }
-          }
-        });
-
-        // At least one row must be completely filled
-        if (!hasAtLeastOneCompleteRow) {
-          errors.evaluationRows =
-            "At least one evaluation row must be completed";
-        }
+        const evalErrors = validateEvaluationStep();
+        Object.assign(errors, evalErrors);
         break;
+        
       case 2: // Milestones
-        // Validate that at least one milestone with milestone name is provided
         const hasValidMilestone = formData.milestones.some(
-          (milestone) =>
-            milestone.milestone && milestone.milestone.trim() !== "",
+          (milestone) => milestone.milestone && milestone.milestone.trim() !== "",
         );
         if (!hasValidMilestone) {
           errors.milestones = "At least one milestone is required";
         }
-        // Validate each milestone that has a milestone name
         formData.milestones.forEach((milestone, index) => {
           if (milestone.milestone && milestone.milestone.trim() !== "") {
             if (!milestone.code) {
@@ -793,9 +634,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           }
         });
         break;
-      case 3: // Review
-        // No validation needed for review
+        
+      case 3: // Review - no validation needed
         break;
+        
       default:
         break;
     }
@@ -965,8 +807,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       N: 0, // Not Relevant (excluded)
     };
 
-    // Get evaluation scores from evaluation rows
-    const evaluationScores = evaluationRows
+    // Get evaluation scores from selected rows
+    const evaluationScores = Object.values(selectedRows)
       .filter((row) => row.evaluation && row.evaluation !== "N")
       .map((row) => evaluationScoreMap[row.evaluation] || 0)
       .filter((score) => score > 0);
@@ -981,35 +823,43 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const handleSubmit = async () => {
     setFeedbackSubmitted(false);
-    // Only send the required JSON structure for feedback
+    
+    // Convert selectedRows to the required format
+    const feedbackList = Object.values(selectedRows)
+      .filter(row => row.criteriaCode && row.unitCode && row.evaluation && row.evaluation.trim() !== "")
+      .map((row) => {
+        const answer = (row.evaluation || "").toString().toUpperCase();
+        const validAnswers = ["P", "A", "G", "E", "N"];
+        
+        return {
+          P_CRITERIA_CODE: row.criteriaCode,
+          P_CODE: row.unitCode,
+          P_ANSWER_TYPE: validAnswers.includes(answer) ? answer : "N",
+          P_REMARKS: row.remarks || formData.remarks || "",
+          P_ACTION_TAKEN: row.actionTaken || formData.actionTaken || "",
+        };
+      });
+
+    // Only submit if we have evaluations
+    if (feedbackList.length === 0) {
+      toast.error("Please provide at least one evaluation before submitting.", {
+        duration: 4000,
+        position: "top-center",
+      });
+      return;
+    }
+
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
       P_REMARKS: formData.remarks || "",
       P_ACTION_TAKEN: formData.actionTaken || "",
-      FeedbackList: evaluationRows
-        .filter((row) => row.criteriaCode && row.unitCode)
-        .map((row) => {
-          // Use only evaluation letters P, A, G, E, N. If evaluation missing or invalid, send 'N'.
-          const answer = (() => {
-            const val = (row.evaluation || "").toString().toUpperCase();
-            return ["P", "A", "G", "E", "N"].includes(val) ? val : "N";
-          })();
-
-          return {
-            P_CRITERIA_CODE: row.criteriaCode,
-            P_CODE: row.unitCode,
-            P_ANSWER_TYPE: answer,
-            P_REMARKS: row.remarks || formData.remarks || "",
-            P_ACTION_TAKEN: row.actionTaken || formData.actionTaken || "",
-          };
-        }),
+      FeedbackList: feedbackList,
     };
 
     try {
       const response = await addFeedback(feedbackPayload);
 
-      // Check if any criteria code and unit code already exist
       if (
         response.ResultSet &&
         response.ResultSet.some((item) => item.Result === "EXISTS")
@@ -1018,7 +868,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           duration: 5000,
           position: "top-center",
         });
-        return; // Do not proceed to success step
+        return;
       }
 
       setFeedbackSubmitted(true);
@@ -1026,14 +876,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     } catch (error) {
       console.error("Failed to submit feedback:", error);
       setFeedbackSubmitted(false);
-      // Show error message for 500 internal server error
       toast.error("Failed to submit feedback. Please try again later.", {
         duration: 5000,
         position: "top-center",
       });
-      // Do not proceed to next step on error
       return;
     }
+    
     if (onSubmit) {
       onSubmit(feedbackPayload);
     }
@@ -1418,6 +1267,150 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     );
   };
 
+  // Milestone handling functions
+  const handleMilestoneChange = (index, field, value) => {
+    const updatedMilestones = [...formData.milestones];
+
+    // If changing code field, auto-populate milestone description
+    if (field === "code") {
+      const selectedMilestone = milestoneTypes.find(
+        (mt) =>
+          (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
+          value,
+      );
+      if (selectedMilestone) {
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          code: value,
+          milestone:
+            selectedMilestone.MILESTONE_DESCRIPTION ||
+            selectedMilestone.MILESTONE_TYPE_DESC ||
+            selectedMilestone.DESCRIPTION ||
+            selectedMilestone.DESC ||
+            "",
+        };
+      } else {
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          [field]: value,
+        };
+      }
+    } else {
+      updatedMilestones[index] = {
+        ...updatedMilestones[index],
+        [field]: value,
+      };
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      milestones: updatedMilestones,
+    }));
+
+    // Reset submitted state when changes are made
+    if (milestonesSubmitted) {
+      setMilestonesSubmitted(false);
+    }
+
+    // Clear validation errors
+    if (validationErrors[`milestone_${field}_${index}`]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[`milestone_${field}_${index}`];
+        return newErrors;
+      });
+    }
+    if (validationErrors.milestones) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.milestones;
+        return newErrors;
+      });
+    }
+  };
+
+  const addMilestone = () => {
+    setFormData((prev) => ({
+      ...prev,
+      milestones: [
+        ...prev.milestones,
+        { code: "", milestone: "", date: "", location: "", remarks: "" },
+      ],
+    }));
+    // Reset submitted state when adding new milestone
+    if (milestonesSubmitted) {
+      setMilestonesSubmitted(false);
+    }
+  };
+
+  const removeMilestone = (index) => {
+    if (formData.milestones.length > 1) {
+      const updatedMilestones = formData.milestones.filter(
+        (_, i) => i !== index,
+      );
+      setFormData((prev) => ({
+        ...prev,
+        milestones: updatedMilestones,
+      }));
+      // Reset submitted state when removing milestone
+      if (milestonesSubmitted) {
+        setMilestonesSubmitted(false);
+      }
+    }
+  };
+
+  const handleSubmitMilestones = async () => {
+    // Validate milestones before submitting
+    const errors = validateStep(2);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      // Scroll to first error
+      setTimeout(() => {
+        const errorElement = document.querySelector(
+          '[class*="text-red-600"]',
+        );
+        if (errorElement) {
+          errorElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      }, 100);
+      return;
+    }
+
+    // Prepare the milestone payload
+    const milestonePayload = {
+      p_job_category: formData.jobCategory,
+      p_jmain: formData.projectNumber,
+      MilestoneList: formData.milestones
+        .filter(
+          (milestone) =>
+            milestone.milestone && milestone.milestone.trim() !== "",
+        )
+        .map((milestone) => ({
+          p_milestone_code: milestone.code,
+          p_milestone_date: milestone.date,
+          p_remarks: milestone.remarks || "",
+          p_milestone_location: milestone.location || "",
+        })),
+    };
+
+    try {
+      await dispatch(submitMilestone(milestonePayload));
+      // Mark milestones as submitted on success
+      setMilestonesSubmitted(true);
+      setValidationErrors({});
+    } catch (error) {
+      console.error("Failed to submit milestones:", error);
+      setValidationErrors({
+        milestones:
+          error.message ||
+          "Failed to submit milestones. Please try again.",
+      });
+    }
+  };
+
   const getStepContent = () => {
     const cardClass = isMobile ? "p-4" : "p-6";
     const titleClass = isMobile ? "text-lg mb-2" : "text-2xl mb-2";
@@ -1589,11 +1582,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     <div className="text-sm font-medium text-gray-900 dark:text-white">
                                       {jmainValue}
                                     </div>
-                                    {/* {jmainDesc && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      {jmainDesc}
-                                    </div>
-                                  )} */}
                                   </div>
                                 );
                               })
@@ -1702,15 +1690,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </div>
               </div>
 
-              {/* Show error if dates fetch fails */}
-              {/* {datesError && (
-                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    Note: Could not auto-load dates. Please enter them manually.
-                  </p>
-                </div>
-              )} */}
-
               {/* Status Fields */}
               <div
                 className={`grid ${
@@ -1800,151 +1779,447 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
+      case 1:
+        return (
+          <div
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
+          >
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+              <div>
+                <h2
+                  className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
+                >
+                  Evaluation Details
+                </h2>
+                <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
+                  Rate each criteria-unit combination. At least one evaluation is required.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 mt-2 md:mt-0">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  ({totalRows} total items)
+                </span>
+              </div>
+            </div>
+
+            {/* Validation Error */}
+            {validationErrors.evaluationRows && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {validationErrors.evaluationRows}
+                </p>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {unitsDescriptionsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">
+                  Loading evaluation criteria...
+                </p>
+              </div>
+            ) : totalRows === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No evaluation criteria available.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Evaluation Table */}
+                <div className="mb-6">
+                  {isMobile ? (
+                    // Mobile View
+                    <div className="space-y-4">
+                      {currentPageData.map((item, rowIndex) => {
+                        const actualIndex = startIndex + rowIndex;
+                        const rowData = selectedRows[actualIndex] || {};
+                        
+                        return (
+                          <div
+                            key={actualIndex}
+                            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
+                          >
+                            {/* Criteria and Unit Info */}
+                            <div className="mb-3">
+                              <div className="mb-1">
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                  Criteria:
+                                </span>
+                                <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                  {item.criteriaCode} - {item.criteriaDescription}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                  Unit:
+                                </span>
+                                <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                  {item.unitCode} - {item.unitDescription}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Evaluation */}
+                            <div className="mb-3">
+                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Evaluation
+                              </label>
+                              <div className="flex flex-wrap gap-2">
+                                {[
+                                  { value: "P", label: "Poor", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
+                                  { value: "A", label: "Average", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
+                                  { value: "G", label: "Good", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" },
+                                  { value: "E", label: "Excellent", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
+                                  { value: "N", label: "Not Relevant", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
+                                ].map((option) => (
+                                  <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => handleEvaluationChange(rowIndex, "evaluation", option.value)}
+                                    className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                      rowData.evaluation === option.value
+                                        ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                    }`}
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Yes/No */}
+                            <div className="mb-3">
+                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                Yes/No
+                              </label>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEvaluationChange(rowIndex, "yesNo", "YES")}
+                                  className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                    rowData.yesNo === "YES"
+                                      ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
+                                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  YES
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleEvaluationChange(rowIndex, "yesNo", "NO")}
+                                  className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                    rowData.yesNo === "NO"
+                                      ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                  }`}
+                                >
+                                  NO
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Remarks */}
+                            <div className="mb-3">
+                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                Remarks
+                              </label>
+                              <textarea
+                                value={rowData.remarks || ""}
+                                onChange={(e) => handleEvaluationChange(rowIndex, "remarks", e.target.value)}
+                                placeholder="Add remarks..."
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                rows="2"
+                              />
+                            </div>
+
+                            {/* Action Taken */}
+                            <div className="mb-3">
+                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                Action Taken
+                              </label>
+                              <textarea
+                                value={rowData.actionTaken || ""}
+                                onChange={(e) => handleEvaluationChange(rowIndex, "actionTaken", e.target.value)}
+                                placeholder="Action taken..."
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                rows="2"
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    // Desktop View
+                    <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                      <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
+                        <thead className="bg-gray-100 dark:bg-gray-800">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Criteria
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Unit
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Evaluation
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Yes/No
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Remarks
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                              Action Taken
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                          {currentPageData.map((item, rowIndex) => {
+                            const actualIndex = startIndex + rowIndex;
+                            const rowData = selectedRows[actualIndex] || {};
+                            
+                            return (
+                              <tr key={actualIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                {/* Criteria */}
+                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                  <div className="text-gray-900 dark:text-white">
+                                    <div className="font-medium">{item.criteriaCode}</div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      {item.criteriaDescription}
+                                    </div>
+                                  </div>
+                                </td>
+                                
+                                {/* Unit */}
+                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                  <div className="text-gray-900 dark:text-white">
+                                    <div className="font-medium">{item.unitCode}</div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                                      {item.unitDescription}
+                                    </div>
+                                  </div>
+                                </td>
+                                
+                                {/* Evaluation */}
+                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                  <div className="flex flex-wrap gap-1">
+                                    {[
+                                      { value: "P", label: "P", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
+                                      { value: "A", label: "A", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
+                                      { value: "G", label: "G", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" },
+                                      { value: "E", label: "E", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
+                                      { value: "N", label: "N", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
+                                    ].map((option) => (
+                                      <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => handleEvaluationChange(rowIndex, "evaluation", option.value)}
+                                        className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                          rowData.evaluation === option.value
+                                            ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                        }`}
+                                      >
+                                        {option.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </td>
+                                
+                                {/* Yes/No */}
+                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEvaluationChange(rowIndex, "yesNo", "YES")}
+                                      className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                        rowData.yesNo === "YES"
+                                          ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
+                                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                      }`}
+                                    >
+                                      YES
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEvaluationChange(rowIndex, "yesNo", "NO")}
+                                      className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                        rowData.yesNo === "NO"
+                                          ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                      }`}
+                                    >
+                                      NO
+                                    </button>
+                                  </div>
+                                </td>
+                                
+                                {/* Remarks */}
+                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                  <textarea
+                                    value={rowData.remarks || ""}
+                                    onChange={(e) => handleEvaluationChange(rowIndex, "remarks", e.target.value)}
+                                    placeholder="Add remarks..."
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                    rows="2"
+                                  />
+                                </td>
+                                
+                                {/* Action Taken */}
+                                <td className="px-4 py-3">
+                                  <textarea
+                                    value={rowData.actionTaken || ""}
+                                    onChange={(e) => handleEvaluationChange(rowIndex, "actionTaken", e.target.value)}
+                                    placeholder="Action taken..."
+                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                    rows="2"
+                                  />
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex justify-between items-center mb-6">
+                    <button
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-600"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      <FiChevronLeft />
+                      Previous
+                    </button>
+                    
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Showing {startIndex + 1} to {endIndex} of {totalRows} items
+                    </div>
+                    
+                    <button
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-600"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                      }`}
+                    >
+                      Next
+                      <FiChevronRight />
+                    </button>
+                  </div>
+                )}
+
+                {/* Legend */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
+                    Evaluation Legend
+                  </h4>
+                  <div className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"} gap-3`}>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">P - POOR</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">A - AVERAGE</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">G - GOOD</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">E - EXCELLENT</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">N - NOT RELEVANT</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes & Recommendation */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Notes & Recommendation
+                  </label>
+                  <textarea
+                    value={formData.observations}
+                    onChange={(e) => handleInputChange("observations", e.target.value)}
+                    placeholder="Notes & recommendations for follow-up or improvements"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
+                    rows={isMobile ? "2" : "3"}
+                  />
+                </div>
+
+                {/* Duration Section */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
+                    Duration (Days)
+                  </h4>
+                  <div className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"} gap-4`}>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Afloat
+                      </label>
+                      <input
+                        disabled
+                        type="number"
+                        min="0"
+                        value={formData.afloatDuration === 0 ? "0" : formData.afloatDuration}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Indock
+                      </label>
+                      <input
+                        disabled
+                        type="number"
+                        min="0"
+                        value={formData.indockDuration === 0 ? "0" : formData.indockDuration}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Total
+                      </label>
+                      <input
+                        type="number"
+                        value={Number(formData.afloatDuration) + Number(formData.indockDuration)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        );
+
       case 2:
         // Milestones Step
-        const handleMilestoneChange = (index, field, value) => {
-          const updatedMilestones = [...formData.milestones];
-
-          // If changing code field, auto-populate milestone description
-          if (field === "code") {
-            const selectedMilestone = milestoneTypes.find(
-              (mt) =>
-                (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
-                value,
-            );
-            if (selectedMilestone) {
-              updatedMilestones[index] = {
-                ...updatedMilestones[index],
-                code: value,
-                milestone:
-                  selectedMilestone.MILESTONE_DESCRIPTION ||
-                  selectedMilestone.MILESTONE_TYPE_DESC ||
-                  selectedMilestone.DESCRIPTION ||
-                  selectedMilestone.DESC ||
-                  "",
-              };
-            } else {
-              updatedMilestones[index] = {
-                ...updatedMilestones[index],
-                [field]: value,
-              };
-            }
-          } else {
-            updatedMilestones[index] = {
-              ...updatedMilestones[index],
-              [field]: value,
-            };
-          }
-
-          setFormData((prev) => ({
-            ...prev,
-            milestones: updatedMilestones,
-          }));
-
-          // Reset submitted state when changes are made
-          if (milestonesSubmitted) {
-            setMilestonesSubmitted(false);
-          }
-
-          // Clear validation errors
-          if (validationErrors[`milestone_${field}_${index}`]) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors[`milestone_${field}_${index}`];
-              return newErrors;
-            });
-          }
-          if (validationErrors.milestones) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors.milestones;
-              return newErrors;
-            });
-          }
-        };
-
-        const addMilestone = () => {
-          setFormData((prev) => ({
-            ...prev,
-            milestones: [
-              ...prev.milestones,
-              { code: "", milestone: "", date: "", location: "", remarks: "" },
-            ],
-          }));
-          // Reset submitted state when adding new milestone
-          if (milestonesSubmitted) {
-            setMilestonesSubmitted(false);
-          }
-        };
-
-        const removeMilestone = (index) => {
-          if (formData.milestones.length > 1) {
-            const updatedMilestones = formData.milestones.filter(
-              (_, i) => i !== index,
-            );
-            setFormData((prev) => ({
-              ...prev,
-              milestones: updatedMilestones,
-            }));
-            // Reset submitted state when removing milestone
-            if (milestonesSubmitted) {
-              setMilestonesSubmitted(false);
-            }
-          }
-        };
-
-        const handleSubmitMilestones = async () => {
-          // Validate milestones before submitting
-          const errors = validateStep(2);
-          if (Object.keys(errors).length > 0) {
-            setValidationErrors(errors);
-            // Scroll to first error
-            setTimeout(() => {
-              const errorElement = document.querySelector(
-                '[class*="text-red-600"]',
-              );
-              if (errorElement) {
-                errorElement.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }
-            }, 100);
-            return;
-          }
-
-          // Prepare the milestone payload
-          const milestonePayload = {
-            p_job_category: formData.jobCategory,
-            p_jmain: formData.projectNumber,
-            MilestoneList: formData.milestones
-              .filter(
-                (milestone) =>
-                  milestone.milestone && milestone.milestone.trim() !== "",
-              )
-              .map((milestone) => ({
-                p_milestone_code: milestone.code,
-                p_milestone_date: milestone.date,
-                p_remarks: milestone.remarks || "",
-                p_milestone_location: milestone.location || "",
-              })),
-          };
-
-          try {
-            await dispatch(submitMilestone(milestonePayload));
-            // Mark milestones as submitted on success
-            setMilestonesSubmitted(true);
-            setValidationErrors({});
-          } catch (error) {
-            console.error("Failed to submit milestones:", error);
-            setValidationErrors({
-              milestones:
-                error.message ||
-                "Failed to submit milestones. Please try again.",
-            });
-          }
-        };
-
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2326,682 +2601,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 1:
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-              <div>
-                <h2
-                  className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-                >
-                  Evaluation Details
-                </h2>
-                <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                  Provide detailed evaluation for each criteria
-                </p>
-              </div>
-              {(unitsDescriptionsLoading || criteriasLoading) && (
-                <div className="text-sm text-blue-600 dark:text-blue-400 mt-2 md:mt-0">
-                  Loading criteria...
-                </div>
-              )}
-            </div>
-
-            {/* Debug Info */}
-            {!unitsDescriptionsLoading &&
-              !criteriasLoading &&
-              unitsDescriptions.length === 0 &&
-              criterias.length === 0 && (
-                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    No criteria data loaded. Total items:{" "}
-                    {Math.max(unitsDescriptions.length, criterias.length)}
-                  </p>
-                </div>
-              )}
-
-            {/* Validation Error for Evaluation Rows */}
-            {validationErrors.evaluationRows && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {validationErrors.evaluationRows}
-                </p>
-              </div>
-            )}
-
-            {/* Evaluation Table - Responsive for Mobile */}
-            <div className="mb-6">
-              {isMobile ? (
-                <div className="space-y-4">
-                  {evaluationRows
-                    .slice(0, Math.min(visibleRowsCount, 5))
-                    .map((row, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
-                      >
-                        <div className="mb-2">
-                          <div className="mb-2">
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                              Criteria
-                            </label>
-
-                            <CustomDropdown
-                              value={row.criteriaCode}
-                              options={getCriteriaOptions()}
-                              placeholder="Select.."
-                              disabled={
-                                unitsDescriptionsLoading || criteriasLoading
-                              }
-                              onChange={(val) =>
-                                handleEvaluationRowChange(
-                                  index,
-                                  "criteriaCode",
-                                  val,
-                                )
-                              }
-                              openDownward={true}
-                            />
-
-                            {validationErrors[`criteriaCode_${index}`] && (
-                              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                {validationErrors[`criteriaCode_${index}`]}
-                              </p>
-                            )}
-                          </div>
-
-                          {validationErrors[`criteriaCode_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`criteriaCode_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div className="mb-2">
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                              Unit
-                            </label>
-                          <div className="mb-2">
-                            <CustomDropdown
-                              value={row.unitCode}
-                              options={getUnitCodesForCriteria(
-                                row.criteriaCode,
-                                index,
-                              ).filter((item) => !item.disabled)}
-                              placeholder="Select..."
-                              disabled={
-                                !row.criteriaCode || unitsDescriptionsLoading
-                              }
-                              onChange={(val) =>
-                                handleEvaluationRowChange(
-                                  index,
-                                  "unitCode",
-                                  val,
-                                )
-                              }
-                              openDownward={true}
-                            />
-                          </div>
-
-                          {validationErrors[`unitCode_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`unitCode_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        {/* description removed - showing names via dropdown labels */}
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Action Taken
-                          </label>
-                          <textarea
-                            value={row.actionTaken || ""}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(index, "actionTaken", e.target.value)
-                            }
-                            placeholder="Action taken for this criteria"
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                            rows={isMobile ? "2" : "2"}
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Remarks
-                          </label>
-                          <textarea
-                            value={row.remarks || ""}
-                            onChange={(e) =>
-                              handleEvaluationRowChange(index, "remarks", e.target.value)
-                            }
-                            placeholder="Remarks for this criteria"
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                            rows={isMobile ? "2" : "2"}
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Evaluation
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {["P", "A", "G", "E", "N"].map((val) => (
-                              <label
-                                key={val}
-                                className="flex items-center gap-1"
-                              >
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value={val}
-                                  checked={row.evaluation === val}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                                <span className="text-xs">{val}</span>
-                              </label>
-                            ))}
-                          </div>
-                          {validationErrors[`evaluation_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`evaluation_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Yes/No
-                          </label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="YES"
-                                checked={row.yesNo === "YES"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                              <span className="text-xs">YES</span>
-                            </label>
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="NO"
-                                checked={row.yesNo === "NO"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value,
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                              <span className="text-xs">NO</span>
-                            </label>
-                          </div>
-                          {validationErrors[`yesNo_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`yesNo_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
-                  <table className="min-w-[700px] md:min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-xs md:text-sm">
-                    <thead className="bg-gray-100 dark:bg-gray-800">
-                      <tr>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs w-[160px] align-middle">
-                          Criteria
-                        </th>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs w-[160px] align-middle">
-                          Unit
-                        </th>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">
-                          Action Taken
-                        </th>
-                        <th className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 whitespace-nowrap align-middle">
-                          Remarks
-                        </th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">P</th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-orange-600 dark:bg-orange-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">A</th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-yellow-600 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">G</th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-green-600 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">E</th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">N</th>
-                        <th className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-indigo-200 dark:bg-indigo-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap align-middle">Yes/No</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
-                      {evaluationRows
-                        .slice(0, visibleRowsCount)
-                        .map((row, index) => (
-                          <React.Fragment key={index}>
-                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 w-[160px] max-w-[160px] overflow-hidden">
-                                <CustomDropdown
-                                  value={row.criteriaCode}
-                                  options={getCriteriaOptions()}
-                                  onChange={(val) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "criteriaCode",
-                                      val,
-                                    )
-                                  }
-                                  disabled={
-                                    unitsDescriptionsLoading || criteriasLoading
-                                  }
-                                  openDownward={true}
-                                />
-                              </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 w-[160px] max-w-[160px] overflow-hidden">
-                                <CustomDropdown
-                                  value={row.unitCode}
-                                  options={getUnitCodesForCriteria(
-                                    row.criteriaCode,
-                                    index,
-                                  )
-                                    .filter((i) => !i.disabled)
-                                    .map((i) => ({
-                                      value: i.value ?? i.code,
-                                      label: i.label ?? i.desc ?? i.value ?? i.code,
-                                      disabled: i.disabled,
-                                    }))}
-                                  onChange={(val) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "unitCode",
-                                      val,
-                                    )
-                                  }
-                                  disabled={
-                                    !row.criteriaCode ||
-                                    unitsDescriptionsLoading
-                                  }
-                                  openDownward={true}
-                                />
-                              </td>
-                              {/* description column removed; unit and criteria labels are shown in dropdowns */}
-                              {/* ...existing code for radio buttons... */}
-                              {/* Action Taken column moved up to after Unit */}
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[200px]">
-                                <textarea
-                                  value={row.actionTaken || ""}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(index, "actionTaken", e.target.value)
-                                  }
-                                  placeholder="Action taken for this criteria"
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
-                                  rows={2}
-                                />
-                              </td>
-                              <td className="px-3 py-2 min-w-[200px] border-r border-gray-300 dark:border-gray-600">
-                                <textarea
-                                  value={row.remarks || ""}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(index, "remarks", e.target.value)
-                                  }
-                                  placeholder="Remarks for this criteria"
-                                  className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs resize-none"
-                                  rows={2}
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="P"
-                                  checked={row.evaluation === "P"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer align-middle"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="A"
-                                  checked={row.evaluation === "A"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer align-middle"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="G"
-                                  checked={row.evaluation === "G"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer align-middle"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="E"
-                                  checked={row.evaluation === "E"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer align-middle"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="N"
-                                  checked={row.evaluation === "N"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer align-middle"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center border-r border-gray-300 dark:border-gray-600 align-middle">
-                                <div className="flex items-center justify-center gap-4 h-full">
-                                  <label className="inline-flex items-center gap-1">
-                                    <input
-                                      type="radio"
-                                      name={`deck-yesno-${index}`}
-                                      value="YES"
-                                      checked={row.yesNo === "YES"}
-                                      onChange={(e) =>
-                                        handleEvaluationRowChange(
-                                          index,
-                                          "yesNo",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="w-4 h-4 cursor-pointer align-middle"
-                                    />
-                                  </label>
-                                  <label className="inline-flex items-center gap-1">
-                                    <input
-                                      type="radio"
-                                      name={`deck-yesno-${index}`}
-                                      value="NO"
-                                      checked={row.yesNo === "NO"}
-                                      onChange={(e) =>
-                                        handleEvaluationRowChange(
-                                          index,
-                                          "yesNo",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="w-4 h-4 cursor-pointer align-middle"
-                                    />
-                                  </label>
-                                </div>
-                              </td>
-                              {/*
-                              <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-yesno-${index}`}
-                                  value="YES"
-                                  checked={row.yesNo === "YES"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "yesNo",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-4 h-4"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20">
-                                <input
-                                  type="radio"
-                                  name={`deck-yesno-${index}`}
-                                  value="NO"
-                                  checked={row.yesNo === "NO"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "yesNo",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-4 h-4"
-                                />
-                              </td>
-                              */}
-                            </tr>
-                            {/* Inline error messages for desktop table */}
-                              {(validationErrors[`criteriaCode_${index}`] ||
-                              validationErrors[`unitCode_${index}`] ||
-                              validationErrors[`evaluation_${index}`]) && (
-                              <tr>
-                                <td
-                                  colSpan="10"
-                                  className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
-                                >
-                                  <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
-                                    {validationErrors[
-                                      `criteriaCode_${index}`
-                                    ] && (
-                                      <span>
-                                        •{" "}
-                                        {
-                                          validationErrors[
-                                            `criteriaCode_${index}`
-                                          ]
-                                        }
-                                      </span>
-                                    )}
-                                    {validationErrors[`unitCode_${index}`] && (
-                                      <span>
-                                        •{" "}
-                                        {validationErrors[`unitCode_${index}`]}
-                                      </span>
-                                    )}
-                                    {validationErrors[
-                                      `evaluation_${index}`
-                                    ] && (
-                                      <span>
-                                        •{" "}
-                                        {
-                                          validationErrors[
-                                            `evaluation_${index}`
-                                          ]
-                                        }
-                                      </span>
-                                    )}
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
-                        ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* Criteria Details Legend */}
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
-                Criteria Details
-              </h4>
-              <div
-                className={`grid ${
-                  isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
-                } gap-3`}
-              >
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    P - POOR
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    A - AVERAGE
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    G - GOOD
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    E - EXCELLENT
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    N - NOT RELEVANT
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Top-level Action Taken and Remarks removed — per-row fields used instead */}
-
-            {/* Notes & Recommendation */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Notes & Recommendation
-              </label>
-              <textarea
-                value={formData.observations}
-                onChange={(e) =>
-                  handleInputChange("observations", e.target.value)
-                }
-                placeholder="Notes & recommendations for follow-up or improvements"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                rows={isMobile ? "2" : "3"}
-              />
-            </div>
-
-            {/* Duration Section */}
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
-                Duration (Days)
-              </h4>
-              <div
-                className={`grid ${
-                  isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
-                } gap-4`}
-              >
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Afloat
-                  </label>
-                  <input
-                    disabled
-                    type="number"
-                    min="0"
-                    placeholder="Days afloat (e.g. 5)"
-                    value={
-                      formData.afloatDuration === 0
-                        ? "0"
-                        : formData.afloatDuration
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "afloatDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0,
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Indock
-                  </label>
-                  <input
-                    disabled
-                    type="number"
-                    min="0"
-                    placeholder="Days in dock"
-                    value={
-                      formData.indockDuration === 0
-                        ? "0"
-                        : formData.indockDuration
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "indockDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0,
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Total
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Total days (calculated)"
-                    value={
-                      Number(formData.afloatDuration) +
-                      Number(formData.indockDuration)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    readOnly
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
       case 3:
         return (
           <div
@@ -3179,7 +2778,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </h4>
 
               {/* Evaluation Details Ratings */}
-              {evaluationRows.filter(
+              {Object.values(selectedRows).filter(
                 (row) => row.evaluation && row.evaluation !== "N",
               ).length > 0 && (
                 <>
@@ -3187,7 +2786,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     Evaluation Details
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    {evaluationRows
+                    {Object.values(selectedRows)
                       .filter((row) => row.evaluation && row.evaluation !== "N")
                       .map((row, index) => {
                         const evaluationScoreMap = {
@@ -3206,6 +2805,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
                         };
 
+                        // Find the criteria description
+                        const criteriaItem = allCriteriaUnits.find(
+                          item => item.criteriaCode === row.criteriaCode && item.unitCode === row.unitCode
+                        );
+
                         return (
                           <div
                             key={index}
@@ -3213,8 +2817,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                               <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {row.description ||
-                                  `${row.criteriaCode}-${row.unitCode}`}
+                                {criteriaItem ? `${criteriaItem.criteriaCode} - ${criteriaItem.unitCode}` : `${row.criteriaCode}-${row.unitCode}`}
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
@@ -3316,7 +2919,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               )}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                {evaluationRows.filter(
+                {Object.values(selectedRows).filter(
                   (row) => row.evaluation && row.evaluation !== "N",
                 ).length +
                   Object.values(formData.ratings).filter((r) => r > 0)
@@ -3486,17 +3089,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         },
                       ],
                     });
-                    setEvaluationRows(
-                      Array(11)
-                        .fill(null)
-                        .map(() => ({
-                          criteriaCode: "",
-                          unitCode: "",
-                          description: "",
-                          evaluation: "",
-                          yesNo: "",
-                        })),
-                    );
+                    setSelectedRows({});
+                    setAllCriteriaUnits([]);
+                    setCurrentPage(1);
                     setFeedbackSubmitted(false);
                     setCurrentStep(0);
                   }}
