@@ -383,11 +383,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
   }, []);
 
-  // Use a single scrollable list for evaluations (no pagination)
+  // Use a single scrollable list for evaluations (show 6 rows by default with scroll for more)
   const totalRows = allCriteriaUnits.length;
-  const currentPageData = allCriteriaUnits; // render all rows and allow scrolling
-
-  // Pagination removed — evaluations render in a single scrollable list
+  const currentPageData = allCriteriaUnits; // Keep all rows but show 6 with scroll
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -1750,7 +1748,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     </div>
                   ) : (
                     // Desktop View
-                    <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                    <div className="scrollbar-thin scrollbar-custom overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-96 overflow-y-auto">
                       <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
                         <thead className="bg-gray-100 dark:bg-gray-800">
                           <tr>
