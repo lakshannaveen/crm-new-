@@ -147,9 +147,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Top-level remarks and action taken
     remarks: "",
     actionTaken: "",
-
-    // Attachments
-    attachments: [],
   });
 
   // If vessel is provided, we may auto-fill job category and project number (JMAIN)
@@ -236,12 +233,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    if (dates.startingDate || dates.endingDate || dates.locationCode) {
+    if (dates.startingDate || dates.endingDate) {
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
         endingDate: dates.endingDate,
-        projectHandleLocation: dates.locationCode || "No Location",
       }));
     }
   }, [dates]);
@@ -341,8 +337,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
       // Sort by criteria code then unit code
       uniqueCombinations.sort((a, b) => {
-        if (a.criteriaCode !== b.criteriaCode) {
-          return a.criteriaCode.localeCompare(b.criteriaCode);
+        // Handle numeric and dotted codes like "3.1", "3.2"
+        const aParts = a.criteriaCode.split('.');
+        const bParts = b.criteriaCode.split('.');
+        
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          const aVal = parseInt(aParts[i] || 0);
+          const bVal = parseInt(bParts[i] || 0);
+          if (aVal !== bVal) return aVal - bVal;
         }
         return a.unitCode.localeCompare(b.unitCode);
       });
@@ -383,11 +385,26 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
   }, []);
 
-  // Use a single scrollable list for evaluations (no pagination)
-  const totalRows = allCriteriaUnits.length;
-  const currentPageData = allCriteriaUnits; // render all rows and allow scrolling
-
-  // Pagination removed — evaluations render in a single scrollable list
+  // Group criteria by parent category (e.g., 3.0, 4.0, 5.0 etc)
+  const groupCriteriaByParent = () => {
+    const groups = {};
+    
+    allCriteriaUnits.forEach((item) => {
+      const mainCategory = item.criteriaCode.split('.')[0]; // Get "3" from "3.1"
+      
+      if (!groups[mainCategory]) {
+        groups[mainCategory] = {
+          mainCode: mainCategory,
+          mainDescription: item.criteriaDescription,
+          items: []
+        };
+      }
+      
+      groups[mainCategory].items.push(item);
+    });
+    
+    return groups;
+  };
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -412,35 +429,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         return newErrors;
       });
     }
-  };
-
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const maxFiles = 5;
-    const maxSize = 10 * 1024 * 1024; // 10MB
-
-    const validFiles = files.filter((file) => {
-      if (file.size > maxSize) {
-        toast.error(`${file.name} exceeds 10MB limit`);
-        return false;
-      }
-      return true;
-    });
-
-    setFormData((prev) => ({
-      ...prev,
-      attachments: [
-        ...prev.attachments,
-        ...validFiles.slice(0, maxFiles - prev.attachments.length),
-      ],
-    }));
-  };
-
-  const removeAttachment = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index),
-    }));
   };
 
   const handleProjectNumberChange = (value) => {
@@ -516,11 +504,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Handle evaluation row changes
   const handleEvaluationChange = (rowIndex, field, value) => {
-    const actualIndex = rowIndex; // currentPageData contains all items, so rowIndex matches global index
     setSelectedRows((prev) => ({
       ...prev,
-      [actualIndex]: {
-        ...prev[actualIndex],
+      [rowIndex]: {
+        ...prev[rowIndex],
         [field]: value,
       },
     }));
@@ -749,7 +736,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       }
 
       setFeedbackSubmitted(true);
-      setCurrentStep(4); // Success step
+      setCurrentStep(3); // Success step
     } catch (error) {
       console.error("Failed to submit feedback:", error);
       setFeedbackSubmitted(false);
@@ -1144,6 +1131,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     );
   };
 
+  // Get the index of an item in allCriteriaUnits
+  const getItemIndex = (criteriaCode, unitCode) => {
+    return allCriteriaUnits.findIndex(
+      (item) => item.criteriaCode === criteriaCode && item.unitCode === unitCode
+    );
+  };
+
   const getStepContent = () => {
     const cardClass = isMobile ? "p-4" : "p-6";
     const titleClass = isMobile ? "text-lg mb-2" : "text-2xl mb-2";
@@ -1513,6 +1507,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         );
 
       case 1:
+        const groupedCriteria = groupCriteriaByParent();
+        const sortedGroupKeys = Object.keys(groupedCriteria).sort((a, b) => 
+          parseInt(a) - parseInt(b)
+        );
+
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -1525,13 +1524,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Evaluation Details
                 </h2>
                 <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                  Rate each criteria-unit combination. At least one evaluation
-                  is required.
+                  Rate each criteria following the PDF format hierarchy. At least one evaluation is required.
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-2 md:mt-0">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  ({totalRows} total items)
+                  ({allCriteriaUnits.length} total items)
                 </span>
               </div>
             </div>
@@ -1553,7 +1551,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Loading evaluation criteria...
                 </p>
               </div>
-            ) : totalRows === 0 ? (
+            ) : allCriteriaUnits.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-600 dark:text-gray-400">
                   No evaluation criteria available.
@@ -1561,402 +1559,412 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             ) : (
               <>
-                {/* Evaluation Table */}
-                <div className="mb-6">
-                  {isMobile ? (
-                    // Mobile View
-                    <div className="space-y-4">
-                      {currentPageData.map((item, rowIndex) => {
-                        const actualIndex = rowIndex;
-                        const rowData = selectedRows[actualIndex] || {};
-
-                        return (
-                          <div
-                            key={actualIndex}
-                            className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
-                          >
-                            {/* Criteria and Unit Info */}
-                            <div className="mb-3">
-                              <div className="mb-1">
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Criteria:
-                                </span>
-                                <span className="text-xs text-gray-900 dark:text-white ml-2">
-                                  {item.criteriaCode} -{" "}
-                                  {item.criteriaDescription}
-                                </span>
-                              </div>
-                              <div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  Unit:
-                                </span>
-                                <span className="text-xs text-gray-900 dark:text-white ml-2">
-                                  {item.unitCode} - {item.unitDescription}
-                                </span>
-                              </div>
+                {/* Scrollable Evaluation Section */}
+                <div className="mb-6 max-h-[70vh] overflow-y-auto pr-2">
+                  {sortedGroupKeys.map((groupKey) => {
+                    const group = groupedCriteria[groupKey];
+                    
+                    return (
+                      <div key={groupKey} className="mb-6 last:mb-0">
+                        {/* Main Category Header - PDF Style */}
+                        <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mb-3 border border-gray-300 dark:border-gray-700">
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 dark:bg-blue-900 h-8 w-8 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-blue-600 dark:text-blue-300 font-bold text-sm">
+                                {groupKey}
+                              </span>
                             </div>
-
-                            {/* Evaluation */}
-                            <div className="mb-3">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Evaluation
-                              </label>
-                              <div className="flex gap-2 flex-nowrap overflow-x-auto">
-                                {[
-                                  {
-                                    value: "P",
-                                    label: "P",
-                                    title: "Poor",
-                                    color:
-                                      "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-                                  },
-                                  {
-                                    value: "A",
-                                    label: "A",
-                                    title: "Average",
-                                    color:
-                                      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-                                  },
-                                  {
-                                    value: "G",
-                                    label: "G",
-                                    title: "Good",
-                                    color:
-                                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-                                  },
-                                  {
-                                    value: "E",
-                                    label: "E",
-                                    title: "Excellent",
-                                    color:
-                                      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-                                  },
-                                  {
-                                    value: "N",
-                                    label: "N",
-                                    title: "Not Relevant",
-                                    color:
-                                      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
-                                  },
-                                ].map((option) => (
-                                  <button
-                                    key={option.value}
-                                    type="button"
-                                    title={option.title}
-                                    onClick={() =>
-                                      handleEvaluationChange(
-                                        rowIndex,
-                                        "evaluation",
-                                        option.value,
-                                      )
-                                    }
-                                    className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                      rowData.evaluation === option.value
-                                        ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
-                                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
-                                    }`}
-                                  >
-                                    {option.label}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-
-                            {/* Yes/No */}
-                            <div className="mb-3">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                Yes/No
-                              </label>
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleEvaluationChange(
-                                      rowIndex,
-                                      "yesNo",
-                                      "YES",
-                                    )
-                                  }
-                                  className={`px-3 py-1 text-xs rounded border transition-colors ${
-                                    rowData.yesNo === "YES"
-                                      ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
-                                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
-                                  }`}
-                                >
-                                  YES
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleEvaluationChange(
-                                      rowIndex,
-                                      "yesNo",
-                                      "NO",
-                                    )
-                                  }
-                                  className={`px-3 py-1 text-xs rounded border transition-colors ${
-                                    rowData.yesNo === "NO"
-                                      ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
-                                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
-                                  }`}
-                                >
-                                  NO
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Remarks */}
-                            <div className="mb-3">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                Remarks
-                              </label>
-                              <textarea
-                                value={rowData.remarks || ""}
-                                onChange={(e) =>
-                                  handleEvaluationChange(
-                                    rowIndex,
-                                    "remarks",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Add remarks..."
-                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                                rows="2"
-                              />
-                            </div>
-
-                            {/* Action Taken */}
-                            <div className="mb-3">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                Action Taken
-                              </label>
-                              <textarea
-                                value={rowData.actionTaken || ""}
-                                onChange={(e) =>
-                                  handleEvaluationChange(
-                                    rowIndex,
-                                    "actionTaken",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Action taken..."
-                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                                rows="2"
-                              />
+                            <div>
+                              <h3 className="font-bold text-gray-900 dark:text-white">
+                                {group.mainDescription}
+                              </h3>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    // Desktop View
-                    <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
-                      <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
-                        <thead className="bg-gray-100 dark:bg-gray-800">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Criteria
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Unit
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Evaluation
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Yes/No
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Remarks
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
-                              Action Taken
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
-                          {currentPageData.map((item, rowIndex) => {
-                            const actualIndex = rowIndex;
-                            const rowData = selectedRows[actualIndex] || {};
+                        </div>
 
-                            return (
-                              <tr
-                                key={actualIndex}
-                                className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                              >
-                                {/* Criteria */}
-                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <div className="text-gray-900 dark:text-white">
-                                    <div className="font-medium">
-                                      {item.criteriaCode}
+                        {/* Evaluation Table */}
+                        {isMobile ? (
+                          // Mobile View
+                          <div className="space-y-3">
+                            {group.items.map((item) => {
+                              const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
+                              const rowData = selectedRows[itemIndexInAll] || {};
+
+                              return (
+                                <div
+                                  key={`${item.criteriaCode}-${item.unitCode}`}
+                                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
+                                >
+                                  {/* Criteria and Unit Info */}
+                                  <div className="mb-3">
+                                    <div className="mb-1">
+                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                        Criteria:
+                                      </span>
+                                      <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                        {item.criteriaCode} - {item.criteriaDescription}
+                                      </span>
                                     </div>
-                                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                                      {item.criteriaDescription}
+                                    <div>
+                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                        Unit:
+                                      </span>
+                                      <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                        {item.unitCode} - {item.unitDescription}
+                                      </span>
                                     </div>
                                   </div>
-                                </td>
 
-                                {/* Unit */}
-                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <div className="text-gray-900 dark:text-white">
-                                    <div className="font-medium">
-                                      {item.unitCode}
-                                    </div>
-                                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                                      {item.unitDescription}
+                                  {/* Evaluation */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                      Evaluation
+                                    </label>
+                                    <div className="flex gap-2 flex-nowrap overflow-x-auto">
+                                      {[
+                                        {
+                                          value: "P",
+                                          label: "P",
+                                          title: "Poor",
+                                          color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                        },
+                                        {
+                                          value: "A",
+                                          label: "A",
+                                          title: "Average",
+                                          color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                        },
+                                        {
+                                          value: "G",
+                                          label: "G",
+                                          title: "Good",
+                                          color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                        },
+                                        {
+                                          value: "E",
+                                          label: "E",
+                                          title: "Excellent",
+                                          color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                        },
+                                        {
+                                          value: "N",
+                                          label: "N",
+                                          title: "Not Relevant",
+                                          color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                        },
+                                      ].map((option) => (
+                                        <button
+                                          key={option.value}
+                                          type="button"
+                                          title={option.title}
+                                          onClick={() =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "evaluation",
+                                              option.value,
+                                            )
+                                          }
+                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                            rowData.evaluation === option.value
+                                              ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                          }`}
+                                        >
+                                          {option.label}
+                                        </button>
+                                      ))}
                                     </div>
                                   </div>
-                                </td>
 
-                                {/* Evaluation */}
-                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <div className="flex gap-1 flex-nowrap overflow-x-auto">
-                                    {[
-                                      {
-                                        value: "P",
-                                        label: "P",
-                                        color:
-                                          "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-                                      },
-                                      {
-                                        value: "A",
-                                        label: "A",
-                                        color:
-                                          "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-                                      },
-                                      {
-                                        value: "G",
-                                        label: "G",
-                                        color:
-                                          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-                                      },
-                                      {
-                                        value: "E",
-                                        label: "E",
-                                        color:
-                                          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-                                      },
-                                      {
-                                        value: "N",
-                                        label: "N",
-                                        color:
-                                          "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
-                                      },
-                                    ].map((option) => (
+                                  {/* Yes/No */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                      Yes/No
+                                    </label>
+                                    <div className="flex gap-2">
                                       <button
-                                        key={option.value}
                                         type="button"
                                         onClick={() =>
                                           handleEvaluationChange(
-                                            rowIndex,
-                                            "evaluation",
-                                            option.value,
+                                            itemIndexInAll,
+                                            "yesNo",
+                                            "YES",
                                           )
                                         }
-                                        className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                          rowData.evaluation === option.value
-                                            ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                        className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                          rowData.yesNo === "YES"
+                                            ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
                                             : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
                                         }`}
                                       >
-                                        {option.label}
+                                        YES
                                       </button>
-                                    ))}
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleEvaluationChange(
+                                            itemIndexInAll,
+                                            "yesNo",
+                                            "NO",
+                                          )
+                                        }
+                                        className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                          rowData.yesNo === "NO"
+                                            ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                        }`}
+                                      >
+                                        NO
+                                      </button>
+                                    </div>
                                   </div>
-                                </td>
 
-                                {/* Yes/No */}
-                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <div className="flex gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
+                                  {/* Remarks */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                      Remarks
+                                    </label>
+                                    <textarea
+                                      value={rowData.remarks || ""}
+                                      onChange={(e) =>
                                         handleEvaluationChange(
-                                          rowIndex,
-                                          "yesNo",
-                                          "YES",
+                                          itemIndexInAll,
+                                          "remarks",
+                                          e.target.value,
                                         )
                                       }
-                                      className={`px-3 py-1 text-xs rounded border transition-colors ${
-                                        rowData.yesNo === "YES"
-                                          ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
-                                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
-                                      }`}
-                                    >
-                                      YES
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
+                                      placeholder="Add remarks..."
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                      rows="2"
+                                    />
+                                  </div>
+
+                                  {/* Action Taken */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                      Action Taken
+                                    </label>
+                                    <textarea
+                                      value={rowData.actionTaken || ""}
+                                      onChange={(e) =>
                                         handleEvaluationChange(
-                                          rowIndex,
-                                          "yesNo",
-                                          "NO",
+                                          itemIndexInAll,
+                                          "actionTaken",
+                                          e.target.value,
                                         )
                                       }
-                                      className={`px-3 py-1 text-xs rounded border transition-colors ${
-                                        rowData.yesNo === "NO"
-                                          ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
-                                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
-                                      }`}
-                                    >
-                                      NO
-                                    </button>
+                                      placeholder="Action taken..."
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                      rows="2"
+                                    />
                                   </div>
-                                </td>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          // Desktop View
+                          <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                            <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
+                              <thead className="bg-gray-100 dark:bg-gray-800">
+                                <tr>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Criteria
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Unit
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Evaluation
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Yes/No
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Remarks
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                    Action Taken
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                                {group.items.map((item) => {
+                                  const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
+                                  const rowData = selectedRows[itemIndexInAll] || {};
 
-                                {/* Remarks */}
-                                <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <textarea
-                                    value={rowData.remarks || ""}
-                                    onChange={(e) =>
-                                      handleEvaluationChange(
-                                        rowIndex,
-                                        "remarks",
-                                        e.target.value,
-                                      )
-                                    }
-                                    placeholder="Add remarks..."
-                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
-                                    rows="2"
-                                  />
-                                </td>
+                                  return (
+                                    <tr
+                                      key={`${item.criteriaCode}-${item.unitCode}`}
+                                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    >
+                                      {/* Criteria */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="text-gray-900 dark:text-white">
+                                          <div className="font-medium">
+                                            {item.criteriaCode}
+                                          </div>
+                                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            {item.criteriaDescription}
+                                          </div>
+                                        </div>
+                                      </td>
 
-                                {/* Action Taken */}
-                                <td className="px-4 py-3">
-                                  <textarea
-                                    value={rowData.actionTaken || ""}
-                                    onChange={(e) =>
-                                      handleEvaluationChange(
-                                        rowIndex,
-                                        "actionTaken",
-                                        e.target.value,
-                                      )
-                                    }
-                                    placeholder="Action taken..."
-                                    className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
-                                    rows="2"
-                                  />
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                                      {/* Unit */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="text-gray-900 dark:text-white">
+                                          <div className="font-medium">
+                                            {item.unitCode}
+                                          </div>
+                                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            {item.unitDescription}
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                      {/* Evaluation */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="flex gap-1 flex-nowrap overflow-x-auto">
+                                          {[
+                                            {
+                                              value: "P",
+                                              label: "P",
+                                              color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                            },
+                                            {
+                                              value: "A",
+                                              label: "A",
+                                              color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                            },
+                                            {
+                                              value: "G",
+                                              label: "G",
+                                              color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                            },
+                                            {
+                                              value: "E",
+                                              label: "E",
+                                              color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                            },
+                                            {
+                                              value: "N",
+                                              label: "N",
+                                              color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                            },
+                                          ].map((option) => (
+                                            <button
+                                              key={option.value}
+                                              type="button"
+                                              onClick={() =>
+                                                handleEvaluationChange(
+                                                  itemIndexInAll,
+                                                  "evaluation",
+                                                  option.value,
+                                                )
+                                              }
+                                              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                                rowData.evaluation === option.value
+                                                  ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                              }`}
+                                            >
+                                              {option.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </td>
+
+                                      {/* Yes/No */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="flex gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleEvaluationChange(
+                                                itemIndexInAll,
+                                                "yesNo",
+                                                "YES",
+                                              )
+                                            }
+                                            className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                              rowData.yesNo === "YES"
+                                                ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
+                                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                            }`}
+                                          >
+                                            YES
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleEvaluationChange(
+                                                itemIndexInAll,
+                                                "yesNo",
+                                                "NO",
+                                              )
+                                            }
+                                            className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                              rowData.yesNo === "NO"
+                                                ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                            }`}
+                                          >
+                                            NO
+                                          </button>
+                                        </div>
+                                      </td>
+
+                                      {/* Remarks */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <textarea
+                                          value={rowData.remarks || ""}
+                                          onChange={(e) =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "remarks",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Add remarks..."
+                                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                          rows="2"
+                                        />
+                                      </td>
+
+                                      {/* Action Taken */}
+                                      <td className="px-4 py-3">
+                                        <textarea
+                                          value={rowData.actionTaken || ""}
+                                          onChange={(e) =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "actionTaken",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Action taken..."
+                                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                          rows="2"
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-
-                {/* Evaluation list now scrolls; pagination removed */}
 
                 {/* Legend */}
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
                     Evaluation Legend
                   </h4>
-                  <div
-                    className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"} gap-3`}
-                  >
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
                       <span className="text-xs text-gray-700 dark:text-gray-300">
@@ -2006,81 +2014,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   />
                 </div>
 
-                {/* File Attachment Section */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                    File Attachments
-                  </label>
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3 text-center bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                    <svg
-                      className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-1"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-16-8v16m0 0l-4-4m4 4l4-4"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                      Click to browse or drag files
-                    </p>
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <label
-                      htmlFor="file-upload"
-                      className="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-xs font-medium transition-colors"
-                    >
-                      Browse
-                    </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      PDF only, max 5 files, 10MB each
-                    </p>
-                  </div>
-
-                  {formData.attachments.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        Files ({formData.attachments.length}/5):
-                      </p>
-                      {formData.attachments.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs"
-                        >
-                          <span className="text-gray-700 dark:text-gray-300 truncate flex-1">
-                            📎 {file.name}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(index)}
-                            className="ml-2 px-2 py-0.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors text-xs"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
                 {/* Duration Section */}
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
                     Duration (Days)
                   </h4>
-                  <div
-                    className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"} gap-4`}
-                  >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Afloat
@@ -2135,6 +2074,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         );
 
       case 2:
+        const reviewGroups = groupCriteriaByParent();
+        const reviewGroupKeys = Object.keys(reviewGroups).sort((a, b) => 
+          parseInt(a) - parseInt(b)
+        );
+
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2245,25 +2189,33 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </h4>
 
               {/* Evaluation Details Ratings */}
-              {Object.values(selectedRows).filter(
-                (row) => row.evaluation && row.evaluation !== "N",
-              ).length > 0 && (
-                <>
-                  <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
-                    Evaluation Details
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    {Object.values(selectedRows)
-                      .filter((row) => row.evaluation && row.evaluation !== "N")
-                      .map((row, index) => {
+              {reviewGroupKeys.map((groupKey) => {
+                const group = reviewGroups[groupKey];
+                const groupEvaluations = group.items.filter(item => {
+                  const index = getItemIndex(item.criteriaCode, item.unitCode);
+                  return selectedRows[index]?.evaluation && selectedRows[index]?.evaluation !== 'N';
+                });
+
+                if (groupEvaluations.length === 0) return null;
+
+                return (
+                  <div key={groupKey} className="mb-4">
+                    <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-t-lg">
+                      <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                        {groupKey}. {group.mainDescription}
+                      </h5>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                      {groupEvaluations.map((item) => {
+                        const index = getItemIndex(item.criteriaCode, item.unitCode);
+                        const rowData = selectedRows[index] || {};
                         const evaluationScoreMap = {
                           P: 25, // Poor
                           A: 50, // Average
                           G: 75, // Good
                           E: 100, // Excellent
                         };
-
-                        const score = evaluationScoreMap[row.evaluation] || 0;
+                        const score = evaluationScoreMap[rowData.evaluation] || 0;
                         const getScoreColor = (s) => {
                           if (s >= 75)
                             return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
@@ -2272,30 +2224,21 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
                         };
 
-                        // Find the criteria description
-                        const criteriaItem = allCriteriaUnits.find(
-                          (item) =>
-                            item.criteriaCode === row.criteriaCode &&
-                            item.unitCode === row.unitCode,
-                        );
-
                         return (
                           <div
-                            key={index}
+                            key={`${item.criteriaCode}-${item.unitCode}`}
                             className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                           >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                               <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {criteriaItem
-                                  ? `${criteriaItem.criteriaCode} - ${criteriaItem.unitCode}`
-                                  : `${row.criteriaCode}-${row.unitCode}`}
+                                {item.criteriaCode} - {item.unitCode}
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
                                   score,
                                 )}`}
                               >
-                                {row.evaluation} ({score}%)
+                                {rowData.evaluation} ({score}%)
                               </span>
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -2310,92 +2253,32 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 style={{ width: `${score}%` }}
                               />
                             </div>
-                            {row.yesNo && (
+                            {rowData.yesNo && (
                               <div className="mt-2 text-xs">
                                 <span
                                   className={`px-2 py-0.5 rounded-full ${
-                                    row.yesNo === "YES"
+                                    rowData.yesNo === "YES"
                                       ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
                                       : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
                                   }`}
                                 >
-                                  {row.yesNo}
+                                  {rowData.yesNo}
                                 </span>
                               </div>
                             )}
                           </div>
                         );
                       })}
+                    </div>
                   </div>
-                </>
-              )}
-
-              {/* Standard Ratings */}
-              {Object.values(formData.ratings).filter((r) => r > 0).length >
-                0 && (
-                <>
-                  <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400 mb-3">
-                    Standard Ratings
-                  </h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    {Object.entries(formData.ratings)
-                      .filter(([_, score]) => score > 0)
-                      .slice(0, isMobile ? 6 : 12)
-                      .map(([category, score]) => {
-                        const getScoreColor = (s) => {
-                          if (s >= 75)
-                            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-                          if (s >= 50)
-                            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-                          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-                        };
-
-                        return (
-                          <div
-                            key={category}
-                            className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                          >
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {category
-                                  .split(/(?=[A-Z])/)
-                                  .slice(0, 2)
-                                  .join(" ")}
-                              </span>
-                              <span
-                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
-                                  score,
-                                )}`}
-                              >
-                                {score}%
-                              </span>
-                            </div>
-                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${
-                                  score >= 75
-                                    ? "bg-green-500"
-                                    : score >= 50
-                                      ? "bg-yellow-500"
-                                      : "bg-red-500"
-                                }`}
-                                style={{ width: `${score}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </>
-              )}
+                );
+              })}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                 {Object.values(selectedRows).filter(
                   (row) => row.evaluation && row.evaluation !== "N",
-                ).length +
-                  Object.values(formData.ratings).filter((r) => r > 0)
-                    .length}{" "}
-                total ratings
+                ).length}{" "}
+                total evaluations
               </div>
             </div>
 
@@ -2438,7 +2321,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               <button
                 onClick={() => {
                   setFeedbackSubmitted(false);
-                  setCurrentStep(0);
+                  setCurrentStep(1);
                 }}
                 className={`${
                   isMobile ? "w-full py-3" : "px-6 py-2"
@@ -2519,7 +2402,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </div>
               </div>
 
-              <div className="flex flex-col items-center space-y-3">
+              <div
+                className={`flex ${
+                  isMobile ? "flex-col space-y-3" : "justify-center space-x-4"
+                }`}
+              >
                 <button
                   onClick={() => {
                     // Reset form for new feedback
@@ -2552,7 +2439,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     setFeedbackSubmitted(false);
                     setCurrentStep(0);
                   }}
-                  className={`w-full py-3 btn-primary`}
+                  className={`${
+                    isMobile ? "w-full py-3" : "px-6 py-2"
+                  } btn-primary`}
                 >
                   Submit Another Feedback
                 </button>
@@ -2564,7 +2453,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       window.location.reload();
                     }
                   }}
-                  className={`w-full py-3 btn-secondary`}
+                  className={`${
+                    isMobile ? "w-full py-3" : "px-6 py-2"
+                  } btn-secondary`}
                 >
                   View History
                 </button>
