@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
-import FeedbackForm from '../../components/common/FeedbackForm';
+import FeedbackForm from '../../components/feedback/FeedbackForm';
 import { FiMessageSquare, FiStar, FiUsers, FiTrendingUp, FiHelpCircle } from 'react-icons/fi';
 
 const FeedbackPage = () => {
