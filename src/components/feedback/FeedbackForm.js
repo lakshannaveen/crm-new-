@@ -2495,12 +2495,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                             key={`${item.criteriaCode}-${item.unitCode}`}
                             className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
                           >
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
-                              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {item.criteriaCode} - {item.unitCode}
-                              </span>
+                            <div className="flex flex-col justify-between gap-2 mb-2">
+                              <div className="flex flex-col gap-1">
+                                <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                  {item.criteriaCode}
+                                </span>
+                                <span className="text-xs text-gray-700 dark:text-gray-300">
+                                  {item.unitDescription}
+                                </span>
+                              </div>
                               <span
-                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
+                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap inline-block w-fit ${getScoreColor(
                                   score,
                                 )}`}
                               >
