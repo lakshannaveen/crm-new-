@@ -1577,7 +1577,7 @@ const FeedbackPage = () => {
                   )}
 
                   {/* Recent Feedback Preview */}
-                  {feedbacks.length > 0 && (
+                  {/* {feedbacks.length > 0 && (
                     <div className="card mb-6">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -1796,7 +1796,7 @@ const FeedbackPage = () => {
                         })}
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   {/* Local storage info removed per request */}
                 </>
