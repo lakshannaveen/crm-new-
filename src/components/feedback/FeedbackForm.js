@@ -14,8 +14,12 @@ import {
   FiX,
   FiUpload,
   FiTrash2,
+  FiCheckCircle,
+  FiClock,
+  FiFlag,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
+import { formatDate } from "../../utils/formatters";
 import { addFeedback } from "../../services/feedbackService";
 import {
   getFeedbackDates,
@@ -25,6 +29,7 @@ import {
   clearFeedbackDates,
   getDuration,
 } from "../../actions/feedbackActions";
+import { getMilestonesByShip } from "../../actions/projectActions";
 
 const FeedbackForm = ({ vessel, onSubmit }) => {
   const dispatch = useDispatch();
@@ -42,6 +47,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     criteriasLoading = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
+  const { milestones = [], milestonesLoading = false } = useSelector(
+    (state) => state.projects || {}
+  );
   const isMobile = useMobile();
 
   const questionSectionRef = useRef(null);
@@ -233,6 +241,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   useEffect(() => {
     if (formData.jobCategory && formData.projectNumber) {
       dispatch(getDuration(formData.jobCategory, formData.projectNumber));
+    }
+  }, [formData.jobCategory, formData.projectNumber, dispatch]);
+
+  // Fetch milestones when job category and project number are selected
+  useEffect(() => {
+    if (formData.jobCategory && formData.projectNumber) {
+      dispatch(getMilestonesByShip(formData.jobCategory, formData.projectNumber));
     }
   }, [formData.jobCategory, formData.projectNumber, dispatch]);
 
@@ -2079,6 +2094,100 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Project Milestones */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-800 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Project Milestones
+                    </h4>
+                    {milestones.length > 5 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Showing {Math.min(5, milestones.length)} of {milestones.length} milestones
+                      </span>
+                    )}
+                  </div>
+                  {milestonesLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+                        Loading milestones...
+                      </span>
+                    </div>
+                  ) : milestones.length === 0 ? (
+                    <div className="text-center py-6">
+                      <FiClock className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        No milestones available for this project
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="relative max-h-64 overflow-y-auto pr-2">
+                      {/* Timeline line */}
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+
+                      <div className="space-y-4">
+                        {milestones.map((milestone, index) => (
+                          <div
+                            key={milestone.id || index}
+                            className="relative flex items-start"
+                          >
+                            <div
+                              className={`z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                                    border-4 border-white dark:border-gray-800 shadow ${
+                                      milestone.status === "completed"
+                                        ? "bg-green-100 dark:bg-green-900/30"
+                                        : milestone.status === "in_progress"
+                                        ? "bg-blue-100 dark:bg-blue-900/30"
+                                        : "bg-gray-100 dark:bg-gray-700"
+                                    }`}
+                            >
+                              {milestone.status === "completed" ? (
+                                <FiCheckCircle
+                                  size={16}
+                                  className="text-green-600 dark:text-green-400"
+                                />
+                              ) : (
+                                <FiClock size={16} className="text-gray-400" />
+                              )}
+                            </div>
+                            <div className="ml-4 flex-1 pb-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                                <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                  {milestone.title}
+                                </h5>
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                           bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                >
+                                  <FiCalendar className="mr-1" size={10} />
+                                  {formatDate(milestone.date, "short")}
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 mb-2 text-xs text-gray-600 dark:text-gray-400">
+                                {milestone.location && (
+                                  <div className="flex items-center">
+                                    <FiFlag className="mr-1 text-blue-500" size={12} />
+                                    <span>{milestone.location}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {milestone.remarks && (
+                                <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                                    {milestone.remarks}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes & Recommendation */}
