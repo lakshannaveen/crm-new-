@@ -1354,44 +1354,46 @@ const FeedbackPage = () => {
 
           <main className="p-4 sm:p-6 lg:p-8">
             {/* Breadcrumb */}
-            <div className="mb-6 flex items-center">
-              <Link
-                to="/dashboard"
-                state={{
-                  jobCategory: selectedJobCategory,
-                  projectNumber: selectedProjectNumber,
-                }}
-                className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              >
-                <FiArrowLeft className="mr-2" />
-                Back to Dashboard
-              </Link>
-              {/* removed page label per request */}
-            </div>
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center">
+                <Link
+                  to="/dashboard"
+                  state={{
+                    jobCategory: selectedJobCategory,
+                    projectNumber: selectedProjectNumber,
+                  }}
+                  className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                >
+                  <FiArrowLeft className="mr-2" />
+                  Back to Dashboard
+                </Link>
+                {/* removed page label per request */}
+              </div>
 
-            <div className="mb-8 flex flex-wrap gap-3 justify-end items-center">
-              <button
-                onClick={handleNewFeedback}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
-                  !showHistory
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
-              >
-                <FiMessageSquare className="mr-2" />
-                New Feedback
-              </button>
-              <button
-                onClick={handleViewHistory}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
-                  showHistory
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                }`}
-              >
-                <FiList className="mr-2" />
-                View History
-              </button>
+              <div className="flex flex-wrap gap-3 items-center">
+                <button
+                  onClick={handleNewFeedback}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
+                    !showHistory
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <FiMessageSquare className="mr-2" />
+                  New Feedback
+                </button>
+                <button
+                  onClick={handleViewHistory}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
+                    showHistory
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  <FiList className="mr-2" />
+                  View History
+                </button>
+              </div>
             </div>
 
             {/* API Error Banner */}
