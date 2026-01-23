@@ -6,6 +6,18 @@ const FeedbackConfirmation = ({ formData }) => {
     ? new Date(formData.submittedAt)
     : new Date();
 
+  const referenceNumber =
+    formData?.feedbackRef ||
+    formData?.referenceNo ||
+    formData?.FEEDBACK_CODE ||
+    "";
+
+  const vesselName =
+    formData?.vesselName ||
+    formData?.projectName ||
+    formData?.FEEDBACK_VESSEL_NAME ||
+    "";
+
   const feedbackItems = formData?.FeedbackList || formData?.evaluationRows || [];
 
   const handleDownload = () => {
@@ -15,7 +27,7 @@ const FeedbackConfirmation = ({ formData }) => {
     const html = `
       <html>
         <head>
-          <title>Feedback - ${formData?.feedbackRef || ''}</title>
+          <title>Feedback${referenceNumber ? ' - ' + referenceNumber : ''}</title>
           <style>
             body { font-family: Arial, Helvetica, sans-serif; padding: 24px; color: #111827 }
             h1 { font-size: 20px; }
@@ -28,8 +40,16 @@ const FeedbackConfirmation = ({ formData }) => {
         <body>
           <h1>Feedback Submission</h1>
           <div class="meta">
-            <div><strong>Reference:</strong> ${formData?.feedbackRef || ''}</div>
-            <div><strong>Vessel:</strong> ${formData?.vesselName || ''}</div>
+            ${
+              referenceNumber
+                ? `<div><strong>Reference:</strong> ${referenceNumber}</div>`
+                : ''
+            }
+            ${
+              vesselName
+                ? `<div><strong>Vessel:</strong> ${vesselName}</div>`
+                : ''
+            }
             <div><strong>Submitted On:</strong> ${submittedOn.toLocaleString()}</div>
           </div>
          
@@ -84,14 +104,18 @@ const FeedbackConfirmation = ({ formData }) => {
 
       <div className="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-6 mb-8 max-w-lg mx-auto">
         <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Reference Number:</span>
-            <span className="font-medium text-gray-900 dark:text-white">{formData.feedbackRef}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-gray-600 dark:text-gray-400">Vessel:</span>
-            <span className="font-medium text-gray-900 dark:text-white">{formData.vesselName}</span>
-          </div>
+          {referenceNumber && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Reference Number:</span>
+              <span className="font-medium text-gray-900 dark:text-white">{referenceNumber}</span>
+            </div>
+          )}
+          {vesselName && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Vessel:</span>
+              <span className="font-medium text-gray-900 dark:text-white">{vesselName}</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="text-gray-600 dark:text-gray-400">Submitted On:</span>
             <span className="font-medium text-gray-900 dark:text-white">{submittedOn.toLocaleString()}</span>
