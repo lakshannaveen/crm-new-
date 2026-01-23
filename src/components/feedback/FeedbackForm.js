@@ -149,6 +149,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Top-level remarks and action taken
     remarks: "",
     actionTaken: "",
+
+    // Attachments
+    attachments: [],
   });
 
   // If vessel is provided, we may auto-fill job category and project number (JMAIN)
@@ -425,6 +428,35 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         return newErrors;
       });
     }
+  };
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const maxFiles = 5;
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    const validFiles = files.filter((file) => {
+      if (file.size > maxSize) {
+        toast.error(`${file.name} exceeds 10MB limit`);
+        return false;
+      }
+      return true;
+    });
+
+    setFormData((prev) => ({
+      ...prev,
+      attachments: [
+        ...prev.attachments,
+        ...validFiles.slice(0, maxFiles - prev.attachments.length),
+      ],
+    }));
+  };
+
+  const removeAttachment = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index),
+    }));
   };
 
   const handleProjectNumberChange = (value) => {
@@ -2025,6 +2057,73 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
                     rows={isMobile ? "2" : "3"}
                   />
+                </div>
+
+                {/* File Attachment Section */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    File Attachments
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-3 text-center bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <svg
+                      className="mx-auto h-8 w-8 text-gray-400 dark:text-gray-500 mb-1"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20m-16-8v16m0 0l-4-4m4 4l4-4"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                      Click to browse or drag files
+                    </p>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="inline-block px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer text-xs font-medium transition-colors"
+                    >
+                      Browse
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      PDF only, max 5 files, 10MB each
+                    </p>
+                  </div>
+
+                  {formData.attachments.length > 0 && (
+                    <div className="mt-2 space-y-1">
+                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                        Files ({formData.attachments.length}/5):
+                      </p>
+                      {formData.attachments.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded text-xs"
+                        >
+                          <span className="text-gray-700 dark:text-gray-300 truncate flex-1">
+                            📎 {file.name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(index)}
+                            className="ml-2 px-2 py-0.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Duration Section */}

@@ -1372,10 +1372,10 @@ const FeedbackPage = () => {
               </span>
             </div>
 
-            <div className="mb-8 flex space-x-3 justify-end">
+            <div className="mb-8 flex flex-wrap gap-3 justify-end items-center">
               <button
                 onClick={handleNewFeedback}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
                   !showHistory
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -1386,7 +1386,7 @@ const FeedbackPage = () => {
               </button>
               <button
                 onClick={handleViewHistory}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center whitespace-nowrap ${
                   showHistory
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
