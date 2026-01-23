@@ -1857,9 +1857,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <thead className="bg-gray-100 dark:bg-gray-800">
                                 <tr>
                                   <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Criteria
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
                                     Unit
                                   </th>
                                   <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
@@ -1890,18 +1887,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       key={`${item.criteriaCode}-${item.unitCode}`}
                                       className="hover:bg-gray-50 dark:hover:bg-gray-800"
                                     >
-                                      {/* Criteria */}
-                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                        <div className="text-gray-900 dark:text-white">
-                                          <div className="font-medium">
-                                            {item.criteriaCode}
-                                          </div>
-                                          <div className="text-xs text-gray-600 dark:text-gray-400">
-                                            {item.criteriaDescription}
-                                          </div>
-                                        </div>
-                                      </td>
-
                                       {/* Unit */}
                                       <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                         <div className="text-gray-900 dark:text-white">
