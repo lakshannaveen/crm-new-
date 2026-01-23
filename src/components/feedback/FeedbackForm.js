@@ -1588,35 +1588,40 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                                 Evaluation
                               </label>
-                              <div className="flex flex-wrap gap-2">
+                              <div className="flex gap-2 flex-nowrap overflow-x-auto">
                                 {[
                                   {
                                     value: "P",
-                                    label: "Poor",
+                                    label: "P",
+                                    title: "Poor",
                                     color:
                                       "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
                                   },
                                   {
                                     value: "A",
-                                    label: "Average",
+                                    label: "A",
+                                    title: "Average",
                                     color:
                                       "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
                                   },
                                   {
                                     value: "G",
-                                    label: "Good",
+                                    label: "G",
+                                    title: "Good",
                                     color:
                                       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
                                   },
                                   {
                                     value: "E",
-                                    label: "Excellent",
+                                    label: "E",
+                                    title: "Excellent",
                                     color:
                                       "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
                                   },
                                   {
                                     value: "N",
-                                    label: "Not Relevant",
+                                    label: "N",
+                                    title: "Not Relevant",
                                     color:
                                       "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
                                   },
@@ -1624,6 +1629,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   <button
                                     key={option.value}
                                     type="button"
+                                    title={option.title}
                                     onClick={() =>
                                       handleEvaluationChange(
                                         rowIndex,
@@ -1791,7 +1797,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
                                 {/* Evaluation */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
-                                  <div className="flex flex-wrap gap-1">
+                                  <div className="flex gap-1 flex-nowrap overflow-x-auto">
                                     {[
                                       {
                                         value: "P",
