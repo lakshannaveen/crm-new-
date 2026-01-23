@@ -447,7 +447,7 @@ const ProjectDetails = () => {
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {formatCurrency(
                           (currentProject.budget || 0) -
-                            (currentProject.spent || 0)
+                            (currentProject.spent || 0),
                         )}
                       </p>
                     </div>
@@ -531,8 +531,8 @@ const ProjectDetails = () => {
                           milestone.status === "completed"
                             ? "bg-green-100 dark:bg-green-900"
                             : milestone.status === "in_progress"
-                            ? "bg-blue-100 dark:bg-blue-900"
-                            : "bg-gray-100 dark:bg-gray-700"
+                              ? "bg-blue-100 dark:bg-blue-900"
+                              : "bg-gray-100 dark:bg-gray-700"
                         }`}
                       >
                         {milestone.status === "completed" ? (
@@ -566,8 +566,8 @@ const ProjectDetails = () => {
                               milestone.status === "completed"
                                 ? "bg-green-500"
                                 : milestone.status === "in_progress"
-                                ? "bg-blue-500"
-                                : "bg-gray-400"
+                                  ? "bg-blue-500"
+                                  : "bg-gray-400"
                             }`}
                             style={{ width: `${milestone.progress}%` }}
                           />
@@ -577,8 +577,8 @@ const ProjectDetails = () => {
                             milestone.status === "completed"
                               ? "text-green-600 dark:text-green-400"
                               : milestone.status === "in_progress"
-                              ? "text-blue-600 dark:text-blue-400"
-                              : "text-gray-600 dark:text-gray-400"
+                                ? "text-blue-600 dark:text-blue-400"
+                                : "text-gray-600 dark:text-gray-400"
                           }`}
                         >
                           {milestone.progress}%
