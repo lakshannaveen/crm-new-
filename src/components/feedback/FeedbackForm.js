@@ -12,6 +12,8 @@ import {
   FiUser,
   FiSearch,
   FiX,
+  FiUpload,
+  FiTrash2,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
 import { addFeedback } from "../../services/feedbackService";
@@ -137,6 +139,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Durations (days)
     afloatDuration: 0,
     indockDuration: 0,
+
+    // File Attachments
+    attachments: [],
 
     // Feedback Reference
     feedbackRef: `FB-${new Date().getFullYear()}-${Math.random()
@@ -338,9 +343,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       // Sort by criteria code then unit code
       uniqueCombinations.sort((a, b) => {
         // Handle numeric and dotted codes like "3.1", "3.2"
-        const aParts = a.criteriaCode.split('.');
-        const bParts = b.criteriaCode.split('.');
-        
+        const aParts = a.criteriaCode.split(".");
+        const bParts = b.criteriaCode.split(".");
+
         for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
           const aVal = parseInt(aParts[i] || 0);
           const bVal = parseInt(bParts[i] || 0);
@@ -388,21 +393,21 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Group criteria by parent category (e.g., 3.0, 4.0, 5.0 etc)
   const groupCriteriaByParent = () => {
     const groups = {};
-    
+
     allCriteriaUnits.forEach((item) => {
-      const mainCategory = item.criteriaCode.split('.')[0]; // Get "3" from "3.1"
-      
+      const mainCategory = item.criteriaCode.split(".")[0]; // Get "3" from "3.1"
+
       if (!groups[mainCategory]) {
         groups[mainCategory] = {
           mainCode: mainCategory,
           mainDescription: item.criteriaDescription,
-          items: []
+          items: [],
         };
       }
-      
+
       groups[mainCategory].items.push(item);
     });
-    
+
     return groups;
   };
 
@@ -677,6 +682,76 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     return allScores.length > 0
       ? Math.round(allScores.reduce((a, b) => a + b, 0) / allScores.length)
       : 0;
+  };
+
+  const handleFileUpload = (e) => {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
+    const files = Array.from(e.target.files);
+    const pdfFiles = files.filter((file) => file.type === "application/pdf");
+
+    if (files.length !== pdfFiles.length) {
+      toast.error("Only PDF files are allowed", {
+        duration: 3000,
+        position: "top-center",
+      });
+    }
+
+    // Filter valid PDFs (correct type and size)
+    const validPdfs = [];
+    const oversizedFiles = [];
+
+    pdfFiles.forEach((file) => {
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(file.name);
+      } else {
+        validPdfs.push(file);
+      }
+    });
+
+    if (oversizedFiles.length > 0) {
+      toast.error(`File(s) exceed 10 MB limit: ${oversizedFiles.join(", ")}`, {
+        duration: 4000,
+        position: "top-center",
+      });
+    }
+
+    if (validPdfs.length > 0) {
+      const newAttachments = validPdfs.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        file: file,
+        id: Math.random().toString(36).substr(2, 9),
+      }));
+
+      setFormData((prev) => ({
+        ...prev,
+        attachments: [...prev.attachments, ...newAttachments],
+      }));
+
+      toast.success(`${validPdfs.length} PDF file(s) added`, {
+        duration: 2000,
+        position: "top-center",
+      });
+    }
+
+    // Reset input
+    e.target.value = "";
+  };
+
+  const removeAttachment = (attachmentId) => {
+    setFormData((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((att) => att.id !== attachmentId),
+    }));
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   const handleSubmit = async () => {
@@ -1134,7 +1209,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Get the index of an item in allCriteriaUnits
   const getItemIndex = (criteriaCode, unitCode) => {
     return allCriteriaUnits.findIndex(
-      (item) => item.criteriaCode === criteriaCode && item.unitCode === unitCode
+      (item) =>
+        item.criteriaCode === criteriaCode && item.unitCode === unitCode,
     );
   };
 
@@ -1508,8 +1584,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
       case 1:
         const groupedCriteria = groupCriteriaByParent();
-        const sortedGroupKeys = Object.keys(groupedCriteria).sort((a, b) => 
-          parseInt(a) - parseInt(b)
+        const sortedGroupKeys = Object.keys(groupedCriteria).sort(
+          (a, b) => parseInt(a) - parseInt(b),
         );
 
         return (
@@ -1524,7 +1600,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Evaluation Details
                 </h2>
                 <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                  Rate each criteria following the PDF format hierarchy. At least one evaluation is required.
+                  Rate each criteria following the PDF format hierarchy. At
+                  least one evaluation is required.
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-2 md:mt-0">
@@ -1563,7 +1640,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 <div className="mb-6 max-h-[70vh] overflow-y-auto pr-2">
                   {sortedGroupKeys.map((groupKey) => {
                     const group = groupedCriteria[groupKey];
-                    
+
                     return (
                       <div key={groupKey} className="mb-6 last:mb-0">
                         {/* Main Category Header - PDF Style */}
@@ -1587,8 +1664,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           // Mobile View
                           <div className="space-y-3">
                             {group.items.map((item) => {
-                              const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
-                              const rowData = selectedRows[itemIndexInAll] || {};
+                              const itemIndexInAll = getItemIndex(
+                                item.criteriaCode,
+                                item.unitCode,
+                              );
+                              const rowData =
+                                selectedRows[itemIndexInAll] || {};
 
                               return (
                                 <div
@@ -1602,7 +1683,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                         Criteria:
                                       </span>
                                       <span className="text-xs text-gray-900 dark:text-white ml-2">
-                                        {item.criteriaCode} - {item.criteriaDescription}
+                                        {item.criteriaCode} -{" "}
+                                        {item.criteriaDescription}
                                       </span>
                                     </div>
                                     <div>
@@ -1626,31 +1708,36 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                           value: "P",
                                           label: "P",
                                           title: "Poor",
-                                          color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                          color:
+                                            "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
                                         },
                                         {
                                           value: "A",
                                           label: "A",
                                           title: "Average",
-                                          color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                          color:
+                                            "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
                                         },
                                         {
                                           value: "G",
                                           label: "G",
                                           title: "Good",
-                                          color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                          color:
+                                            "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
                                         },
                                         {
                                           value: "E",
                                           label: "E",
                                           title: "Excellent",
-                                          color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                          color:
+                                            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
                                         },
                                         {
                                           value: "N",
                                           label: "N",
                                           title: "Not Relevant",
-                                          color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                          color:
+                                            "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
                                         },
                                       ].map((option) => (
                                         <button
@@ -1790,8 +1877,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </thead>
                               <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
                                 {group.items.map((item) => {
-                                  const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
-                                  const rowData = selectedRows[itemIndexInAll] || {};
+                                  const itemIndexInAll = getItemIndex(
+                                    item.criteriaCode,
+                                    item.unitCode,
+                                  );
+                                  const rowData =
+                                    selectedRows[itemIndexInAll] || {};
 
                                   return (
                                     <tr
@@ -1829,27 +1920,32 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                             {
                                               value: "P",
                                               label: "P",
-                                              color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                              color:
+                                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
                                             },
                                             {
                                               value: "A",
                                               label: "A",
-                                              color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                              color:
+                                                "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
                                             },
                                             {
                                               value: "G",
                                               label: "G",
-                                              color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                              color:
+                                                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
                                             },
                                             {
                                               value: "E",
                                               label: "E",
-                                              color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                              color:
+                                                "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
                                             },
                                             {
                                               value: "N",
                                               label: "N",
-                                              color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                              color:
+                                                "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
                                             },
                                           ].map((option) => (
                                             <button
@@ -1863,7 +1959,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                                 )
                                               }
                                               className={`px-2 py-1 text-xs rounded border transition-colors ${
-                                                rowData.evaluation === option.value
+                                                rowData.evaluation ===
+                                                option.value
                                                   ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
                                                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
                                               }`}
@@ -2014,6 +2111,73 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   />
                 </div>
 
+                {/* File Attachment Section */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <div className="flex items-center gap-2">
+                      <FiUpload className="w-4 h-4" />
+                      File Attachments (PDF Only)
+                    </div>
+                  </label>
+
+                  {/* Upload Input */}
+                  <div className="mb-4">
+                    <label className="flex items-center justify-center w-full px-4 py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                      <div className="text-center">
+                        <FiUpload className="w-8 h-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          PDF files only (max 10 MB per file)
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {/* Uploaded Files List */}
+                  {formData.attachments.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                        {formData.attachments.length} file(s) selected
+                      </p>
+                      {formData.attachments.map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg"
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <FiUpload className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm text-gray-800 dark:text-gray-200 truncate">
+                                {attachment.name}
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                {formatFileSize(attachment.size)}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(attachment.id)}
+                            className="ml-2 p-1 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors flex-shrink-0"
+                            title="Remove file"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Duration Section */}
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
@@ -2075,8 +2239,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
       case 2:
         const reviewGroups = groupCriteriaByParent();
-        const reviewGroupKeys = Object.keys(reviewGroups).sort((a, b) => 
-          parseInt(a) - parseInt(b)
+        const reviewGroupKeys = Object.keys(reviewGroups).sort(
+          (a, b) => parseInt(a) - parseInt(b),
         );
 
         return (
@@ -2191,9 +2355,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               {/* Evaluation Details Ratings */}
               {reviewGroupKeys.map((groupKey) => {
                 const group = reviewGroups[groupKey];
-                const groupEvaluations = group.items.filter(item => {
+                const groupEvaluations = group.items.filter((item) => {
                   const index = getItemIndex(item.criteriaCode, item.unitCode);
-                  return selectedRows[index]?.evaluation && selectedRows[index]?.evaluation !== 'N';
+                  return (
+                    selectedRows[index]?.evaluation &&
+                    selectedRows[index]?.evaluation !== "N"
+                  );
                 });
 
                 if (groupEvaluations.length === 0) return null;
@@ -2207,7 +2374,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
                       {groupEvaluations.map((item) => {
-                        const index = getItemIndex(item.criteriaCode, item.unitCode);
+                        const index = getItemIndex(
+                          item.criteriaCode,
+                          item.unitCode,
+                        );
                         const rowData = selectedRows[index] || {};
                         const evaluationScoreMap = {
                           P: 25, // Poor
@@ -2215,7 +2385,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           G: 75, // Good
                           E: 100, // Excellent
                         };
-                        const score = evaluationScoreMap[rowData.evaluation] || 0;
+                        const score =
+                          evaluationScoreMap[rowData.evaluation] || 0;
                         const getScoreColor = (s) => {
                           if (s >= 75)
                             return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
@@ -2275,9 +2446,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               })}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                {Object.values(selectedRows).filter(
-                  (row) => row.evaluation && row.evaluation !== "N",
-                ).length}{" "}
+                {
+                  Object.values(selectedRows).filter(
+                    (row) => row.evaluation && row.evaluation !== "N",
+                  ).length
+                }{" "}
                 total evaluations
               </div>
             </div>
