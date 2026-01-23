@@ -385,9 +385,26 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
   }, []);
 
-  // Use a single scrollable list for evaluations (show 6 rows by default with scroll for more)
-  const totalRows = allCriteriaUnits.length;
-  const currentPageData = allCriteriaUnits; // Keep all rows but show 6 with scroll
+  // Group criteria by parent category (e.g., 3.0, 4.0, 5.0 etc)
+  const groupCriteriaByParent = () => {
+    const groups = {};
+    
+    allCriteriaUnits.forEach((item) => {
+      const mainCategory = item.criteriaCode.split('.')[0]; // Get "3" from "3.1"
+      
+      if (!groups[mainCategory]) {
+        groups[mainCategory] = {
+          mainCode: mainCategory,
+          mainDescription: item.criteriaDescription,
+          items: []
+        };
+      }
+      
+      groups[mainCategory].items.push(item);
+    });
+    
+    return groups;
+  };
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -1128,65 +1145,63 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     switch (safeCurrentStep) {
       case 0:
-        // ...existing code...
-        // Evaluation Step (Step 1)
-        if (safeCurrentStep === 1) {
-          const groupedCriteria = groupCriteriaByParent();
-          return (
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Evaluation Details</h2>
-              {Object.entries(groupedCriteria).map(([parent, items]) => (
-                <div key={parent} className="mb-8">
-                  <h3 className="text-lg font-bold mb-2">{parent}</h3>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white dark:bg-gray-800 rounded-lg shadow">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-2 text-left">Criteria</th>
-                          <th className="px-4 py-2 text-left">Unit</th>
-                          <th className="px-4 py-2 text-left">Evaluation</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {items.map((item, idx) => {
-                          const rowIndex = getItemIndex(item.criteriaCode, item.unitCode);
-                          const selectedRow = selectedRows[rowIndex] || {};
-                          return (
-                            <tr key={rowIndex} className="border-b">
-                              <td className="px-4 py-2">
-                                {/* Show criteria number and description name together */}
-                                <span className="font-semibold mr-2">{item.criteriaCode}</span>
-                                <span>{item.criteriaDesc}</span>
-                              </td>
-                              <td className="px-4 py-2">{item.unitDesc}</td>
-                              <td className="px-4 py-2">
-                                <select
-                                  value={selectedRow.evaluation || ""}
-                                  onChange={(e) =>
-                                    handleEvaluationChange(rowIndex, "evaluation", e.target.value)
-                                  }
-                                  className="form-select"
-                                >
-                                  <option value="">Select</option>
-                                  <option value="P">Poor</option>
-                                  <option value="A">Average</option>
-                                  <option value="G">Good</option>
-                                  <option value="E">Excellent</option>
-                                  <option value="N">N/A</option>
-                                </select>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+        return (
+          <div
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
+          >
+            <div className="mb-4">
+              <h2
+                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
+              >
+                Project Information
+              </h2>
+              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
+                Please provide project details and management information
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {/* Job Category and Project Number on the same horizontal line */}
+              <div
+                className={
+                  isMobile
+                    ? "flex flex-col gap-2"
+                    : "flex flex-row gap-6 items-end"
+                }
+              >
+                <div className={isMobile ? "w-full" : "w-1/2"}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Job Category
+                  </label>
+                  <select
+                    value={formData.jobCategory}
+                    onChange={(e) =>
+                      handleSelectChange("jobCategory", e.target.value)
+                    }
+                    className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
+                      validationErrors.jobCategory ? "border-red-500" : ""
+                    }`}
+                  >
+                    {jobCategoryOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="min-h-[20px]">
+                    {validationErrors.jobCategory && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {validationErrors.jobCategory}
+                      </p>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          );
-        }
-        // ...existing code...
+                <div className={isMobile ? "w-full" : "w-1/2"}>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Project Number
+                  </label>
+                  <div className="relative" ref={projectDropdownRef}>
+                    <div className="relative">
                       <input
                         type="text"
                         value={
@@ -1724,59 +1739,59 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     />
                                   </div>
 
-                            {/* Action Taken */}
-                            <div className="mb-3">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                Action Taken
-                              </label>
-                              <textarea
-                                value={rowData.actionTaken || ""}
-                                onChange={(e) =>
-                                  handleEvaluationChange(
-                                    rowIndex,
-                                    "actionTaken",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Action taken..."
-                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                                rows="2"
-                              />
-                            </div>
+                                  {/* Action Taken */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                      Action Taken
+                                    </label>
+                                    <textarea
+                                      value={rowData.actionTaken || ""}
+                                      onChange={(e) =>
+                                        handleEvaluationChange(
+                                          itemIndexInAll,
+                                          "actionTaken",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="Action taken..."
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                      rows="2"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    // Desktop View
-                    <div className="scrollbar-thin scrollbar-custom overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-96 overflow-y-auto">
-                      <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
-                        <thead className="bg-gray-100 dark:bg-gray-800">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Criteria
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Unit
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Evaluation
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Yes/No
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                              Remarks
-                            </th>
-                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
-                              Action Taken
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
-                          {currentPageData.map((item, rowIndex) => {
-                            const actualIndex = rowIndex;
-                            const rowData = selectedRows[actualIndex] || {};
+                        ) : (
+                          // Desktop View
+                          <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                            <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
+                              <thead className="bg-gray-100 dark:bg-gray-800">
+                                <tr>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Criteria
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Unit
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Evaluation
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Yes/No
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Remarks
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                    Action Taken
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                                {group.items.map((item) => {
+                                  const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
+                                  const rowData = selectedRows[itemIndexInAll] || {};
 
                                   return (
                                     <tr
