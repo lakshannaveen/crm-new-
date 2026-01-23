@@ -10,7 +10,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiUser,
-  FiTrendingUp,
   FiSearch,
   FiX,
 } from "react-icons/fi";
@@ -21,8 +20,6 @@ import {
   getJmain,
   getUnitsDescriptions,
   getCriterias,
-  getMilestoneTypes,
-  submitMilestone,
   clearFeedbackDates,
   getDuration,
 } from "../../actions/feedbackActions";
@@ -41,10 +38,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     unitsDescriptionsLoading = false,
     criterias = [],
     criteriasLoading = false,
-    milestoneTypes = [],
-    milestoneTypesLoading = false,
-    milestoneSubmitting = false,
-    milestoneSubmitSuccess = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const isMobile = useMobile();
@@ -52,15 +45,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const questionSectionRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [validationErrors, setValidationErrors] = useState({});
-  const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [projectSearchTerm, setProjectSearchTerm] = useState("");
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropdownRef = useRef(null);
-  const [openMilestoneIndex, setOpenMilestoneIndex] = useState(null);
-  const milestoneDropdownRefs = useRef({});
-  const [openLocationIndex, setOpenLocationIndex] = useState(null);
-  
+
   // New state for evaluation
   const [allCriteriaUnits, setAllCriteriaUnits] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -160,11 +149,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // Top-level remarks and action taken
     remarks: "",
     actionTaken: "",
-
-    // Milestones
-    milestones: [
-      { code: "", milestone: "", date: "", location: "", remarks: "" },
-    ],
   });
 
   // If vessel is provided, we may auto-fill job category and project number (JMAIN)
@@ -195,52 +179,21 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     { value: "4", label: "Reluctant to Issue" },
   ];
 
-  const milestoneLocationOptions = [
-    { value: "", label: "Select Location" },
-    { value: "DOCK-01", label: "DOCK-01" },
-    { value: "DOCK-02", label: "DOCK-02" },
-    { value: "DOCK-03", label: "DOCK-03" },
-    { value: "DOCK-04", label: "DOCK-04" },
-    { value: "PIER-01", label: "PIER-01" },
-    { value: "PIER-02", label: "PIER-02" },
-    { value: "PIER-03", label: "PIER-03" },
-    { value: "GP1", label: "GUIDE PIER I" },
-    { value: "GP2", label: "GUIDE PIER II" },
-    { value: "NPD4", label: "NORTH PIER DOCK-4" },
-    { value: "DN3E", label: "DOCK NO.3 ENTRANCE" },
-    { value: "DN4E", label: "DOCK NO.4 ENTRANCE" },
-    { value: "DOLPHINS", label: "DOLPHINS" },
-    { value: "SLPA BERTH", label: "SLPA BERTH" },
-    { value: "OUTANCH", label: "OUTER ANCHORAGE" },
-    { value: "JCT", label: "JCT" },
-    { value: "UCT", label: "UCT" },
-    { value: "PVQ", label: "PVQ" },
-    { value: "BQ", label: "BQ" },
-    { value: "TANKBERTH", label: "TANKER BERTH" },
-    { value: "GATEWAY", label: "GATEWAY" },
-    { value: "PASSTERM", label: "PASSENGER TERMINAL" },
-    { value: "GALLE", label: "GALLE" },
-    { value: "TRINCOMALE", label: "TRINCOMALE" },
-    { value: "OTHER", label: "OTHER" },
-  ];
-
   const steps = [
     { id: 0, title: "Project Details", icon: <FiCalendar /> },
     { id: 1, title: "Evaluation Details", icon: <FiStar /> },
-    { id: 2, title: "Milestones", icon: <FiTrendingUp /> },
-    { id: 3, title: "Review", icon: <FiCheck /> },
-    { id: 4, title: "Complete", icon: <FiCheck /> },
+    { id: 2, title: "Review", icon: <FiCheck /> },
+    { id: 3, title: "Complete", icon: <FiCheck /> },
   ];
 
   // Ensure currentStep is within bounds
   const safeCurrentStep = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const currentStepData = steps[safeCurrentStep] || steps[0];
 
-  // Fetch units descriptions and milestone types on component mount
+  // Fetch units descriptions on component mount
   useEffect(() => {
     dispatch(getUnitsDescriptions());
     dispatch(getCriterias());
-    dispatch(getMilestoneTypes());
   }, [dispatch]);
 
   // Cleanup: Clear dates when component unmounts
@@ -362,13 +315,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     if (unitsDescriptions.length > 0) {
       const uniqueCombinations = [];
       const seen = new Set();
-      
-      unitsDescriptions.forEach(item => {
+
+      unitsDescriptions.forEach((item) => {
         const criteriaCode = item.FEEDBACK_CRITERIA_CODE;
         const unitCode = item.FEEDBACK_UNIT_CODE;
         const unitDescription = item.FEEDBACK_UNIT_DESCRIPTION || "";
         const criteriaDescription = item.FEEDBACK_CRITERIA_DESC || "";
-        
+
         if (criteriaCode && unitCode) {
           const key = `${criteriaCode}-${unitCode}`;
           if (!seen.has(key)) {
@@ -383,7 +336,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           }
         }
       });
-      
+
       // Sort by criteria code then unit code
       uniqueCombinations.sort((a, b) => {
         if (a.criteriaCode !== b.criteriaCode) {
@@ -391,9 +344,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         }
         return a.unitCode.localeCompare(b.unitCode);
       });
-      
+
       setAllCriteriaUnits(uniqueCombinations);
-      
+
       // Initialize selected rows with empty evaluation
       const initialSelectedRows = {};
       uniqueCombinations.forEach((item, index) => {
@@ -423,25 +376,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     document.addEventListener("mousedown", handleClickOutside);
 
-    const handleClickOutsideMilestones = (event) => {
-      // If click is outside any open milestone dropdown, close them
-      const refs = milestoneDropdownRefs.current || {};
-      let clickedInsideAny = false;
-      Object.values(refs).forEach((r) => {
-        if (r && r.contains && r.contains(event.target))
-          clickedInsideAny = true;
-      });
-      if (!clickedInsideAny) {
-        setOpenMilestoneIndex(null);
-        setOpenLocationIndex(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutsideMilestones);
-
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("mousedown", handleClickOutsideMilestones);
     };
   }, []);
 
@@ -455,13 +391,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Handle page change
   const nextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(prev => prev + 1);
+      setCurrentPage((prev) => prev + 1);
     }
   };
 
   const prevPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(prev => prev - 1);
+      setCurrentPage((prev) => prev - 1);
     }
   };
 
@@ -564,12 +500,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Handle evaluation row changes
   const handleEvaluationChange = (rowIndex, field, value) => {
     const actualIndex = startIndex + rowIndex;
-    setSelectedRows(prev => ({
+    setSelectedRows((prev) => ({
       ...prev,
       [actualIndex]: {
         ...prev[actualIndex],
         [field]: value,
-      }
+      },
     }));
   };
 
@@ -577,18 +513,18 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const validateEvaluationStep = () => {
     const errors = {};
     let hasAtLeastOneEvaluation = false;
-    
+
     // Check if at least one row has evaluation
     Object.values(selectedRows).forEach((row, index) => {
       if (row.evaluation && row.evaluation.trim() !== "") {
         hasAtLeastOneEvaluation = true;
       }
     });
-    
+
     if (!hasAtLeastOneEvaluation) {
       errors.evaluationRows = "At least one evaluation must be provided";
     }
-    
+
     return errors;
   };
 
@@ -598,46 +534,29 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     switch (step) {
       case 0: // Project Details
-        if (!formData.jobCategory) errors.jobCategory = "Job Category is required";
-        if (!formData.projectNumber) errors.projectNumber = "Project Number is required";
-        if (!formData.projectName) errors.projectName = "Project Name is required";
-        if (!formData.startingDate) errors.startingDate = "Starting Date is required";
+        if (!formData.jobCategory)
+          errors.jobCategory = "Job Category is required";
+        if (!formData.projectNumber)
+          errors.projectNumber = "Project Number is required";
+        if (!formData.projectName)
+          errors.projectName = "Project Name is required";
+        if (!formData.startingDate)
+          errors.startingDate = "Starting Date is required";
         if (!formData.endingDate) errors.endingDate = "Ending Date is required";
         if (!formData.jobStatus) errors.jobStatus = "Job Status is required";
         if (!formData.customerFeedbackStatus)
-          errors.customerFeedbackStatus = "Customer Feedback Status is required";
+          errors.customerFeedbackStatus =
+            "Customer Feedback Status is required";
         break;
-        
+
       case 1: // Evaluation Details
         const evalErrors = validateEvaluationStep();
         Object.assign(errors, evalErrors);
         break;
-        
-      case 2: // Milestones
-        const hasValidMilestone = formData.milestones.some(
-          (milestone) => milestone.milestone && milestone.milestone.trim() !== "",
-        );
-        if (!hasValidMilestone) {
-          errors.milestones = "At least one milestone is required";
-        }
-        formData.milestones.forEach((milestone, index) => {
-          if (milestone.milestone && milestone.milestone.trim() !== "") {
-            if (!milestone.code) {
-              errors[`milestone_code_${index}`] = "Code is required";
-            }
-            if (!milestone.date) {
-              errors[`milestone_date_${index}`] = "Date is required";
-            }
-            if (!milestone.location) {
-              errors[`milestone_location_${index}`] = "Location is required";
-            }
-          }
-        });
+
+      case 2: // Review - no validation needed
         break;
-        
-      case 3: // Review - no validation needed
-        break;
-        
+
       default:
         break;
     }
@@ -647,76 +566,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      if (currentStep === 3 && !feedbackSubmitted) {
+      if (currentStep === 2 && !feedbackSubmitted) {
         toast.error("Please submit your feedback before completing.", {
           duration: 4000,
           position: "top-center",
         });
         return;
       }
-      // Check if on milestone step and milestones not submitted
-      if (currentStep === 2 && !milestonesSubmitted) {
-        toast(
-          (t) => (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-start gap-3">
-                <FiAlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    Submit Milestones?
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    You haven't submitted any milestones yet. Do you want to
-                    submit milestones?
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    // User chose to skip, clear any errors and proceed
-                    setValidationErrors({});
-                    setCurrentStep((prev) => {
-                      const next = Math.min(prev + 1, steps.length - 1);
-                      setTimeout(scrollToQuestionSection, 100);
-                      return next;
-                    });
-                  }}
-                  className="btn-secondary text-sm"
-                >
-                  Skip
-                </button>
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    // User wants to submit milestones, stay on current step
-                    setValidationErrors({
-                      milestones:
-                        "Please fill out the milestone form and click 'Submit Milestones' button",
-                    });
-                    setTimeout(scrollToQuestionSection, 100);
-                  }}
-                  className="btn-primary text-sm"
-                >
-                  Fill Milestones
-                </button>
-              </div>
-            </div>
-          ),
-          {
-            duration: Infinity,
-            position: "top-center",
-            style: {
-              maxWidth: "500px",
-            },
-          },
-        );
-        return;
-      }
-
-      // Validate current step before proceeding (skip milestone validation)
-      const errors = currentStep === 2 ? {} : validateStep(currentStep);
+      // Validate current step before proceeding
+      const errors = validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
 
@@ -787,10 +645,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         setTimeout(scrollToQuestionSection, 100);
         return prevStep;
       });
-      // Reset milestones submitted flag when going back to milestone step
-      if (currentStep === 3) {
-        setMilestonesSubmitted(false);
-      }
     }
   };
 
@@ -823,14 +677,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   const handleSubmit = async () => {
     setFeedbackSubmitted(false);
-    
+
     // Convert selectedRows to the required format
     const feedbackList = Object.values(selectedRows)
-      .filter(row => row.criteriaCode && row.unitCode && row.evaluation && row.evaluation.trim() !== "")
+      .filter(
+        (row) =>
+          row.criteriaCode &&
+          row.unitCode &&
+          row.evaluation &&
+          row.evaluation.trim() !== "",
+      )
       .map((row) => {
         const answer = (row.evaluation || "").toString().toUpperCase();
         const validAnswers = ["P", "A", "G", "E", "N"];
-        
+
         return {
           P_CRITERIA_CODE: row.criteriaCode,
           P_CODE: row.unitCode,
@@ -882,7 +742,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       });
       return;
     }
-    
+
     if (onSubmit) {
       onSubmit(feedbackPayload);
     }
@@ -1267,150 +1127,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     );
   };
 
-  // Milestone handling functions
-  const handleMilestoneChange = (index, field, value) => {
-    const updatedMilestones = [...formData.milestones];
-
-    // If changing code field, auto-populate milestone description
-    if (field === "code") {
-      const selectedMilestone = milestoneTypes.find(
-        (mt) =>
-          (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
-          value,
-      );
-      if (selectedMilestone) {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          code: value,
-          milestone:
-            selectedMilestone.MILESTONE_DESCRIPTION ||
-            selectedMilestone.MILESTONE_TYPE_DESC ||
-            selectedMilestone.DESCRIPTION ||
-            selectedMilestone.DESC ||
-            "",
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          [field]: value,
-        };
-      }
-    } else {
-      updatedMilestones[index] = {
-        ...updatedMilestones[index],
-        [field]: value,
-      };
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      milestones: updatedMilestones,
-    }));
-
-    // Reset submitted state when changes are made
-    if (milestonesSubmitted) {
-      setMilestonesSubmitted(false);
-    }
-
-    // Clear validation errors
-    if (validationErrors[`milestone_${field}_${index}`]) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[`milestone_${field}_${index}`];
-        return newErrors;
-      });
-    }
-    if (validationErrors.milestones) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.milestones;
-        return newErrors;
-      });
-    }
-  };
-
-  const addMilestone = () => {
-    setFormData((prev) => ({
-      ...prev,
-      milestones: [
-        ...prev.milestones,
-        { code: "", milestone: "", date: "", location: "", remarks: "" },
-      ],
-    }));
-    // Reset submitted state when adding new milestone
-    if (milestonesSubmitted) {
-      setMilestonesSubmitted(false);
-    }
-  };
-
-  const removeMilestone = (index) => {
-    if (formData.milestones.length > 1) {
-      const updatedMilestones = formData.milestones.filter(
-        (_, i) => i !== index,
-      );
-      setFormData((prev) => ({
-        ...prev,
-        milestones: updatedMilestones,
-      }));
-      // Reset submitted state when removing milestone
-      if (milestonesSubmitted) {
-        setMilestonesSubmitted(false);
-      }
-    }
-  };
-
-  const handleSubmitMilestones = async () => {
-    // Validate milestones before submitting
-    const errors = validateStep(2);
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      // Scroll to first error
-      setTimeout(() => {
-        const errorElement = document.querySelector(
-          '[class*="text-red-600"]',
-        );
-        if (errorElement) {
-          errorElement.scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
-      }, 100);
-      return;
-    }
-
-    // Prepare the milestone payload
-    const milestonePayload = {
-      p_job_category: formData.jobCategory,
-      p_jmain: formData.projectNumber,
-      MilestoneList: formData.milestones
-        .filter(
-          (milestone) =>
-            milestone.milestone && milestone.milestone.trim() !== "",
-        )
-        .map((milestone) => ({
-          p_milestone_code: milestone.code,
-          p_milestone_date: milestone.date,
-          p_remarks: milestone.remarks || "",
-          p_milestone_location: milestone.location || "",
-        })),
-    };
-
-    try {
-      await dispatch(submitMilestone(milestonePayload));
-      // Mark milestones as submitted on success
-      setMilestonesSubmitted(true);
-      setValidationErrors({});
-    } catch (error) {
-      console.error("Failed to submit milestones:", error);
-      setValidationErrors({
-        milestones:
-          error.message ||
-          "Failed to submit milestones. Please try again.",
-      });
-    }
-  };
-
   const getStepContent = () => {
     const cardClass = isMobile ? "p-4" : "p-6";
     const titleClass = isMobile ? "text-lg mb-2" : "text-2xl mb-2";
@@ -1792,7 +1508,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Evaluation Details
                 </h2>
                 <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                  Rate each criteria-unit combination. At least one evaluation is required.
+                  Rate each criteria-unit combination. At least one evaluation
+                  is required.
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-2 md:mt-0">
@@ -1838,7 +1555,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       {currentPageData.map((item, rowIndex) => {
                         const actualIndex = startIndex + rowIndex;
                         const rowData = selectedRows[actualIndex] || {};
-                        
+
                         return (
                           <div
                             key={actualIndex}
@@ -1851,7 +1568,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   Criteria:
                                 </span>
                                 <span className="text-xs text-gray-900 dark:text-white ml-2">
-                                  {item.criteriaCode} - {item.criteriaDescription}
+                                  {item.criteriaCode} -{" "}
+                                  {item.criteriaDescription}
                                 </span>
                               </div>
                               <div>
@@ -1871,16 +1589,47 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </label>
                               <div className="flex flex-wrap gap-2">
                                 {[
-                                  { value: "P", label: "Poor", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
-                                  { value: "A", label: "Average", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
-                                  { value: "G", label: "Good", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" },
-                                  { value: "E", label: "Excellent", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
-                                  { value: "N", label: "Not Relevant", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
+                                  {
+                                    value: "P",
+                                    label: "Poor",
+                                    color:
+                                      "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                  },
+                                  {
+                                    value: "A",
+                                    label: "Average",
+                                    color:
+                                      "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                  },
+                                  {
+                                    value: "G",
+                                    label: "Good",
+                                    color:
+                                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                  },
+                                  {
+                                    value: "E",
+                                    label: "Excellent",
+                                    color:
+                                      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                  },
+                                  {
+                                    value: "N",
+                                    label: "Not Relevant",
+                                    color:
+                                      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                  },
                                 ].map((option) => (
                                   <button
                                     key={option.value}
                                     type="button"
-                                    onClick={() => handleEvaluationChange(rowIndex, "evaluation", option.value)}
+                                    onClick={() =>
+                                      handleEvaluationChange(
+                                        rowIndex,
+                                        "evaluation",
+                                        option.value,
+                                      )
+                                    }
                                     className={`px-2 py-1 text-xs rounded border transition-colors ${
                                       rowData.evaluation === option.value
                                         ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
@@ -1901,7 +1650,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <div className="flex gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => handleEvaluationChange(rowIndex, "yesNo", "YES")}
+                                  onClick={() =>
+                                    handleEvaluationChange(
+                                      rowIndex,
+                                      "yesNo",
+                                      "YES",
+                                    )
+                                  }
                                   className={`px-3 py-1 text-xs rounded border transition-colors ${
                                     rowData.yesNo === "YES"
                                       ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
@@ -1912,7 +1667,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => handleEvaluationChange(rowIndex, "yesNo", "NO")}
+                                  onClick={() =>
+                                    handleEvaluationChange(
+                                      rowIndex,
+                                      "yesNo",
+                                      "NO",
+                                    )
+                                  }
                                   className={`px-3 py-1 text-xs rounded border transition-colors ${
                                     rowData.yesNo === "NO"
                                       ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
@@ -1931,7 +1692,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </label>
                               <textarea
                                 value={rowData.remarks || ""}
-                                onChange={(e) => handleEvaluationChange(rowIndex, "remarks", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationChange(
+                                    rowIndex,
+                                    "remarks",
+                                    e.target.value,
+                                  )
+                                }
                                 placeholder="Add remarks..."
                                 className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
                                 rows="2"
@@ -1945,7 +1712,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               </label>
                               <textarea
                                 value={rowData.actionTaken || ""}
-                                onChange={(e) => handleEvaluationChange(rowIndex, "actionTaken", e.target.value)}
+                                onChange={(e) =>
+                                  handleEvaluationChange(
+                                    rowIndex,
+                                    "actionTaken",
+                                    e.target.value,
+                                  )
+                                }
                                 placeholder="Action taken..."
                                 className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
                                 rows="2"
@@ -1985,43 +1758,81 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           {currentPageData.map((item, rowIndex) => {
                             const actualIndex = startIndex + rowIndex;
                             const rowData = selectedRows[actualIndex] || {};
-                            
+
                             return (
-                              <tr key={actualIndex} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                              <tr
+                                key={actualIndex}
+                                className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                              >
                                 {/* Criteria */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                   <div className="text-gray-900 dark:text-white">
-                                    <div className="font-medium">{item.criteriaCode}</div>
+                                    <div className="font-medium">
+                                      {item.criteriaCode}
+                                    </div>
                                     <div className="text-xs text-gray-600 dark:text-gray-400">
                                       {item.criteriaDescription}
                                     </div>
                                   </div>
                                 </td>
-                                
+
                                 {/* Unit */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                   <div className="text-gray-900 dark:text-white">
-                                    <div className="font-medium">{item.unitCode}</div>
+                                    <div className="font-medium">
+                                      {item.unitCode}
+                                    </div>
                                     <div className="text-xs text-gray-600 dark:text-gray-400">
                                       {item.unitDescription}
                                     </div>
                                   </div>
                                 </td>
-                                
+
                                 {/* Evaluation */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                   <div className="flex flex-wrap gap-1">
                                     {[
-                                      { value: "P", label: "P", color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
-                                      { value: "A", label: "A", color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
-                                      { value: "G", label: "G", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" },
-                                      { value: "E", label: "E", color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
-                                      { value: "N", label: "N", color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
+                                      {
+                                        value: "P",
+                                        label: "P",
+                                        color:
+                                          "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                      },
+                                      {
+                                        value: "A",
+                                        label: "A",
+                                        color:
+                                          "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                      },
+                                      {
+                                        value: "G",
+                                        label: "G",
+                                        color:
+                                          "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                      },
+                                      {
+                                        value: "E",
+                                        label: "E",
+                                        color:
+                                          "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                      },
+                                      {
+                                        value: "N",
+                                        label: "N",
+                                        color:
+                                          "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                      },
                                     ].map((option) => (
                                       <button
                                         key={option.value}
                                         type="button"
-                                        onClick={() => handleEvaluationChange(rowIndex, "evaluation", option.value)}
+                                        onClick={() =>
+                                          handleEvaluationChange(
+                                            rowIndex,
+                                            "evaluation",
+                                            option.value,
+                                          )
+                                        }
                                         className={`px-2 py-1 text-xs rounded border transition-colors ${
                                           rowData.evaluation === option.value
                                             ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
@@ -2033,13 +1844,19 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     ))}
                                   </div>
                                 </td>
-                                
+
                                 {/* Yes/No */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                   <div className="flex gap-2">
                                     <button
                                       type="button"
-                                      onClick={() => handleEvaluationChange(rowIndex, "yesNo", "YES")}
+                                      onClick={() =>
+                                        handleEvaluationChange(
+                                          rowIndex,
+                                          "yesNo",
+                                          "YES",
+                                        )
+                                      }
                                       className={`px-3 py-1 text-xs rounded border transition-colors ${
                                         rowData.yesNo === "YES"
                                           ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
@@ -2050,7 +1867,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => handleEvaluationChange(rowIndex, "yesNo", "NO")}
+                                      onClick={() =>
+                                        handleEvaluationChange(
+                                          rowIndex,
+                                          "yesNo",
+                                          "NO",
+                                        )
+                                      }
                                       className={`px-3 py-1 text-xs rounded border transition-colors ${
                                         rowData.yesNo === "NO"
                                           ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
@@ -2061,23 +1884,35 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     </button>
                                   </div>
                                 </td>
-                                
+
                                 {/* Remarks */}
                                 <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
                                   <textarea
                                     value={rowData.remarks || ""}
-                                    onChange={(e) => handleEvaluationChange(rowIndex, "remarks", e.target.value)}
+                                    onChange={(e) =>
+                                      handleEvaluationChange(
+                                        rowIndex,
+                                        "remarks",
+                                        e.target.value,
+                                      )
+                                    }
                                     placeholder="Add remarks..."
                                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
                                     rows="2"
                                   />
                                 </td>
-                                
+
                                 {/* Action Taken */}
                                 <td className="px-4 py-3">
                                   <textarea
                                     value={rowData.actionTaken || ""}
-                                    onChange={(e) => handleEvaluationChange(rowIndex, "actionTaken", e.target.value)}
+                                    onChange={(e) =>
+                                      handleEvaluationChange(
+                                        rowIndex,
+                                        "actionTaken",
+                                        e.target.value,
+                                      )
+                                    }
                                     placeholder="Action taken..."
                                     className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
                                     rows="2"
@@ -2107,11 +1942,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       <FiChevronLeft />
                       Previous
                     </button>
-                    
+
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Showing {startIndex + 1} to {endIndex} of {totalRows} items
+                      Showing {startIndex + 1} to {endIndex} of {totalRows}{" "}
+                      items
                     </div>
-                    
+
                     <button
                       onClick={nextPage}
                       disabled={currentPage === totalPages}
@@ -2132,26 +1968,38 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
                     Evaluation Legend
                   </h4>
-                  <div className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"} gap-3`}>
+                  <div
+                    className={`grid ${isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"} gap-3`}
+                  >
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                      <span className="text-xs text-gray-700 dark:text-gray-300">P - POOR</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        P - POOR
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
-                      <span className="text-xs text-gray-700 dark:text-gray-300">A - AVERAGE</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        A - AVERAGE
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-                      <span className="text-xs text-gray-700 dark:text-gray-300">G - GOOD</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        G - GOOD
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                      <span className="text-xs text-gray-700 dark:text-gray-300">E - EXCELLENT</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        E - EXCELLENT
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-                      <span className="text-xs text-gray-700 dark:text-gray-300">N - NOT RELEVANT</span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        N - NOT RELEVANT
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -2163,7 +2011,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   </label>
                   <textarea
                     value={formData.observations}
-                    onChange={(e) => handleInputChange("observations", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("observations", e.target.value)
+                    }
                     placeholder="Notes & recommendations for follow-up or improvements"
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
                     rows={isMobile ? "2" : "3"}
@@ -2175,7 +2025,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
                     Duration (Days)
                   </h4>
-                  <div className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"} gap-4`}>
+                  <div
+                    className={`grid ${isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"} gap-4`}
+                  >
                     <div>
                       <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Afloat
@@ -2184,7 +2036,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         disabled
                         type="number"
                         min="0"
-                        value={formData.afloatDuration === 0 ? "0" : formData.afloatDuration}
+                        value={
+                          formData.afloatDuration === 0
+                            ? "0"
+                            : formData.afloatDuration
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       />
                     </div>
@@ -2196,7 +2052,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         disabled
                         type="number"
                         min="0"
-                        value={formData.indockDuration === 0 ? "0" : formData.indockDuration}
+                        value={
+                          formData.indockDuration === 0
+                            ? "0"
+                            : formData.indockDuration
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       />
                     </div>
@@ -2206,7 +2066,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </label>
                       <input
                         type="number"
-                        value={Number(formData.afloatDuration) + Number(formData.indockDuration)}
+                        value={
+                          Number(formData.afloatDuration) +
+                          Number(formData.indockDuration)
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                         readOnly
                       />
@@ -2219,389 +2082,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         );
 
       case 2:
-        // Milestones Step
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Project Milestones
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Track key milestones and achievements for this project
-              </p>
-            </div>
-
-            {validationErrors.milestones && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {validationErrors.milestones}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {formData.milestones.map((milestone, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900"
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Milestone {index + 1}
-                    </h3>
-                    {formData.milestones.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMilestone(index)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <div
-                    className={`grid ${
-                      isMobile ? "grid-cols-1 gap-3" : "grid-cols-2 gap-4"
-                    }`}
-                  >
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Code
-                      </label>
-                      <div
-                        className="relative"
-                        ref={(el) =>
-                          (milestoneDropdownRefs.current[index] = el)
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenMilestoneIndex(
-                              openMilestoneIndex === index ? null : index,
-                            )
-                          }
-                          disabled={milestoneTypesLoading}
-                          className={`w-full text-left input-field flex items-center justify-between ${
-                            isMobile ? "py-2 text-sm" : ""
-                          } ${
-                            validationErrors[`milestone_code_${index}`]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        >
-                          <span>
-                            {milestone.code
-                              ? milestone.code
-                              : milestoneTypesLoading
-                                ? "Loading codes..."
-                                : "Select milestone code"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 ml-2 text-gray-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </button>
-
-                        {openMilestoneIndex === index && (
-                          <div
-                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
-                            style={{ maxHeight: "10rem", overflowY: "auto" }}
-                          >
-                            {milestoneTypes
-                              .slice()
-                              .sort((a, b) => {
-                                const aCode =
-                                  a.MILESTONE_TYPE_CODE ||
-                                  a.MILESTONE_CODE ||
-                                  a.CODE;
-                                const bCode =
-                                  b.MILESTONE_TYPE_CODE ||
-                                  b.MILESTONE_CODE ||
-                                  b.CODE;
-                                const na = parseInt(aCode, 10);
-                                const nb = parseInt(bCode, 10);
-                                if (!isNaN(na) && !isNaN(nb)) return na - nb;
-                                return String(aCode).localeCompare(
-                                  String(bCode),
-                                );
-                              })
-                              .map((mt, idx) => {
-                                const code =
-                                  mt.MILESTONE_TYPE_CODE ||
-                                  mt.MILESTONE_CODE ||
-                                  mt.CODE;
-                                return (
-                                  <div
-                                    key={idx}
-                                    onClick={() => {
-                                      handleMilestoneChange(
-                                        index,
-                                        "code",
-                                        code,
-                                      );
-                                      setOpenMilestoneIndex(null);
-                                    }}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                                      milestone.code === code
-                                        ? "bg-blue-50 dark:bg-blue-900/30"
-                                        : ""
-                                    }`}
-                                  >
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {code}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        )}
-                      </div>
-                      {validationErrors[`milestone_code_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_code_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Milestone
-                      </label>
-                      <input
-                        type="text"
-                        value={milestone.milestone}
-                        readOnly
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_milestone_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        } bg-gray-100 dark:bg-gray-700 cursor-not-allowed`}
-                        placeholder="Select a milestone code first"
-                      />
-                      {validationErrors[`milestone_milestone_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_milestone_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        value={milestone.date}
-                        onChange={(e) =>
-                          handleMilestoneChange(index, "date", e.target.value)
-                        }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_date_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {validationErrors[`milestone_date_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_date_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Location
-                      </label>
-                      <div
-                        className="relative"
-                        ref={(el) =>
-                          (milestoneDropdownRefs.current[`loc_${index}`] = el)
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenLocationIndex(
-                              openLocationIndex === index ? null : index,
-                            )
-                          }
-                          className={`w-full text-left input-field flex items-center justify-between ${
-                            isMobile ? "py-2 text-sm" : ""
-                          } ${
-                            validationErrors[`milestone_location_${index}`]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        >
-                          <span>
-                            {milestone.location
-                              ? (
-                                  milestoneLocationOptions.find(
-                                    (o) => o.value === milestone.location,
-                                  ) || { label: milestone.location }
-                                ).label
-                              : "Select Location"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 ml-2 text-gray-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </button>
-
-                        {openLocationIndex === index && (
-                          <div
-                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
-                            style={{ maxHeight: "10rem", overflowY: "auto" }}
-                          >
-                            {milestoneLocationOptions.map((option) => (
-                              <div
-                                key={option.value}
-                                onClick={() => {
-                                  handleMilestoneChange(
-                                    index,
-                                    "location",
-                                    option.value,
-                                  );
-                                  setOpenLocationIndex(null);
-                                }}
-                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                              >
-                                <div className="text-sm text-gray-900 dark:text-white">
-                                  {option.label}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {validationErrors[`milestone_location_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_location_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className={isMobile ? "" : "col-span-2"}>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Remarks
-                      </label>
-                      <textarea
-                        value={milestone.remarks}
-                        onChange={(e) =>
-                          handleMilestoneChange(
-                            index,
-                            "remarks",
-                            e.target.value,
-                          )
-                        }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          isMobile ? "h-20" : "h-24"
-                        } resize-none overflow-auto`}
-                        placeholder="Add any remarks about this milestone..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addMilestone}
-                className="btn-secondary w-full flex items-center justify-center gap-2"
-              >
-                <FiTrendingUp className="w-5 h-5" />
-                Add Another Milestone
-              </button>
-            </div>
-
-            {/* Submit Milestones Button */}
-            <div className="mt-6">
-              {milestonesSubmitted ? (
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg flex items-center gap-3">
-                  <FiCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-                    Milestones submitted successfully! You can now proceed to
-                    the next step.
-                  </span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmitMilestones}
-                  disabled={milestoneSubmitting}
-                  className={`btn-primary w-full flex items-center justify-center gap-2 ${
-                    milestoneSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {milestoneSubmitting ? (
-                    <>
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <FiCheck className="w-5 h-5" />
-                      Submit Milestones
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        );
-
-      case 3:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2705,72 +2185,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
             </div>
 
-            {/* Milestones Summary - only show if milestones were submitted */}
-            {milestonesSubmitted &&
-              formData.milestones.filter((m) => m.milestone).length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
-                    Project Milestones
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {formData.milestones
-                      .filter((milestone) => milestone.milestone)
-                      .map((milestone, index) => {
-                        return (
-                          <div
-                            key={index}
-                            className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                  <span className="inline-flex w-fit px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-md text-xs font-medium">
-                                    {milestone.code}
-                                  </span>
-                                  <h5 className="font-medium text-gray-900 dark:text-white break-words">
-                                    {milestone.milestone}
-                                  </h5>
-                                </div>
-
-                                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                  <div className="flex items-center">
-                                    <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span className="break-words">
-                                      {milestone.date
-                                        ? new Date(
-                                            milestone.date,
-                                          ).toLocaleDateString()
-                                        : "No date set"}
-                                    </span>
-                                  </div>
-                                  {milestone.location && (
-                                    <div className="flex items-center min-w-0">
-                                      <span className="mr-1 flex-shrink-0">
-                                        📍
-                                      </span>
-                                      <span className="break-words">
-                                        {milestone.location}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {milestone.remarks && (
-                              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
-                                  {milestone.remarks}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-
             {/* Ratings Summary */}
             <div className="mb-6">
               <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
@@ -2807,7 +2221,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
                         // Find the criteria description
                         const criteriaItem = allCriteriaUnits.find(
-                          item => item.criteriaCode === row.criteriaCode && item.unitCode === row.unitCode
+                          (item) =>
+                            item.criteriaCode === row.criteriaCode &&
+                            item.unitCode === row.unitCode,
                         );
 
                         return (
@@ -2817,14 +2233,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                           >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                               <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {criteriaItem ? `${criteriaItem.criteriaCode} - ${criteriaItem.unitCode}` : `${row.criteriaCode}-${row.unitCode}`}
+                                {criteriaItem
+                                  ? `${criteriaItem.criteriaCode} - ${criteriaItem.unitCode}`
+                                  : `${row.criteriaCode}-${row.unitCode}`}
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
                                   score,
                                 )}`}
                               >
-                                {row.evaluation} ({score})
+                                {row.evaluation} ({score}%)
                               </span>
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -2896,7 +2314,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                   score,
                                 )}`}
                               >
-                                {score}
+                                {score}%
                               </span>
                             </div>
                             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -2988,7 +2406,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -3079,15 +2497,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       observations: "",
                       poorAverageDetails: "",
                       shipManagerComments: "",
-                      milestones: [
-                        {
-                          code: "",
-                          milestone: "",
-                          date: "",
-                          location: "",
-                          remarks: "",
-                        },
-                      ],
                     });
                     setSelectedRows({});
                     setAllCriteriaUnits([]);
@@ -3165,78 +2574,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
   };
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
-
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4">
-      {/* Desktop Progress Bar */}
-      <div className="hidden md:block mb-8">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-          <span>
-            Step {currentStep + 1} of {steps.length}
-          </span>
-          <span>{Math.round(progress)}% Complete</span>
-        </div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between mt-6">
-          {steps.map((step, index) => {
-            // Check if all previous steps are validated
-            const canNavigate = () => {
-              if (index <= currentStep) return true; // Can always go back
-              if (index === steps.length - 1 && !feedbackSubmitted)
-                return false;
-              // Check all steps from current to target are valid
-              for (let i = currentStep; i < index; i++) {
-                const errors = validateStep(i);
-                if (Object.keys(errors).length > 0) return false;
-              }
-              return true;
-            };
-
-            const isClickable = canNavigate();
-
-            return (
-              <div key={step.id} className="flex flex-col items-center">
-                <button
-                  onClick={() => {
-                    if (isClickable) {
-                      setCurrentStep(step.id);
-                    }
-                  }}
-                  disabled={!isClickable}
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                    index === currentStep
-                      ? "bg-blue-600 text-white scale-110"
-                      : index < currentStep
-                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
-                        : isClickable
-                          ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
-                          : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
-                  }`}
-                >
-                  {index < currentStep ? <FiCheck /> : step.icon}
-                </button>
-                <span
-                  className={`mt-2 text-xs text-center ${
-                    index === currentStep
-                      ? "text-blue-600 dark:text-blue-400 font-medium"
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
-                >
-                  {step.title}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Mobile Progress Indicator */}
       {isMobile && currentStep <= steps.length - 1 && (
         <MobileProgressIndicator />
@@ -3250,14 +2589,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       {/* Mobile Step Buttons */}
       {isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 3 &&
-        currentStep !== 4 && <MobileStepButtons />}
+        currentStep !== 2 &&
+        currentStep !== 3 && <MobileStepButtons />}
 
       {/* Desktop Navigation */}
       {!isMobile &&
         currentStep < steps.length - 1 &&
-        currentStep !== 3 &&
-        currentStep !== 4 && (
+        currentStep !== 2 &&
+        currentStep !== 3 && (
           <div className="flex justify-between mt-8">
             <button
               onClick={prevStep}

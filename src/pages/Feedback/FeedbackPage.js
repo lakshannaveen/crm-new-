@@ -1327,44 +1327,29 @@ const FeedbackPage = () => {
               </span>
             </div>
 
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Service Feedback System
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Share your experience and view feedback history. All data is
-                    saved locally.
-                  </p>
-                </div>
-
-                <div className="mt-4 md:mt-0 flex space-x-3">
-                  <button
-                    onClick={handleNewFeedback}
-                    className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      !showHistory
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <FiMessageSquare className="mr-2" />
-                    New Feedback
-                  </button>
-                  <button
-                    onClick={handleViewHistory}
-                    className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
-                      showHistory
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
-                  >
-                    <FiList className="mr-2" />
-                    View History
-                  </button>
-                </div>
-              </div>
+            <div className="mb-8 flex space-x-3 justify-end">
+              <button
+                onClick={handleNewFeedback}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                  !showHistory
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                <FiMessageSquare className="mr-2" />
+                New Feedback
+              </button>
+              <button
+                onClick={handleViewHistory}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
+                  showHistory
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                }`}
+              >
+                <FiList className="mr-2" />
+                View History
+              </button>
             </div>
 
             {/* API Error Banner */}
@@ -1567,44 +1552,59 @@ const FeedbackPage = () => {
                             feedback,
                             "FEEDBACK_VESSEL_NAME",
                             "vesselName",
-                            "vessel_name"
+                            "vessel_name",
                           );
-                          const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT", "P_JCAT");
-                          const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
+                          const jcatVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_JCAT",
+                            "P_JCAT",
+                          );
+                          const jmainVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_JMAIN",
+                            "P_JMAIN",
+                          );
                           const criteriaCodeVal = getFieldValue(
                             feedback,
-                            "FEEDBACK_CRITERIA_CODE"
+                            "FEEDBACK_CRITERIA_CODE",
                           );
                           const criteriaDescVal = getFieldValue(
                             feedback,
-                            "FEEDBACK_CRITERIA_DESC"
+                            "FEEDBACK_CRITERIA_DESC",
                           );
-                          const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
+                          const codeVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_CODE",
+                            "P_CODE",
+                          );
                           const codeDescVal = getFieldValue(
                             feedback,
                             "FEEDBACK_CODE_DESC",
-                            "P_CODE_DESC"
+                            "P_CODE_DESC",
                           );
-                          const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
+                          const evalVal = getFieldValue(
+                            feedback,
+                            "FEEDBACK_EVAL",
+                          );
                           const answerVal = formatYesNo(
                             feedback,
                             "FEEDBACK_ANSWER",
-                            "P_ANSWER_TYPE"
+                            "P_ANSWER_TYPE",
                           );
                           const completionVal = getFieldValue(
                             feedback,
-                            "FEEDBACK_COMPLETION_DATE"
+                            "FEEDBACK_COMPLETION_DATE",
                           );
                           const remarksVal = getFieldValue(
                             feedback,
                             "FEEDBACK_REMARKS",
                             "P_REMARKS",
-                            "observations"
+                            "observations",
                           );
                           const actionTakenVal = getFieldValue(
                             feedback,
                             "FEEDBACK_ACTION_TAKEN",
-                            "P_ACTION_TAKEN"
+                            "P_ACTION_TAKEN",
                           );
 
                           return (
@@ -1619,18 +1619,41 @@ const FeedbackPage = () => {
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex-1">
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Vessel</div>
-                                    <h4 className="font-medium text-gray-900 dark:text-white">{vesselName}</h4>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Vessel
+                                    </div>
+                                    <h4 className="font-medium text-gray-900 dark:text-white">
+                                      {vesselName}
+                                    </h4>
 
                                     <div className="flex gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                                      {jcatVal !== "NA" && <div className="text-xs"><strong>JCAT:</strong> {jcatVal}</div>}
-                                      {jmainVal !== "NA" && <div className="text-xs"><strong>JMAIN:</strong> {jmainVal}</div>}
-                                      {criteriaCodeVal !== "NA" && <div className="text-xs"><strong>Criteria:</strong> {criteriaCodeVal}</div>}
+                                      {jcatVal !== "NA" && (
+                                        <div className="text-xs">
+                                          <strong>JCAT:</strong> {jcatVal}
+                                        </div>
+                                      )}
+                                      {jmainVal !== "NA" && (
+                                        <div className="text-xs">
+                                          <strong>JMAIN:</strong> {jmainVal}
+                                        </div>
+                                      )}
+                                      {criteriaCodeVal !== "NA" && (
+                                        <div className="text-xs">
+                                          <strong>Criteria:</strong>{" "}
+                                          {criteriaCodeVal}
+                                        </div>
+                                      )}
                                     </div>
 
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">Date</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                      Date
+                                    </div>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                                      {feedback.submittedAt ? new Date(feedback.submittedAt).toLocaleDateString() : "NA"}
+                                      {feedback.submittedAt
+                                        ? new Date(
+                                            feedback.submittedAt,
+                                          ).toLocaleDateString()
+                                        : "NA"}
                                     </p>
                                   </div>
                                 </div>
@@ -1639,57 +1662,87 @@ const FeedbackPage = () => {
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
                                 {criteriaDescVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Description</div>
-                                    <div className="font-medium">{criteriaDescVal}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Criteria Description
+                                    </div>
+                                    <div className="font-medium">
+                                      {criteriaDescVal}
+                                    </div>
                                   </div>
                                 )}
 
                                 {codeVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Code
+                                    </div>
                                     <div className="font-medium">{codeVal}</div>
                                   </div>
                                 )}
 
                                 {codeDescVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Code Description</div>
-                                    <div className="font-medium">{codeDescVal}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Code Description
+                                    </div>
+                                    <div className="font-medium">
+                                      {codeDescVal}
+                                    </div>
                                   </div>
                                 )}
 
                                 {evalVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Evaluation</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Evaluation
+                                    </div>
                                     <div className="font-medium">{evalVal}</div>
                                   </div>
                                 )}
 
                                 {answerVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
-                                    <div className="font-medium">{answerVal}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Answer
+                                    </div>
+                                    <div className="font-medium">
+                                      {answerVal}
+                                    </div>
                                   </div>
                                 )}
 
                                 {completionVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Completion Date</div>
-                                    <div className="font-medium">{new Date(completionVal).toLocaleDateString()}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Completion Date
+                                    </div>
+                                    <div className="font-medium">
+                                      {new Date(
+                                        completionVal,
+                                      ).toLocaleDateString()}
+                                    </div>
                                   </div>
                                 )}
 
                                 {actionTakenVal !== "NA" && (
                                   <div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Action Taken</div>
-                                    <div className="font-medium">{actionTakenVal}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Action Taken
+                                    </div>
+                                    <div className="font-medium">
+                                      {actionTakenVal}
+                                    </div>
                                   </div>
                                 )}
 
                                 {remarksVal !== "NA" && (
                                   <div className="sm:col-span-2">
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Remarks</div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{remarksVal}</p>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      Remarks
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                      {remarksVal}
+                                    </p>
                                   </div>
                                 )}
                               </div>
