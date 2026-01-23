@@ -341,7 +341,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         const criteriaCode = item.FEEDBACK_CRITERIA_CODE;
         const unitCode = item.FEEDBACK_UNIT_CODE;
         const unitDescription = item.FEEDBACK_UNIT_DESCRIPTION || "";
-        const criteriaDescription = item.FEEDBACK_CRITERIA_DESC || "";
+        // Accept both FEEDBACK_CRITERIA_DESC and FEEDBACK_CRITERIA_DESCRIPTION
+        const criteriaDescription =
+          item.FEEDBACK_CRITERIA_DESC ||
+          item.FEEDBACK_CRITERIA_DESCRIPTION ||
+          item.FEEDBACK_CRITERIA_DESCRIPTION_LONG ||
+          "";
 
         if (criteriaCode && unitCode) {
           const key = `${criteriaCode}-${unitCode}`;
@@ -412,13 +417,24 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   const groupCriteriaByParent = () => {
     const groups = {};
 
+    // Build a lookup from `criterias` (from API) in case it contains the
+    // top-level criteria descriptions (e.g., FEEDBACK_CRITERIA_DESCRIPTION).
+    const criteriaLookup = {};
+    (criterias || []).forEach((c) => {
+      const code = String(c.FEEDBACK_CRITERIA_CODE || c.FEEDBACK_CRITERIA || "");
+      const desc = c.FEEDBACK_CRITERIA_DESCRIPTION || c.FEEDBACK_CRITERIA_DESC || "";
+      if (code) criteriaLookup[code] = desc;
+    });
+
     allCriteriaUnits.forEach((item) => {
-      const mainCategory = item.criteriaCode.split(".")[0]; // Get "3" from "3.1"
+      const mainCategory = String(item.criteriaCode).split(".")[0]; // Get "3" from "3.1"
 
       if (!groups[mainCategory]) {
+        // Prefer description from `criterias` API; fallback to item.criteriaDescription
+        const mainDesc = criteriaLookup[mainCategory] || item.criteriaDescription || "";
         groups[mainCategory] = {
           mainCode: mainCategory,
-          mainDescription: item.criteriaDescription,
+          mainDescription: mainDesc,
           items: [],
         };
       }
