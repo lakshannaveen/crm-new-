@@ -1366,10 +1366,7 @@ const FeedbackPage = () => {
                 <FiArrowLeft className="mr-2" />
                 Back to Dashboard
               </Link>
-              <span className="mx-3 text-gray-400">/</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                Service Feedback
-              </span>
+              {/* removed page label per request */}
             </div>
 
             <div className="mb-8 flex flex-wrap gap-3 justify-end items-center">
@@ -1423,12 +1420,12 @@ const FeedbackPage = () => {
                     <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
                       <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
                     </div>
-                    <div className="ml-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Total Feedback
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                        {stats.totalResponses}
+                    <div className="mb-8">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                        Feedback Questionnaire
+                      </h1>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Please complete this questionnaire to help us improve our service.
                       </p>
                     </div>
                   </div>
