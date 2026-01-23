@@ -1412,27 +1412,6 @@ const FeedbackPage = () => {
               </div>
             )}
 
-            {/* Stats Cards - Only shown in View History */}
-            {showHistory && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="card">
-                  <div className="flex items-center">
-                    <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                      <FiMessageSquare className="w-6 h-6 text-blue-600 dark:text-blue-300" />
-                    </div>
-                    <div className="mb-8">
-                      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                        Feedback Questionnaire
-                      </h1>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Please complete this questionnaire to help us improve our service.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Confirmation Message */}
             {showConfirmation && recentFeedback && (
               <div className="mb-8 animate-fade-in">
