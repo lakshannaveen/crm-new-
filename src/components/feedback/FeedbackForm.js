@@ -235,11 +235,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    if (dates.startingDate || dates.endingDate) {
+    if (dates.startingDate || dates.endingDate || dates.locationCode) {
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
         endingDate: dates.endingDate,
+        projectHandleLocation: dates.locationCode || "No Location",
       }));
     }
   }, [dates]);
