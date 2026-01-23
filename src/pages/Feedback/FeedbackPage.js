@@ -1105,7 +1105,51 @@ const FeedbackPage = () => {
   };
 
   const downloadFeedbackPDF = (feedback) => {
-    // Create a PDF with only card content: vessel name, date, score, rating, observations
+    const referenceNumber =
+      (feedback &&
+        (feedback.feedbackRef ||
+          feedback.referenceNo ||
+          feedback.FEEDBACK_CODE ||
+          feedback.FEEDBACK_REFERENCE ||
+          feedback.P_REFERENCE_NO)) ||
+      "";
+
+    const vesselName =
+      (feedback &&
+        (feedback.vesselName ||
+          feedback.FEEDBACK_VESSEL_NAME ||
+          feedback.vessel_name ||
+          feedback.FEEDBACK_DESC)) ||
+      "";
+
+    const submittedDate = feedback?.submittedAt
+      ? new Date(feedback.submittedAt).toLocaleDateString()
+      : feedback?.FEEDBACK_COMPLETION_DATE
+        ? new Date(feedback.FEEDBACK_COMPLETION_DATE).toLocaleDateString()
+        : new Date().toLocaleDateString();
+
+    const scoreValue =
+      typeof feedback?.overallScore === "number" &&
+      !Number.isNaN(feedback.overallScore)
+        ? Math.round(feedback.overallScore)
+        : 0;
+
+    const ratingClass =
+      scoreValue >= 75
+        ? "rating-excellent"
+        : scoreValue >= 50
+          ? "rating-good"
+          : "rating-needs";
+
+    const ratingLabel =
+      scoreValue >= 75
+        ? "Excellent"
+        : scoreValue >= 50
+          ? "Good"
+          : scoreValue > 0
+            ? "Needs Improvement"
+            : "Not Rated";
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -1153,40 +1197,41 @@ const FeedbackPage = () => {
             <div class="title">Feedback Report</div>
           </div>
 
-          <div className="info-row">
+          ${
+            referenceNumber
+              ? `
+          <div class="info-row">
+            <span class="label">Reference Number:</span>
+            <span class="value">${referenceNumber}</span>
+          </div>`
+              : ""
+          }
+
+          ${
+            vesselName
+              ? `
+          <div class="info-row">
             <span class="label">Vessel Name:</span>
-            <span class="value">${feedback.vesselName || "N/A"}</span>
-          </div>
+            <span class="value">${vesselName}</span>
+          </div>`
+              : ""
+          }
 
           <div class="info-row">
             <span class="label">Submitted On:</span>
-            <span class="value">${new Date(
-              feedback.submittedAt,
-            ).toLocaleDateString()}</span>
+            <span class="value">${submittedDate}</span>
           </div>
 
           <div class="info-row">
             <span class="label">Overall Score:</span>
-            <span class="score-box">${feedback.overallScore}</span>
+            <span class="score-box">${scoreValue}</span>
           </div>
 
           <div class="info-row">
             <span class="label">Rating:</span>
             <br/>
-            <span class="rating-badge ${
-              feedback.overallScore >= 75
-                ? "rating-excellent"
-                : feedback.overallScore >= 50
-                  ? "rating-good"
-                  : "rating-needs"
-            }">
-              ${
-                feedback.overallScore >= 75
-                  ? "Excellent"
-                  : feedback.overallScore >= 50
-                    ? "Good"
-                    : ""
-              }
+            <span class="rating-badge ${ratingClass}">
+              ${ratingLabel}
             </span>
           </div>
 
@@ -1540,7 +1585,7 @@ const FeedbackPage = () => {
                   {!showConfirmation && (
                     <div className="mb-6" ref={feedbackFormRef}>
                       <FeedbackForm
-                        vessel={null}
+                        vessel={selectedVessel}
                         onSubmit={handleFeedbackSubmit}
                       />
                     </div>

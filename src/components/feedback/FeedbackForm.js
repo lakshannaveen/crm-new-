@@ -857,6 +857,28 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       FeedbackList: feedbackList,
     };
 
+    const clientSubmission = {
+      ...feedbackPayload,
+      feedbackRef: formData.feedbackRef,
+      vesselName:
+        (vessel &&
+          (vessel.name || vessel.raw?.SHIP_NAME || vessel.raw?.FEEDBACK_DESC)) ||
+        "",
+      vesselIMO:
+        (vessel &&
+          (vessel.imoNumber || vessel.imo || vessel.raw?.SHIP_IMO)) ||
+        "",
+      projectName: formData.projectName,
+      jobCategory: formData.jobCategory,
+      projectNumber: formData.projectNumber,
+      ratings: { ...formData.ratings },
+      observations: formData.observations,
+      poorAverageDetails: formData.poorAverageDetails,
+      remarks: formData.remarks,
+      actionTaken: formData.actionTaken,
+      FeedbackList: feedbackList,
+    };
+
     try {
       const response = await addFeedback(feedbackPayload);
 
@@ -884,7 +906,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
     
     if (onSubmit) {
-      onSubmit(feedbackPayload);
+      onSubmit(clientSubmission);
     }
   };
 
@@ -2988,7 +3010,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           </div>
         );
 
-      case 4:
+      case 4: {
+        const vesselDisplayName = (
+          vessel?.name ||
+          vessel?.raw?.SHIP_NAME ||
+          vessel?.raw?.FEEDBACK_DESC ||
+          formData.projectName ||
+          ""
+        ).trim();
+
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -3021,6 +3051,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       {formData.feedbackRef}
                     </span>
                   </div>
+                  {vesselDisplayName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Vessel:
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white truncate max-w-[150px]">
+                        {vesselDisplayName}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">
                       Project:
@@ -3125,6 +3165,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             </div>
           </div>
         );
+      }
 
       default:
         return (
