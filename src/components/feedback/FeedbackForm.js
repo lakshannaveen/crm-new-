@@ -418,6 +418,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const maxSize = 10 * 1024 * 1024; // 10MB
 
     const validFiles = files.filter((file) => {
+      // Check if file is PDF
+      if (
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+      ) {
+        toast.error(`${file.name} is not a PDF file`);
+        return false;
+      }
+      // Check file size
       if (file.size > maxSize) {
         toast.error(`${file.name} exceeds 10MB limit`);
         return false;
