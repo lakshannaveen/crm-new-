@@ -113,14 +113,43 @@ const FeedbackHistory = ({
     return raw;
   };
 
+  const formatRating = (feedback, ...names) => {
+    const raw = getFieldValue(feedback, ...names);
+    if (raw === "NA") return "NA";
+    const s = String(raw).trim();
+
+    // If value is numeric, map to the requested ranges
+    const num = Number(s);
+    if (!isNaN(num)) {
+      if (num >= 76) return "76 - 100 (EXCELLENT)";
+      if (num >= 51) return "51 - 75 (GOOD)";
+      if (num >= 26) return "26 - 50 (AVERAGE)";
+      return "0 - 25 (POOR)";
+    }
+
+    // Map common letter codes to ranges/labels
+    const up = s.toUpperCase();
+    if (up === "A") return "76 - 100 (EXCELLENT)";
+    if (up === "B") return "51 - 75 (GOOD)";
+    if (up === "C") return "26 - 50 (AVERAGE)";
+    if (up === "D") return "0 - 25 (POOR)";
+
+    // If already a textual rating, normalize to uppercase words
+    if (["POOR", "AVERAGE", "GOOD", "EXCELLENT"].includes(up))
+      return up;
+
+    // Fallback: return raw string
+    return s;
+  };
+
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
-    const rows = [
+      const rows = [
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
       ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
       ["Evaluation", getFieldValue(feedback, "FEEDBACK_EVAL")],
-      ["Answer", getFieldValue(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
+      ["Answer", formatRating(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
       ["Remarks", getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS")],
       [
         "Action Taken",
@@ -286,7 +315,7 @@ const FeedbackHistory = ({
             "P_CODE_DESC"
           );
           const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
-          const answerVal = formatYesNo(
+          const answerVal = formatRating(
             feedback,
             "FEEDBACK_ANSWER",
             "P_ANSWER_TYPE"
