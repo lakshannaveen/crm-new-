@@ -145,7 +145,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                 </div>
 
                 {/* Maintenance Schedule */}
-                <div className="space-y-6">
+                {/* <div className="space-y-6">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Maintenance Schedule
                   </h4>
@@ -168,7 +168,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                       </span>
                     </div>
                   ))}
-                </div>
+                </div> */}
               </div>
 
               {/* Right Column - Specifications */}
