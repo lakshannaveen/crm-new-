@@ -2420,11 +2420,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                 </div>
               </div>
 
-              <div
-                className={`flex ${
-                  isMobile ? "flex-col space-y-3" : "justify-center space-x-4"
-                }`}
-              >
+              <div className="flex flex-col items-center space-y-3">
                 <button
                   onClick={() => {
                     // Reset form for new feedback
@@ -2457,9 +2453,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     setFeedbackSubmitted(false);
                     setCurrentStep(0);
                   }}
-                  className={`${
-                    isMobile ? "w-full py-3" : "px-6 py-2"
-                  } btn-primary`}
+                  className={`w-full py-3 btn-primary`}
                 >
                   Submit Another Feedback
                 </button>
@@ -2471,9 +2465,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       window.location.reload();
                     }
                   }}
-                  className={`${
-                    isMobile ? "w-full py-3" : "px-6 py-2"
-                  } btn-secondary`}
+                  className={`w-full py-3 btn-secondary`}
                 >
                   View History
                 </button>
