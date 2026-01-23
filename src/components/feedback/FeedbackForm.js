@@ -1618,8 +1618,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   Evaluation Details
                 </h2>
                 <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                  Rate each criteria following the PDF format hierarchy. At
-                  least one evaluation is required.
+                  Please provide evaluations for the listed criteria.
                 </p>
               </div>
               <div className="flex items-center gap-2 mt-2 md:mt-0">
