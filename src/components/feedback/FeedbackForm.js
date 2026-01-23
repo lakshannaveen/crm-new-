@@ -385,26 +385,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
   }, []);
 
-  // Group criteria by parent category (e.g., 3.0, 4.0, 5.0 etc)
-  const groupCriteriaByParent = () => {
-    const groups = {};
-    
-    allCriteriaUnits.forEach((item) => {
-      const mainCategory = item.criteriaCode.split('.')[0]; // Get "3" from "3.1"
-      
-      if (!groups[mainCategory]) {
-        groups[mainCategory] = {
-          mainCode: mainCategory,
-          mainDescription: item.criteriaDescription,
-          items: []
-        };
-      }
-      
-      groups[mainCategory].items.push(item);
-    });
-    
-    return groups;
-  };
+  // Use a single scrollable list for evaluations (show 6 rows by default with scroll for more)
+  const totalRows = allCriteriaUnits.length;
+  const currentPageData = allCriteriaUnits; // Keep all rows but show 6 with scroll
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -1741,59 +1724,59 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     />
                                   </div>
 
-                                  {/* Action Taken */}
-                                  <div className="mb-3">
-                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                      Action Taken
-                                    </label>
-                                    <textarea
-                                      value={rowData.actionTaken || ""}
-                                      onChange={(e) =>
-                                        handleEvaluationChange(
-                                          itemIndexInAll,
-                                          "actionTaken",
-                                          e.target.value,
-                                        )
-                                      }
-                                      placeholder="Action taken..."
-                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
-                                      rows="2"
-                                    />
-                                  </div>
-                                </div>
-                              );
-                            })}
+                            {/* Action Taken */}
+                            <div className="mb-3">
+                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                Action Taken
+                              </label>
+                              <textarea
+                                value={rowData.actionTaken || ""}
+                                onChange={(e) =>
+                                  handleEvaluationChange(
+                                    rowIndex,
+                                    "actionTaken",
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Action taken..."
+                                className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                rows="2"
+                              />
+                            </div>
                           </div>
-                        ) : (
-                          // Desktop View
-                          <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
-                            <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
-                              <thead className="bg-gray-100 dark:bg-gray-800">
-                                <tr>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Criteria
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Unit
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Evaluation
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Yes/No
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
-                                    Remarks
-                                  </th>
-                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
-                                    Action Taken
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
-                                {group.items.map((item) => {
-                                  const itemIndexInAll = getItemIndex(item.criteriaCode, item.unitCode);
-                                  const rowData = selectedRows[itemIndexInAll] || {};
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    // Desktop View
+                    <div className="scrollbar-thin scrollbar-custom overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg max-h-96 overflow-y-auto">
+                      <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
+                        <thead className="bg-gray-100 dark:bg-gray-800">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Criteria
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Unit
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Evaluation
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Yes/No
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                              Remarks
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                              Action Taken
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                          {currentPageData.map((item, rowIndex) => {
+                            const actualIndex = rowIndex;
+                            const rowData = selectedRows[actualIndex] || {};
 
                                   return (
                                     <tr
