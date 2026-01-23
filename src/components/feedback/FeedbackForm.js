@@ -52,9 +52,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // New state for evaluation
   const [allCriteriaUnits, setAllCriteriaUnits] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState({});
-  const rowsPerPage = 5; // Show 5 rows per page
 
   // Initialize form data
   const [formData, setFormData] = useState({
@@ -381,25 +379,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     };
   }, []);
 
-  // Calculate current page data
+  // Use a single scrollable list for evaluations (no pagination)
   const totalRows = allCriteriaUnits.length;
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-  const startIndex = (currentPage - 1) * rowsPerPage;
-  const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
-  const currentPageData = allCriteriaUnits.slice(startIndex, endIndex);
+  const currentPageData = allCriteriaUnits; // render all rows and allow scrolling
 
-  // Handle page change
-  const nextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
+  // Pagination removed — evaluations render in a single scrollable list
 
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
@@ -499,7 +483,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
   // Handle evaluation row changes
   const handleEvaluationChange = (rowIndex, field, value) => {
-    const actualIndex = startIndex + rowIndex;
+    const actualIndex = rowIndex; // currentPageData contains all items, so rowIndex matches global index
     setSelectedRows((prev) => ({
       ...prev,
       [actualIndex]: {
@@ -1514,9 +1498,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </div>
               <div className="flex items-center gap-2 mt-2 md:mt-0">
                 <span className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
                   ({totalRows} total items)
                 </span>
               </div>
@@ -1553,7 +1534,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     // Mobile View
                     <div className="space-y-4">
                       {currentPageData.map((item, rowIndex) => {
-                        const actualIndex = startIndex + rowIndex;
+                        const actualIndex = rowIndex;
                         const rowData = selectedRows[actualIndex] || {};
 
                         return (
@@ -1762,7 +1743,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         </thead>
                         <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
                           {currentPageData.map((item, rowIndex) => {
-                            const actualIndex = startIndex + rowIndex;
+                            const actualIndex = rowIndex;
                             const rowData = selectedRows[actualIndex] || {};
 
                             return (
@@ -1933,41 +1914,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                   )}
                 </div>
 
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex justify-between items-center mb-6">
-                    <button
-                      onClick={prevPage}
-                      disabled={currentPage === 1}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-600"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                      }`}
-                    >
-                      <FiChevronLeft />
-                      Previous
-                    </button>
-
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Showing {startIndex + 1} to {endIndex} of {totalRows}{" "}
-                      items
-                    </div>
-
-                    <button
-                      onClick={nextPage}
-                      disabled={currentPage === totalPages}
-                      className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                        currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-600"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-                      }`}
-                    >
-                      Next
-                      <FiChevronRight />
-                    </button>
-                  </div>
-                )}
+                {/* Evaluation list now scrolls; pagination removed */}
 
                 {/* Legend */}
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
@@ -2506,7 +2453,6 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     });
                     setSelectedRows({});
                     setAllCriteriaUnits([]);
-                    setCurrentPage(1);
                     setFeedbackSubmitted(false);
                     setCurrentStep(0);
                   }}
