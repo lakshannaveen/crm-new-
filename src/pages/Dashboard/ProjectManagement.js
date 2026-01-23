@@ -653,6 +653,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
 import { getShips } from "../../actions/shipActions";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import {
   FiArrowLeft,
   FiCalendar,
@@ -690,6 +691,11 @@ const ProjectManagement = () => {
   const [milestoneSearch, setMilestoneSearch] = useState("");
   const [milestoneLocation, setMilestoneLocation] = useState("all");
   const [milestoneView, setMilestoneView] = useState("date");
+  const [projectDates, setProjectDates] = useState({
+    startDate: "2024-01-10",
+    deadline: "2024-03-15",
+  });
+  const [loadingDates, setLoadingDates] = useState(false);
   const lastScrollY = useRef(
     typeof window !== "undefined" ? window.pageYOffset : 0,
   );
@@ -698,6 +704,75 @@ const ProjectManagement = () => {
   useEffect(() => {
     dispatch(getShips());
   }, [dispatch]);
+
+  // Fetch project dates from API
+  useEffect(() => {
+    const fetchProjectDates = async () => {
+      if (ships && ships.length > 0 && id) {
+        const matchingShip = ships.find((ship) => {
+          const shipId = ship?.id;
+          const shipJmain =
+            ship?.jmainNo || ship?.raw?.SHIP_JMAIN || ship?.raw?.SHIP_JOB_NO;
+          return (
+            String(shipId) === String(id) || String(shipJmain) === String(id)
+          );
+        });
+
+        if (matchingShip) {
+          const jobCategory =
+            matchingShip.raw?.SHIP_JCAT ||
+            matchingShip.SHIP_JCAT ||
+            matchingShip.JCAT ||
+            matchingShip.jcat;
+          const jmain =
+            matchingShip.raw?.SHIP_JMAIN ||
+            matchingShip.jmainNo ||
+            matchingShip.SHIP_JMAIN ||
+            matchingShip.id;
+
+          if (jobCategory && jmain) {
+            setLoadingDates(true);
+            try {
+              const response = await dispatch(
+                getFeedbackDates(jobCategory, jmain),
+              );
+              if (response) {
+                const resultData =
+                  response.ResultSet?.[0] || response[0] || response;
+                const startDate =
+                  resultData.FEEDBACK_START_DATE ||
+                  resultData.FEEDBACK_START_DT ||
+                  resultData.startingDate ||
+                  resultData.START_DATE ||
+                  resultData.startDate ||
+                  response.startingDate;
+                const endDate =
+                  resultData.FEEDBACK_END_DATE ||
+                  resultData.FEEDBACK_END_DT ||
+                  resultData.endingDate ||
+                  resultData.END_DATE ||
+                  resultData.endDate ||
+                  response.endingDate;
+
+                if (startDate || endDate) {
+                  setProjectDates({
+                    startDate: startDate || projectDates.startDate,
+                    deadline: endDate || projectDates.deadline,
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Failed to fetch project dates:", error);
+            } finally {
+              setLoadingDates(false);
+            }
+          }
+        }
+      }
+    };
+
+    fetchProjectDates();
+  }, [ships, id, dispatch]);
 
   // Toggle translucent header when scrolling up
   useEffect(() => {
@@ -757,8 +832,8 @@ const ProjectManagement = () => {
     //   "Complete hull repair and engine overhaul with system upgrades",
     status: "on_track",
     progress: 75,
-    startDate: "2024-01-10",
-    deadline: "2024-03-15",
+    startDate: projectDates.startDate,
+    deadline: projectDates.deadline,
     budget: "2500000",
     spent: "1875000",
     coordinator: "Raj Patel",
@@ -1155,7 +1230,11 @@ const ProjectManagement = () => {
                         Start:{" "}
                       </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.startDate, "short")}
+                        {loadingDates ? (
+                          <span className="text-gray-400">Loading...</span>
+                        ) : (
+                          formatDate(project.startDate, "iso")
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
@@ -1164,7 +1243,11 @@ const ProjectManagement = () => {
                         Deadline:{" "}
                       </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.deadline, "short")}
+                        {loadingDates ? (
+                          <span className="text-gray-400">Loading...</span>
+                        ) : (
+                          formatDate(project.deadline, "iso")
+                        )}
                       </span>
                     </div>
                     {/* <div className="flex items-center text-sm">

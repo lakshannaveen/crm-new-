@@ -1,19 +1,74 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { FiCalendar, FiAnchor, FiFlag } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { setSelectedShipJmain } from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import ShipDetailsModal from "./ShipDetailsModal";
 
 const ShipCard = ({ ship }) => {
   const dispatch = useDispatch();
   const [showDetails, setShowDetails] = useState(false);
+  const [dates, setDates] = useState({
+    startDate: ship.startDate,
+    endDate: ship.endDate,
+  });
+  const [loadingDates, setLoadingDates] = useState(false);
 
   const statusColor = getStatusColor(ship.status);
   const statusText = getStatusText(ship.status);
+
+  // Fetch dates when component mounts
+  useEffect(() => {
+    const fetchDates = async () => {
+      const jobCategory =
+        ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
+      const jmain =
+        ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+
+      if (jobCategory && jmain) {
+        setLoadingDates(true);
+        try {
+          const response = await dispatch(getFeedbackDates(jobCategory, jmain));
+          if (response) {
+            // Get dates from response
+            const resultData =
+              response.ResultSet?.[0] || response[0] || response;
+            const startDate =
+              resultData.FEEDBACK_START_DATE ||
+              resultData.FEEDBACK_START_DT ||
+              resultData.startingDate ||
+              resultData.START_DATE ||
+              resultData.startDate ||
+              response.startingDate;
+            const endDate =
+              resultData.FEEDBACK_END_DATE ||
+              resultData.FEEDBACK_END_DT ||
+              resultData.endingDate ||
+              resultData.END_DATE ||
+              resultData.endDate ||
+              response.endingDate;
+
+            if (startDate || endDate) {
+              setDates({
+                startDate: startDate || ship.startDate,
+                endDate: endDate || ship.endDate,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch dates:", error);
+        } finally {
+          setLoadingDates(false);
+        }
+      }
+    };
+
+    fetchDates();
+  }, [ship, dispatch]);
 
   const handleViewDetails = () => {
     // Store the ship's JMAIN in localStorage before showing details
@@ -122,7 +177,11 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {formatDate(ship.startDate, "short")}
+                    {loadingDates ? (
+                      <span className="text-gray-400">Loading...</span>
+                    ) : (
+                      formatDate(dates.startDate, "iso")
+                    )}
                   </span>
                 </div>
               </div>
@@ -133,7 +192,11 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {formatDate(ship.endDate, "short")}
+                    {loadingDates ? (
+                      <span className="text-gray-400">Loading...</span>
+                    ) : (
+                      formatDate(dates.endDate, "iso")
+                    )}
                   </span>
                 </div>
               </div>
