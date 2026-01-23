@@ -48,7 +48,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
   const { milestones = [], milestonesLoading = false } = useSelector(
-    (state) => state.projects || {}
+    (state) => state.projects || {},
   );
   const isMobile = useMobile();
 
@@ -247,7 +247,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Fetch milestones when job category and project number are selected
   useEffect(() => {
     if (formData.jobCategory && formData.projectNumber) {
-      dispatch(getMilestonesByShip(formData.jobCategory, formData.projectNumber));
+      dispatch(
+        getMilestonesByShip(formData.jobCategory, formData.projectNumber),
+      );
     }
   }, [formData.jobCategory, formData.projectNumber, dispatch]);
 
@@ -2104,7 +2106,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                     </h4>
                     {milestones.length > 5 && (
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Showing {Math.min(5, milestones.length)} of {milestones.length} milestones
+                        Showing {Math.min(5, milestones.length)} of{" "}
+                        {milestones.length} milestones
                       </span>
                     )}
                   </div>
@@ -2139,8 +2142,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                       milestone.status === "completed"
                                         ? "bg-green-100 dark:bg-green-900/30"
                                         : milestone.status === "in_progress"
-                                        ? "bg-blue-100 dark:bg-blue-900/30"
-                                        : "bg-gray-100 dark:bg-gray-700"
+                                          ? "bg-blue-100 dark:bg-blue-900/30"
+                                          : "bg-gray-100 dark:bg-gray-700"
                                     }`}
                             >
                               {milestone.status === "completed" ? (
@@ -2169,7 +2172,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                               <div className="flex flex-wrap gap-2 mb-2 text-xs text-gray-600 dark:text-gray-400">
                                 {milestone.location && (
                                   <div className="flex items-center">
-                                    <FiFlag className="mr-1 text-blue-500" size={12} />
+                                    <FiFlag
+                                      className="mr-1 text-blue-500"
+                                      size={12}
+                                    />
                                     <span>{milestone.location}</span>
                                   </div>
                                 )}
