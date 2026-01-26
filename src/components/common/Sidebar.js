@@ -257,7 +257,7 @@ const Sidebar = ({ embedded = false }) => {
           ${desktopCollapsed ? 'w-16' : 'w-64'}
           flex flex-col
           h-screen
-          fixed left-0 top-0 z-30
+          fixed left-0 top-0 z-30 pt-16
         `}>
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -365,7 +365,7 @@ const Sidebar = ({ embedded = false }) => {
             className="absolute inset-0 bg-black bg-opacity-50" 
             onClick={closeMobileSidebar}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl">
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl pt-16">
             <aside className="h-full flex flex-col">
               {/* Mobile Sidebar Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
