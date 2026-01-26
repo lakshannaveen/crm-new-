@@ -180,9 +180,6 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       .substr(2, 6)
       .toUpperCase()}`,
 
-    // Top-level remarks and action taken
-    remarks: "",
-    actionTaken: "",
     // Removed vessel fields (vesselName, vesselIMO)
 
     // Milestones
@@ -921,8 +918,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
           P_CRITERIA_CODE: row.criteriaCode,
           P_CODE: row.unitCode,
           P_ANSWER_TYPE: validAnswers.includes(answer) ? answer : "N",
-          P_REMARKS: row.remarks || formData.remarks || "",
-          P_ACTION_TAKEN: row.actionTaken || formData.actionTaken || "",
+          P_REMARKS: row.remarks || "",
+          P_ACTION_TAKEN: row.actionTaken || "",
         };
       });
 
@@ -939,8 +936,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
-      P_REMARKS: formData.remarks || "",
-      P_ACTION_TAKEN: formData.actionTaken || "",
+      P_REMARKS: "",
+      P_ACTION_TAKEN: "",
       FeedbackList: feedbackList,
     };
 
@@ -2669,39 +2666,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                   )}
                 </div>
 
-                {/* Action Taken and Remarks */}
-                <div
-                  className={`grid ${
-                    isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
-                  } gap-4 mb-6`}
-                >
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Action Taken
-                    </label>
-                    <textarea
-                      value={formData.actionTaken}
-                      onChange={(e) =>
-                        handleInputChange("actionTaken", e.target.value)
-                      }
-                      placeholder="Describe the action taken (e.g., corrective steps)"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                      rows={isMobile ? "3" : "4"}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Remarks
-                    </label>
-                    <textarea
-                      value={formData.remarks}
-                      onChange={(e) => handleInputChange("remarks", e.target.value)}
-                      placeholder="Add any remarks or observations"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                      rows={isMobile ? "3" : "4"}
-                    />
-                  </div>
-                </div>
+                {/* Top-level Action Taken and Remarks inputs removed */}
 
                 {/* Notes & Recommendation */}
                 <div className="mb-6">
