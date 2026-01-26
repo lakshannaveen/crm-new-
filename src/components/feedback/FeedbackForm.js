@@ -422,8 +422,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     // top-level criteria descriptions (e.g., FEEDBACK_CRITERIA_DESCRIPTION).
     const criteriaLookup = {};
     (criterias || []).forEach((c) => {
-      const code = String(c.FEEDBACK_CRITERIA_CODE || c.FEEDBACK_CRITERIA || "");
-      const desc = c.FEEDBACK_CRITERIA_DESCRIPTION || c.FEEDBACK_CRITERIA_DESC || "";
+      const code = String(
+        c.FEEDBACK_CRITERIA_CODE || c.FEEDBACK_CRITERIA || "",
+      );
+      const desc =
+        c.FEEDBACK_CRITERIA_DESCRIPTION || c.FEEDBACK_CRITERIA_DESC || "";
       if (code) criteriaLookup[code] = desc;
     });
 
@@ -432,7 +435,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
       if (!groups[mainCategory]) {
         // Prefer description from `criterias` API; fallback to item.criteriaDescription
-        const mainDesc = criteriaLookup[mainCategory] || item.criteriaDescription || "";
+        const mainDesc =
+          criteriaLookup[mainCategory] || item.criteriaDescription || "";
         groups[mainCategory] = {
           mainCode: mainCategory,
           mainDescription: mainDesc,
@@ -569,7 +573,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
 
     // If there are any evaluation errors, also include a general message
     if (Object.keys(errors).length > 0) {
-      errors.evaluationRows = "Please provide an evaluation for every listed item.";
+      errors.evaluationRows =
+        "Please provide an evaluation for every listed item.";
     }
 
     return errors;
@@ -769,10 +774,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     });
 
     if (invalidFiles.length > 0) {
-      toast.error(`Invalid file type (only PDF allowed): ${invalidFiles.join(", ")}`, {
-        duration: 4000,
-        position: "top-center",
-      });
+      toast.error(
+        `Invalid file type (only PDF allowed): ${invalidFiles.join(", ")}`,
+        {
+          duration: 4000,
+          position: "top-center",
+        },
+      );
     }
 
     if (oversizedFiles.length > 0) {
@@ -811,10 +819,13 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       });
 
       if (validFiles.length > allowedToAdd) {
-        toast.error("Only one PDF attachment is allowed; extras were ignored.", {
-          duration: 3000,
-          position: "top-center",
-        });
+        toast.error(
+          "Only one PDF attachment is allowed; extras were ignored.",
+          {
+            duration: 3000,
+            position: "top-center",
+          },
+        );
       }
     }
 
@@ -904,12 +915,14 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
             fileToUpload,
             formData.jobCategory,
           );
-          toast.success('Attachment uploaded successfully', { position: 'top-center' });
+          toast.success("Attachment uploaded successfully", {
+            position: "top-center",
+          });
         } catch (uploadError) {
-          console.error('Attachment upload failed:', uploadError);
-          toast.error('Feedback submitted but attachment upload failed', {
+          console.error("Attachment upload failed:", uploadError);
+          toast.error("Feedback submitted but attachment upload failed", {
             duration: 5000,
-            position: 'top-center',
+            position: "top-center",
           });
         }
       }
@@ -1866,9 +1879,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     </div>
                                   </div>
 
-                                  {validationErrors[`evaluation_${itemIndexInAll}`] && (
+                                  {validationErrors[
+                                    `evaluation_${itemIndexInAll}`
+                                  ] && (
                                     <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                                      {validationErrors[`evaluation_${itemIndexInAll}`]}
+                                      {
+                                        validationErrors[
+                                          `evaluation_${itemIndexInAll}`
+                                        ]
+                                      }
                                     </p>
                                   )}
 
@@ -2006,9 +2025,15 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                           </div>
                                         </div>
 
-                                        {validationErrors[`evaluation_${itemIndexInAll}`] && (
+                                        {validationErrors[
+                                          `evaluation_${itemIndexInAll}`
+                                        ] && (
                                           <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                                            {validationErrors[`evaluation_${itemIndexInAll}`]}
+                                            {
+                                              validationErrors[
+                                                `evaluation_${itemIndexInAll}`
+                                              ]
+                                            }
                                           </p>
                                         )}
                                       </td>
@@ -2334,7 +2359,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                         type="file"
                         accept=".pdf,application/pdf"
                         onChange={handleFileUpload}
-                        disabled={formData.attachments && formData.attachments.length >= 1}
+                        disabled={
+                          formData.attachments &&
+                          formData.attachments.length >= 1
+                        }
                         className="hidden"
                       />
                     </label>
@@ -2551,102 +2579,107 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
               </h4>
 
               {/* Evaluation Details Ratings */}
-              {reviewGroupKeys.map((groupKey) => {
-                const group = reviewGroups[groupKey];
-                const groupEvaluations = group.items.filter((item) => {
-                  const index = getItemIndex(item.criteriaCode, item.unitCode);
+              <div className="max-h-96 overflow-y-auto pr-2">
+                {reviewGroupKeys.map((groupKey) => {
+                  const group = reviewGroups[groupKey];
+                  const groupEvaluations = group.items.filter((item) => {
+                    const index = getItemIndex(
+                      item.criteriaCode,
+                      item.unitCode,
+                    );
+                    return (
+                      selectedRows[index]?.evaluation &&
+                      selectedRows[index]?.evaluation !== "N"
+                    );
+                  });
+
+                  if (groupEvaluations.length === 0) return null;
+
                   return (
-                    selectedRows[index]?.evaluation &&
-                    selectedRows[index]?.evaluation !== "N"
-                  );
-                });
+                    <div key={groupKey} className="mb-4">
+                      <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-t-lg">
+                        <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
+                          {groupKey}. {group.mainDescription}
+                        </h5>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                        {groupEvaluations.map((item) => {
+                          const index = getItemIndex(
+                            item.criteriaCode,
+                            item.unitCode,
+                          );
+                          const rowData = selectedRows[index] || {};
+                          const evaluationScoreMap = {
+                            P: 25, // Poor
+                            A: 50, // Average
+                            G: 75, // Good
+                            E: 100, // Excellent
+                          };
+                          const score =
+                            evaluationScoreMap[rowData.evaluation] || 0;
+                          const getScoreColor = (s) => {
+                            if (s >= 75)
+                              return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+                            if (s >= 50)
+                              return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+                            return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+                          };
 
-                if (groupEvaluations.length === 0) return null;
-
-                return (
-                  <div key={groupKey} className="mb-4">
-                    <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-t-lg">
-                      <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-400">
-                        {groupKey}. {group.mainDescription}
-                      </h5>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                      {groupEvaluations.map((item) => {
-                        const index = getItemIndex(
-                          item.criteriaCode,
-                          item.unitCode,
-                        );
-                        const rowData = selectedRows[index] || {};
-                        const evaluationScoreMap = {
-                          P: 25, // Poor
-                          A: 50, // Average
-                          G: 75, // Good
-                          E: 100, // Excellent
-                        };
-                        const score =
-                          evaluationScoreMap[rowData.evaluation] || 0;
-                        const getScoreColor = (s) => {
-                          if (s >= 75)
-                            return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-                          if (s >= 50)
-                            return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-                          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-                        };
-
-                        return (
-                          <div
-                            key={`${item.criteriaCode}-${item.unitCode}`}
-                            className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
-                          >
-                            <div className="flex flex-col justify-between gap-2 mb-2">
-                              <div className="flex flex-col gap-1">
-                                <span className="text-xs font-bold text-gray-900 dark:text-white">
-                                  {item.criteriaCode}
-                                </span>
-                                <span className="text-xs text-gray-700 dark:text-gray-300">
-                                  {item.unitDescription}
-                                </span>
-                              </div>
-                              <span
-                                className={`px-2 py-1 text-xs rounded-full whitespace-nowrap inline-block w-fit ${getScoreColor(
-                                  score,
-                                )}`}
-                              >
-                                {rowData.evaluation} ({score}%)
-                              </span>
-                            </div>
-                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${
-                                  score >= 75
-                                    ? "bg-green-500"
-                                    : score >= 50
-                                      ? "bg-yellow-500"
-                                      : "bg-red-500"
-                                }`}
-                                style={{ width: `${score}%` }}
-                              />
-                            </div>
-                            {rowData.yesNo && (
-                              <div className="mt-2 text-xs">
+                          return (
+                            <div
+                              key={`${item.criteriaCode}-${item.unitCode}`}
+                              className="p-3 sm:p-4 border border-gray-200 dark:border-gray-700 rounded-lg"
+                            >
+                              <div className="flex flex-col justify-between gap-2 mb-2">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                    {item.criteriaCode}
+                                  </span>
+                                  <span className="text-xs text-gray-700 dark:text-gray-300">
+                                    {item.unitDescription}
+                                  </span>
+                                </div>
                                 <span
-                                  className={`px-2 py-0.5 rounded-full ${
-                                    rowData.yesNo === "YES"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                  }`}
+                                  className={`px-2 py-1 text-xs rounded-full whitespace-nowrap inline-block w-fit ${getScoreColor(
+                                    score,
+                                  )}`}
                                 >
-                                  {rowData.yesNo}
+                                  {rowData.evaluation} ({score}%)
                                 </span>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full ${
+                                    score >= 75
+                                      ? "bg-green-500"
+                                      : score >= 50
+                                        ? "bg-yellow-500"
+                                        : "bg-red-500"
+                                  }`}
+                                  style={{ width: `${score}%` }}
+                                />
+                              </div>
+                              {rowData.yesNo && (
+                                <div className="mt-2 text-xs">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full ${
+                                      rowData.yesNo === "YES"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                        : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                    }`}
+                                  >
+                                    {rowData.yesNo}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                 {

@@ -1,80 +1,135 @@
-import React, { useState } from 'react';
-import { FiStar, FiSmile, FiFrown, FiMeh, FiCheck, FiArrowRight, FiArrowLeft, FiUpload, FiThumbsUp, FiThumbsDown } from 'react-icons/fi';
-import { toast } from 'react-hot-toast';
+import React, { useState } from "react";
+import {
+  FiStar,
+  FiSmile,
+  FiFrown,
+  FiMeh,
+  FiCheck,
+  FiArrowRight,
+  FiArrowLeft,
+  FiUpload,
+  FiThumbsUp,
+  FiThumbsDown,
+} from "react-icons/fi";
+import { toast } from "react-hot-toast";
 
 const FeedbackForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const [formData, setFormData] = useState({
     rating: 0,
-    experience: '',
+    experience: "",
     categories: [],
-    comments: '',
-    suggestions: '',
+    comments: "",
+    suggestions: "",
     contact: {
-      name: '',
-      email: '',
-      phone: ''
+      name: "",
+      email: "",
+      phone: "",
     },
     attachments: [],
-    followUp: false
+    followUp: false,
   });
 
   const steps = [
-    { id: 0, title: 'Overall Rating', icon: FiStar },
-    { id: 1, title: 'Experience', icon: FiSmile },
-    { id: 2, title: 'Categories', icon: FiCheck },
-    { id: 3, title: 'Comments', icon: FiThumbsUp },
-    { id: 4, title: 'Contact Info', icon: FiArrowRight },
-    { id: 5, title: 'Review', icon: FiCheck }
+    { id: 0, title: "Overall Rating", icon: FiStar },
+    { id: 1, title: "Experience", icon: FiSmile },
+    { id: 2, title: "Categories", icon: FiCheck },
+    { id: 3, title: "Comments", icon: FiThumbsUp },
+    { id: 4, title: "Contact Info", icon: FiArrowRight },
+    { id: 5, title: "Review", icon: FiCheck },
   ];
 
   const ratingOptions = [
-    { value: 1, label: 'Very Poor', icon: FiFrown, color: 'text-red-500' },
-    { value: 2, label: 'Poor', icon: FiFrown, color: 'text-orange-500' },
-    { value: 3, label: 'Average', icon: FiMeh, color: 'text-yellow-500' },
-    { value: 4, label: 'Good', icon: FiSmile, color: 'text-blue-500' },
-    { value: 5, label: 'Excellent', icon: FiStar, color: 'text-green-500' }
+    { value: 1, label: "Very Poor", icon: FiFrown, color: "text-red-500" },
+    { value: 2, label: "Poor", icon: FiFrown, color: "text-orange-500" },
+    { value: 3, label: "Average", icon: FiMeh, color: "text-yellow-500" },
+    { value: 4, label: "Good", icon: FiSmile, color: "text-blue-500" },
+    { value: 5, label: "Excellent", icon: FiStar, color: "text-green-500" },
   ];
 
   const experienceOptions = [
-    { id: 'easy', label: 'Easy to Use', description: 'The system was intuitive and user-friendly' },
-    { id: 'responsive', label: 'Fast & Responsive', description: 'Pages loaded quickly and navigation was smooth' },
-    { id: 'features', label: 'Useful Features', description: 'All necessary features were available' },
-    { id: 'reliable', label: 'Reliable', description: 'System was stable with no crashes or errors' },
-    { id: 'support', label: 'Good Support', description: 'Help and support were readily available' }
+    {
+      id: "easy",
+      label: "Easy to Use",
+      description: "The system was intuitive and user-friendly",
+    },
+    {
+      id: "responsive",
+      label: "Fast & Responsive",
+      description: "Pages loaded quickly and navigation was smooth",
+    },
+    {
+      id: "features",
+      label: "Useful Features",
+      description: "All necessary features were available",
+    },
+    {
+      id: "reliable",
+      label: "Reliable",
+      description: "System was stable with no crashes or errors",
+    },
+    {
+      id: "support",
+      label: "Good Support",
+      description: "Help and support were readily available",
+    },
   ];
 
   const categoryOptions = [
-    { id: 'ui', label: 'User Interface', description: 'Design, layout, and visual appeal' },
-    { id: 'ux', label: 'User Experience', description: 'Ease of use and navigation flow' },
-    { id: 'performance', label: 'Performance', description: 'Speed and responsiveness' },
-    { id: 'features', label: 'Features', description: 'Available functionality' },
-    { id: 'support', label: 'Support', description: 'Help and customer service' },
-    { id: 'mobile', label: 'Mobile Experience', description: 'Experience on mobile devices' }
+    {
+      id: "ui",
+      label: "User Interface",
+      description: "Design, layout, and visual appeal",
+    },
+    {
+      id: "ux",
+      label: "User Experience",
+      description: "Ease of use and navigation flow",
+    },
+    {
+      id: "performance",
+      label: "Performance",
+      description: "Speed and responsiveness",
+    },
+    {
+      id: "features",
+      label: "Features",
+      description: "Available functionality",
+    },
+    {
+      id: "support",
+      label: "Support",
+      description: "Help and customer service",
+    },
+    {
+      id: "mobile",
+      label: "Mobile Experience",
+      description: "Experience on mobile devices",
+    },
   ];
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
   const handleNestedInputChange = (parent, field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [parent]: {
         ...prev[parent],
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handleCategoryToggle = (categoryId) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const categories = prev.categories.includes(categoryId)
-        ? prev.categories.filter(id => id !== categoryId)
+        ? prev.categories.filter((id) => id !== categoryId)
         : [...prev.categories, categoryId];
       return { ...prev, categories };
     });
@@ -82,16 +137,19 @@ const FeedbackForm = () => {
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attachments: [...prev.attachments, ...files.slice(0, 5 - prev.attachments.length)]
+      attachments: [
+        ...prev.attachments,
+        ...files.slice(0, 5 - prev.attachments.length),
+      ],
     }));
   };
 
   const removeAttachment = (index) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
+      attachments: prev.attachments.filter((_, i) => i !== index),
     }));
   };
 
@@ -111,26 +169,26 @@ const FeedbackForm = () => {
 
   const handleSubmit = () => {
     // Here you would typically send the data to your backend
-    console.log('Feedback submitted:', formData);
-    
-    toast.success('Thank you for your feedback! We appreciate your input.');
-    
+    console.log("Feedback submitted:", formData);
+
+    toast.success("Thank you for your feedback! We appreciate your input.");
+
     // Reset form
     setCurrentStep(0);
     setProgress(0);
     setFormData({
       rating: 0,
-      experience: '',
+      experience: "",
       categories: [],
-      comments: '',
-      suggestions: '',
+      comments: "",
+      suggestions: "",
       contact: {
-        name: '',
-        email: '',
-        phone: ''
+        name: "",
+        email: "",
+        phone: "",
       },
       attachments: [],
-      followUp: false
+      followUp: false,
     });
   };
 
@@ -155,14 +213,16 @@ const FeedbackForm = () => {
               {ratingOptions.map((option) => (
                 <button
                   key={option.value}
-                  onClick={() => handleInputChange('rating', option.value)}
+                  onClick={() => handleInputChange("rating", option.value)}
                   className={`flex flex-col items-center p-4 rounded-xl transition-all duration-300 ${
                     formData.rating === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 scale-105'
-                      : 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                      ? "bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-500 scale-105"
+                      : "bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300"
                   }`}
                 >
-                  <option.icon className={`w-10 h-10 mb-2 ${option.color} ${formData.rating === option.value ? 'scale-110' : ''}`} />
+                  <option.icon
+                    className={`w-10 h-10 mb-2 ${option.color} ${formData.rating === option.value ? "scale-110" : ""}`}
+                  />
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
                     {option.value}
                   </span>
@@ -176,7 +236,11 @@ const FeedbackForm = () => {
             {formData.rating > 0 && (
               <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                 <p className="text-center text-blue-700 dark:text-blue-300 font-medium">
-                  You selected: {formData.rating}/5 - {ratingOptions.find(r => r.value === formData.rating)?.label}
+                  You selected: {formData.rating}/5 -{" "}
+                  {
+                    ratingOptions.find((r) => r.value === formData.rating)
+                      ?.label
+                  }
                 </p>
               </div>
             )}
@@ -202,19 +266,21 @@ const FeedbackForm = () => {
               {experienceOptions.map((option) => (
                 <button
                   key={option.id}
-                  onClick={() => handleInputChange('experience', option.id)}
+                  onClick={() => handleInputChange("experience", option.id)}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     formData.experience === option.id
-                      ? 'bg-green-50 dark:bg-green-900/30 border-2 border-green-500'
-                      : 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-green-300'
+                      ? "bg-green-50 dark:bg-green-900/30 border-2 border-green-500"
+                      : "bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-green-300"
                   }`}
                 >
                   <div className="flex items-center mb-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      formData.experience === option.id
-                        ? 'bg-green-100 dark:bg-green-800'
-                        : 'bg-gray-100 dark:bg-gray-700'
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
+                        formData.experience === option.id
+                          ? "bg-green-100 dark:bg-green-800"
+                          : "bg-gray-100 dark:bg-gray-700"
+                      }`}
+                    >
                       {formData.experience === option.id ? (
                         <FiCheck className="text-green-600 dark:text-green-300" />
                       ) : null}
@@ -237,7 +303,9 @@ const FeedbackForm = () => {
               <textarea
                 placeholder="Tell us more about your experience..."
                 className="input-field h-32"
-                onChange={(e) => handleInputChange('experienceNotes', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("experienceNotes", e.target.value)
+                }
               />
             </div>
           </div>
@@ -265,19 +333,21 @@ const FeedbackForm = () => {
                   onClick={() => handleCategoryToggle(category.id)}
                   className={`p-4 rounded-xl cursor-pointer transition-all duration-300 ${
                     formData.categories.includes(category.id)
-                      ? 'bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-500'
-                      : 'bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300'
+                      ? "bg-purple-50 dark:bg-purple-900/30 border-2 border-purple-500"
+                      : "bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300"
                   }`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-medium text-gray-900 dark:text-white">
                       {category.label}
                     </span>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      formData.categories.includes(category.id)
-                        ? 'bg-purple-500'
-                        : 'bg-gray-200 dark:bg-gray-700'
-                    }`}>
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                        formData.categories.includes(category.id)
+                          ? "bg-purple-500"
+                          : "bg-gray-200 dark:bg-gray-700"
+                      }`}
+                    >
                       {formData.categories.includes(category.id) && (
                         <FiCheck className="text-white w-4 h-4" />
                       )}
@@ -322,7 +392,9 @@ const FeedbackForm = () => {
                 </label>
                 <textarea
                   value={formData.comments}
-                  onChange={(e) => handleInputChange('comments', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("comments", e.target.value)
+                  }
                   placeholder="Tell us what you enjoyed about the system..."
                   className="input-field h-32"
                 />
@@ -334,7 +406,9 @@ const FeedbackForm = () => {
                 </label>
                 <textarea
                   value={formData.suggestions}
-                  onChange={(e) => handleInputChange('suggestions', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("suggestions", e.target.value)
+                  }
                   placeholder="What can we do better?"
                   className="input-field h-32"
                 />
@@ -419,7 +493,9 @@ const FeedbackForm = () => {
                 <input
                   type="text"
                   value={formData.contact.name}
-                  onChange={(e) => handleNestedInputChange('contact', 'name', e.target.value)}
+                  onChange={(e) =>
+                    handleNestedInputChange("contact", "name", e.target.value)
+                  }
                   placeholder="Enter your name"
                   className="input-field"
                 />
@@ -432,7 +508,9 @@ const FeedbackForm = () => {
                 <input
                   type="email"
                   value={formData.contact.email}
-                  onChange={(e) => handleNestedInputChange('contact', 'email', e.target.value)}
+                  onChange={(e) =>
+                    handleNestedInputChange("contact", "email", e.target.value)
+                  }
                   placeholder="Enter your email"
                   className="input-field"
                 />
@@ -445,7 +523,9 @@ const FeedbackForm = () => {
                 <input
                   type="tel"
                   value={formData.contact.phone}
-                  onChange={(e) => handleNestedInputChange('contact', 'phone', e.target.value)}
+                  onChange={(e) =>
+                    handleNestedInputChange("contact", "phone", e.target.value)
+                  }
                   placeholder="Enter your phone number"
                   className="input-field"
                 />
@@ -456,18 +536,24 @@ const FeedbackForm = () => {
                   type="checkbox"
                   id="follow-up"
                   checked={formData.followUp}
-                  onChange={(e) => handleInputChange('followUp', e.target.checked)}
+                  onChange={(e) =>
+                    handleInputChange("followUp", e.target.checked)
+                  }
                   className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                 />
-                <label htmlFor="follow-up" className="ml-3 text-sm text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="follow-up"
+                  className="ml-3 text-sm text-gray-700 dark:text-gray-300"
+                >
                   Yes, I'd like to be contacted for follow-up
                 </label>
               </div>
 
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Your contact information will only be used to respond to your feedback.
-                  We respect your privacy and will not share your information.
+                  Your contact information will only be used to respond to your
+                  feedback. We respect your privacy and will not share your
+                  information.
                 </p>
               </div>
             </div>
@@ -491,7 +577,9 @@ const FeedbackForm = () => {
 
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Overall Rating</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                  Overall Rating
+                </h4>
                 <div className="flex items-center">
                   <div className="flex mr-4">
                     {[...Array(5)].map((_, i) => (
@@ -499,35 +587,47 @@ const FeedbackForm = () => {
                         key={i}
                         className={`w-5 h-5 ${
                           i < formData.rating
-                            ? 'text-yellow-400 fill-yellow-400'
-                            : 'text-gray-300 dark:text-gray-600'
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300 dark:text-gray-600"
                         }`}
                       />
                     ))}
                   </div>
                   <span className="text-gray-700 dark:text-gray-300">
-                    {formData.rating}/5 - {ratingOptions.find(r => r.value === formData.rating)?.label}
+                    {formData.rating}/5 -{" "}
+                    {
+                      ratingOptions.find((r) => r.value === formData.rating)
+                        ?.label
+                    }
                   </span>
                 </div>
               </div>
 
               <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Experience</h4>
+                <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                  Experience
+                </h4>
                 <p className="text-gray-700 dark:text-gray-300">
-                  {experienceOptions.find(e => e.id === formData.experience)?.label || 'Not specified'}
+                  {experienceOptions.find((e) => e.id === formData.experience)
+                    ?.label || "Not specified"}
                 </p>
               </div>
 
               {formData.categories.length > 0 && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Categories</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                    Categories
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {formData.categories.map((categoryId) => (
                       <span
                         key={categoryId}
                         className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300 rounded-full text-sm"
                       >
-                        {categoryOptions.find(c => c.id === categoryId)?.label}
+                        {
+                          categoryOptions.find((c) => c.id === categoryId)
+                            ?.label
+                        }
                       </span>
                     ))}
                   </div>
@@ -536,26 +636,52 @@ const FeedbackForm = () => {
 
               {formData.comments && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">What you liked</h4>
-                  <p className="text-gray-700 dark:text-gray-300">{formData.comments}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                    What you liked
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {formData.comments}
+                  </p>
                 </div>
               )}
 
               {formData.suggestions && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Suggestions</h4>
-                  <p className="text-gray-700 dark:text-gray-300">{formData.suggestions}</p>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                    Suggestions
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {formData.suggestions}
+                  </p>
                 </div>
               )}
 
-              {(formData.contact.name || formData.contact.email || formData.contact.phone) && (
+              {(formData.contact.name ||
+                formData.contact.email ||
+                formData.contact.phone) && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Contact Information</h4>
-                  {formData.contact.name && <p className="text-gray-700 dark:text-gray-300">Name: {formData.contact.name}</p>}
-                  {formData.contact.email && <p className="text-gray-700 dark:text-gray-300">Email: {formData.contact.email}</p>}
-                  {formData.contact.phone && <p className="text-gray-700 dark:text-gray-300">Phone: {formData.contact.phone}</p>}
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">
+                    Contact Information
+                  </h4>
+                  {formData.contact.name && (
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Name: {formData.contact.name}
+                    </p>
+                  )}
+                  {formData.contact.email && (
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Email: {formData.contact.email}
+                    </p>
+                  )}
+                  {formData.contact.phone && (
+                    <p className="text-gray-700 dark:text-gray-300">
+                      Phone: {formData.contact.phone}
+                    </p>
+                  )}
                   {formData.followUp && (
-                    <p className="text-green-600 dark:text-green-400 mt-2">✓ Follow-up requested</p>
+                    <p className="text-green-600 dark:text-green-400 mt-2">
+                      ✓ Follow-up requested
+                    </p>
                   )}
                 </div>
               )}
@@ -563,7 +689,8 @@ const FeedbackForm = () => {
 
             <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
               <p className="text-green-700 dark:text-green-300 text-center">
-                Your feedback is valuable to us and will help improve the system for all users.
+                Your feedback is valuable to us and will help improve the system
+                for all users.
               </p>
             </div>
           </div>
@@ -579,12 +706,14 @@ const FeedbackForm = () => {
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Feedback Form</h2>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Feedback Form
+          </h2>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Step {currentStep + 1} of {steps.length}
           </span>
         </div>
-        
+
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-4">
           {steps.map((step, index) => (
@@ -593,32 +722,36 @@ const FeedbackForm = () => {
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                     currentStep >= index
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                  } ${currentStep === index ? 'ring-4 ring-blue-200 dark:ring-blue-800 scale-110' : ''}`}
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                  } ${currentStep === index ? "ring-4 ring-blue-200 dark:ring-blue-800 scale-110" : ""}`}
                 >
                   <step.icon className="w-5 h-5" />
                 </div>
-                <span className={`text-xs mt-2 font-medium ${
-                  currentStep >= index
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-500'
-                }`}>
+                <span
+                  className={`text-xs mt-2 font-medium ${
+                    currentStep >= index
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-gray-500 dark:text-gray-500"
+                  }`}
+                >
                   {step.title}
                 </span>
               </div>
-              
+
               {index < steps.length - 1 && (
                 <div
                   className={`flex-1 h-1 mx-2 ${
-                    currentStep > index ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
+                    currentStep > index
+                      ? "bg-blue-500"
+                      : "bg-gray-200 dark:bg-gray-700"
                   }`}
                 />
               )}
             </React.Fragment>
           ))}
         </div>
-        
+
         {/* Progress Bar */}
         <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
           <div
@@ -635,9 +768,7 @@ const FeedbackForm = () => {
 
       {/* Form Card */}
       <div className="card mb-6">
-        <div className="min-h-[400px]">
-          {renderStep()}
-        </div>
+        <div className="min-h-[400px]">{renderStep()}</div>
       </div>
 
       {/* Navigation Buttons */}
@@ -647,8 +778,8 @@ const FeedbackForm = () => {
           disabled={currentStep === 0}
           className={`flex items-center px-6 py-3 rounded-lg transition-all ${
             currentStep === 0
-              ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+              ? "opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400"
+              : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
           }`}
         >
           <FiArrowLeft className="mr-2" />
@@ -684,9 +815,11 @@ const FeedbackForm = () => {
               Feedback Status
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {currentStep === 0 ? 'Starting feedback process...' :
-               currentStep === steps.length - 1 ? 'Ready to submit!' :
-               'Please continue to the next step'}
+              {currentStep === 0
+                ? "Starting feedback process..."
+                : currentStep === steps.length - 1
+                  ? "Ready to submit!"
+                  : "Please continue to the next step"}
             </p>
           </div>
           <div className="text-right">
