@@ -19,6 +19,9 @@ import {
   UPLOAD_SHIP_IMAGE_REQUEST,
   UPLOAD_SHIP_IMAGE_SUCCESS,
   UPLOAD_SHIP_IMAGE_FAILURE,
+  GET_SHIP_IMAGE_PREVIEW_REQUEST,
+  GET_SHIP_IMAGE_PREVIEW_SUCCESS,
+  GET_SHIP_IMAGE_PREVIEW_FAILURE,
 } from "../constants/shipActionTypes";
 import { shipService } from "../services/shipService";
 
@@ -186,6 +189,29 @@ export const uploadShipImage = (jmain, imageFile) => async (dispatch) => {
       payload: error.message,
     });
     toast.error(error.message || "Failed to upload ship image");
+    throw error;
+  }
+};
+
+// Get ship image preview
+export const getShipImagePreview = (jmain) => async (dispatch) => {
+  try {
+    dispatch({ type: GET_SHIP_IMAGE_PREVIEW_REQUEST });
+
+    const imageUrl = await shipService.getShipImagePreview(jmain);
+
+    dispatch({
+      type: GET_SHIP_IMAGE_PREVIEW_SUCCESS,
+      payload: imageUrl,
+    });
+
+    return imageUrl;
+  } catch (error) {
+    dispatch({
+      type: GET_SHIP_IMAGE_PREVIEW_FAILURE,
+      payload: error.message,
+    });
+    toast.error(error.message || "Failed to load ship image");
     throw error;
   }
 };

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,18 +14,67 @@ import {
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { getShipImagePreview } from "../../actions/shipActions";
+import { shipService } from "../../services/shipService";
 
 const ShipDetailsModal = ({ ship, onClose }) => {
   const dispatch = useDispatch();
   const { milestones, milestonesLoading } = useSelector(
     (state) => state.projects,
   );
+  const [imageSrc, setImageSrc] = useState(null);
+  const [hasImageError, setHasImageError] = useState(false);
+  const [loadingImage, setLoadingImage] = useState(false);
+  const imageObjectUrlRef = useRef(null);
 
   const statusColor = getStatusColor(ship.status);
   const statusText = getStatusText(ship.status);
 
-  // Fetch milestones when modal opens
+  // Fetch image and milestones when modal opens
   useEffect(() => {
+    let isMounted = true;
+
+    // Cleanup previous object URL
+    if (imageObjectUrlRef.current) {
+      URL.revokeObjectURL(imageObjectUrlRef.current);
+      imageObjectUrlRef.current = null;
+    }
+
+    setImageSrc(null);
+    setHasImageError(false);
+    setLoadingImage(false);
+
+    const fetchImage = async () => {
+      const jmain =
+        ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+
+      if (!jmain) {
+        return;
+      }
+
+      setLoadingImage(true);
+      try {
+        const objectUrl = await shipService.getShipImagePreview(jmain);
+        if (isMounted) {
+          imageObjectUrlRef.current = objectUrl;
+          setImageSrc(objectUrl);
+          setHasImageError(false);
+        } else if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setHasImageError(true);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingImage(false);
+        }
+      }
+    };
+
+    fetchImage();
+
     const jobCategory =
       ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
     const jmain =
@@ -34,6 +83,14 @@ const ShipDetailsModal = ({ ship, onClose }) => {
     if (jobCategory && jmain) {
       dispatch(getMilestonesByShip(jobCategory, jmain));
     }
+
+    return () => {
+      isMounted = false;
+      if (imageObjectUrlRef.current) {
+        URL.revokeObjectURL(imageObjectUrlRef.current);
+        imageObjectUrlRef.current = null;
+      }
+    };
   }, [dispatch, ship]);
 
   const specifications = [
@@ -114,12 +171,27 @@ const ShipDetailsModal = ({ ship, onClose }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Left Column - Image & Basic Info */}
               <div>
-                <div className="rounded-lg overflow-hidden mb-6">
-                  <img
-                    src={ship.image}
-                    alt={ship.name}
-                    className="w-full h-64 object-cover"
-                  />
+                <div className="rounded-lg overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700">
+                  {loadingImage ? (
+                    <div className="w-full h-64 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : hasImageError || !imageSrc ? (
+                    <div className="w-full h-64 flex items-center justify-center bg-gray-200 dark:bg-gray-600">
+                      <div className="text-center">
+                        <FiAnchor className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">
+                          No image available
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={imageSrc}
+                      alt={ship.name}
+                      className="w-full h-64 object-cover"
+                    />
+                  )}
                 </div>
 
                 {/* Progress */}

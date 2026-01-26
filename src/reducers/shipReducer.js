@@ -17,11 +17,15 @@ import {
   UPLOAD_SHIP_IMAGE_REQUEST,
   UPLOAD_SHIP_IMAGE_SUCCESS,
   UPLOAD_SHIP_IMAGE_FAILURE,
+  GET_SHIP_IMAGE_PREVIEW_REQUEST,
+  GET_SHIP_IMAGE_PREVIEW_SUCCESS,
+  GET_SHIP_IMAGE_PREVIEW_FAILURE,
 } from "../constants/shipActionTypes";
 
 const initialState = {
   ships: [],
   currentShip: null,
+  shipImageUrl: null,
   loading: false,
   error: null,
 };
@@ -33,6 +37,7 @@ const shipReducer = (state = initialState, action) => {
     case ADD_SHIP_REQUEST:
     case UPDATE_SHIP_REQUEST:
     case UPLOAD_SHIP_IMAGE_REQUEST:
+    case GET_SHIP_IMAGE_PREVIEW_REQUEST:
       return {
         ...state,
         loading: true,
@@ -85,11 +90,19 @@ const shipReducer = (state = initialState, action) => {
         loading: false,
       };
 
+    case GET_SHIP_IMAGE_PREVIEW_SUCCESS:
+      return {
+        ...state,
+        loading: false,
+        shipImageUrl: action.payload,
+      };
+
     case GET_SHIPS_FAILURE:
     case GET_SHIP_DETAILS_FAILURE:
     case ADD_SHIP_FAILURE:
     case UPDATE_SHIP_FAILURE:
     case UPLOAD_SHIP_IMAGE_FAILURE:
+    case GET_SHIP_IMAGE_PREVIEW_FAILURE:
       return {
         ...state,
         loading: false,
