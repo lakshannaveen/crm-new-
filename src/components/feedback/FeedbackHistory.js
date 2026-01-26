@@ -129,7 +129,7 @@ const FeedbackHistory = ({
     if (up === "O") return "Not Relevant";
     if (up === "Y") return "Yes";
     if (up === "N") return "No";
-    if (up === "Z") return "Hidden";
+    if (up === "Z") return "HIDE";
 
     // If value is numeric, map to the rating labels
     const num = Number(s);
@@ -164,8 +164,13 @@ const FeedbackHistory = ({
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
     const rows = [
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
+      ["Vessel", getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")],
+      ["Criteria Code", getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE")],
+      ["Criteria Description", getFieldValue(feedback, "FEEDBACK_CRITERIA_DESC")],
+      ["Unit Description", getFieldValue(feedback, "FEEDBACK_UNIT_DESCRIPTION", "P_UNIT_DESC")],
       ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
+      ["Code Description", getFieldValue(feedback, "FEEDBACK_CODE_DESC", "P_CODE_DESC")],
       ["Evaluation", getFieldValue(feedback, "FEEDBACK_EVAL")],
       ["Answer", formatRating(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
       ["Remarks", getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS")],
