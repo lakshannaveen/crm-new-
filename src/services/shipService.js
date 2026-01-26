@@ -215,6 +215,44 @@ class ShipService {
   }
 
   /**
+   * Fetch feedback PDF preview for a ship (if exists).
+   * Returns an object URL string for the PDF blob, or null if none available.
+   */
+  async getFeedbackPreview(jmain, jcat) {
+    if (!jmain) throw new Error('Missing jmain for feedback preview');
+
+    const headers = {
+      ...authService.getAuthHeader(),
+    };
+
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ShipFeedBackPreview`,
+      { params: { jmain, jacat: jcat }, headers, responseType: 'blob' },
+    );
+
+    const contentType = response.headers?.['content-type'] || '';
+
+    // If backend returned a PDF blob
+    if (contentType.includes('application/pdf')) {
+      return URL.createObjectURL(response.data);
+    }
+
+    // If not PDF, try to read text to detect null/empty response
+    try {
+      const text = await new Response(response.data).text();
+      const lowered = (text || '').toLowerCase();
+      if (!text || lowered.includes('null') || lowered.includes('no data')) {
+        return null;
+      }
+      // Unknown non-PDF payload — throw to let caller handle
+      throw new Error('Unexpected preview response: ' + text);
+    } catch (err) {
+      // If reading failed, treat as no preview
+      return null;
+    }
+  }
+
+  /**
    * Upload a single PDF feedback for a ship.
    * - Only a single PDF file is allowed.
    * - Validates file count and MIME/type before uploading.
