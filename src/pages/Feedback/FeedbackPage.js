@@ -722,6 +722,7 @@ import {
 } from "react-icons/fi";
 import { getShips } from "../../actions/shipActions";
 import { getAllFeedbacks } from "../../actions/feedbackActions";
+import CustomDropdown from "../../components/common/Dropdown";
 
 // Feedbacks are loaded from the API. No hardcoded sample data.
 
@@ -1433,86 +1434,40 @@ const FeedbackPage = () => {
                         </div>
                       </div>
                     ) : (
-                      ships.length > 1 && (
+                      ships.length > 0 && (
                         <div className="card mb-8">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                             Select Vessel for Feedback
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {ships.slice(0, shipVisibleCount).map((ship) => (
-                              <button
-                                key={ship.id}
-                                onClick={() => setSelectedVessel(ship)}
-                                className={`p-4 border rounded-lg transition-all ${
-                                  selectedVessel?.id === ship.id
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                    : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                                }`}
-                              >
-                                <div className="flex items-start">
-                                  <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 flex-shrink-0">
-                                    <FiFileText className="text-blue-600 dark:text-blue-300" />
-                                  </div>
-                                  <div className="text-left flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900 dark:text-white truncate">
-                                      {ship.name}
-                                    </p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                      {ship.imoNumber}
-                                    </p>
-                                    <div className="mt-3 space-y-2 text-xs">
-                                      <div>
-                                        <span className="text-gray-500 dark:text-gray-400">
-                                          Category:
-                                        </span>
-                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                          {ship.raw?.SHIP_JCAT ||
-                                            ship.raw?.SHIP_JOB_CATEGORY ||
-                                            "N/A"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500 dark:text-gray-400">
-                                          Project Number:
-                                        </span>
-                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                          {ship.raw?.SHIP_JMAIN ||
-                                            ship.jmainNo ||
-                                            ship.id ||
-                                            "N/A"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Vessel
+                            </label>
+                            <CustomDropdown
+                              value={selectedVessel ? String(selectedVessel.id) : ""}
+                              onChange={(val) => {
+                                const ship = ships.find((s) => String(s.id) === String(val));
+                                setSelectedVessel(ship || null);
+                              }}
+                              options={ships.map((ship) => ({
+                                value: String(ship.id),
+                                label: `${ship.name}${ship.imoNumber ? ` (${ship.imoNumber})` : ""}`,
+                              }))}
+                              placeholder="-- Select Vessel --"
+                              openDownward={true}
+                            />
+
+                            {selectedVessel && (
+                              <div className="mt-3 p-3 border rounded bg-gray-50 dark:bg-gray-800">
+                                <p className="font-medium text-gray-900 dark:text-white truncate">
+                                  {selectedVessel.name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {selectedVessel.imoNumber || "IMO N/A"} • Category: {selectedVessel.raw?.SHIP_JCAT || selectedVessel.raw?.SHIP_JOB_CATEGORY || "N/A"}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                          {ships.length > baseShipVisibleCount && (
-                            <div className="mt-4 flex justify-center">
-                              {!showAllShips ? (
-                                <button
-                                  onClick={() => {
-                                    setShowAllShips(true);
-                                    setShipVisibleCount(ships.length);
-                                  }}
-                                  className="text-blue-600 hover:text-blue-800 font-medium"
-                                >
-                                  Load more
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setShowAllShips(false);
-                                    setShipVisibleCount(baseShipVisibleCount);
-                                  }}
-                                  className="text-gray-600 hover:text-gray-800 font-medium"
-                                >
-                                  Show less
-                                </button>
-                              )}
-                            </div>
-                          )}
                         </div>
                       )
                     )}
