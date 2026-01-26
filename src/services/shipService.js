@@ -189,6 +189,94 @@ class ShipService {
     return URL.createObjectURL(blob);
   }
 
+  /**
+   * Fetch profile picture preview for a user/service.
+   * Returns an object URL string for the image blob, or null if none available.
+   */
+  async getProfilePicPreview(serviceNo) {
+    if (!serviceNo) throw new Error('Missing serviceNo for profile preview');
+
+    const headers = {
+      ...authService.getAuthHeader(),
+    };
+
+    const start = Date.now();
+    console.debug('[shipService] getProfilePicPreview start', { serviceNo, url: `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ProfilePicPreview` });
+
+    try {
+      const response = await axios.get(
+        `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ProfilePicPreview`,
+        { params: { serviceNo }, headers, responseType: 'blob' },
+      );
+
+      const elapsed = Date.now() - start;
+      const contentType = response.headers?.['content-type'] || '';
+      const blobSize = response.data && response.data.size ? response.data.size : null;
+      console.debug('[shipService] getProfilePicPreview response', { serviceNo, status: response.status, contentType, blobSize, elapsed });
+
+      if (contentType.includes('image')) {
+        return URL.createObjectURL(response.data);
+      }
+
+      // If backend returned non-image (maybe empty/null), try reading text to detect
+      try {
+        const text = await new Response(response.data).text();
+        const lowered = (text || '').toLowerCase();
+        if (!text || lowered.includes('null') || lowered.includes('no data')) {
+          console.debug('[shipService] getProfilePicPreview no image content', { serviceNo });
+          return null;
+        }
+        // Unexpected payload — throw so caller can handle
+        throw new Error('Unexpected preview response: ' + text);
+      } catch (err) {
+        console.debug('[shipService] getProfilePicPreview read error', { serviceNo, err });
+        return null;
+      }
+    } catch (err) {
+      const elapsed = Date.now() - start;
+      console.warn('[shipService] getProfilePicPreview failed', { serviceNo, elapsed, err: err?.message || err });
+      throw err;
+    }
+  }
+
+  /**
+   * Fetch profile pic as a blob. Returns { blob, contentType } or null.
+   */
+  async getProfilePicPreviewBlob(serviceNo) {
+    if (!serviceNo) throw new Error('Missing serviceNo for profile preview');
+
+    const headers = {
+      ...authService.getAuthHeader(),
+    };
+
+    const start = Date.now();
+    console.debug('[shipService] getProfilePicPreviewBlob start', { serviceNo });
+
+    try {
+      const response = await axios.get(
+        `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ProfilePicPreview`,
+        { params: { serviceNo }, headers, responseType: 'blob' },
+      );
+
+      const elapsed = Date.now() - start;
+      const contentType = response.headers?.['content-type'] || '';
+      const blob = response.data;
+      const blobSize = blob && blob.size ? blob.size : null;
+      console.debug('[shipService] getProfilePicPreviewBlob response', { serviceNo, status: response.status, contentType, blobSize, elapsed });
+
+      if (contentType.includes('image') && blob && blob.size > 0) {
+        return { blob, contentType };
+      }
+
+      // treat non-image or empty as no image
+      return null;
+    } catch (err) {
+      const elapsed = Date.now() - start;
+      console.warn('[shipService] getProfilePicPreviewBlob failed', { serviceNo, elapsed, err: err?.message || err });
+      return null;
+    }
+  }
+
   async uploadShipImage(jmain, imageFile) {
     if (!jmain) {
       throw new Error("Missing ship JMAIN for image upload");

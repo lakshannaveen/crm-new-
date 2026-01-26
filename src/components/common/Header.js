@@ -31,6 +31,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef(null);
   const [profilePreview, setProfilePreview] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const fileInputRef = useRef(null);
 
   // Use sidebar context
@@ -88,6 +89,61 @@ const Header = () => {
   const [selectedPreviewUrl, setSelectedPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
 
+  useEffect(() => {
+    let active = true;
+    const loadServerProfile = async () => {
+      const serviceNo = user?.serviceNo || localStorage.getItem("serviceNo");
+      if (!serviceNo) return;
+      setLoadingProfile(true);
+      const start = Date.now();
+      console.debug('[Header] loadServerProfile start', { serviceNo });
+      try {
+        const result = await shipService.getProfilePicPreviewBlob(serviceNo);
+        if (!active) return;
+        const elapsed = Date.now() - start;
+        if (result && result.blob) {
+          console.debug('[Header] loadServerProfile got blob', { serviceNo, elapsed, size: result.blob.size });
+          // convert blob to data URL for fast caching
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (!active) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem('profilePicData', dataUrl);
+            } catch (e) {
+              console.warn('Failed to store profilePicData in localStorage', e);
+            }
+            setProfilePreview(dataUrl);
+          };
+          reader.onerror = (e) => console.warn('FileReader error', e);
+          reader.readAsDataURL(result.blob);
+        } else {
+          console.debug('[Header] loadServerProfile no image returned', { serviceNo, elapsed });
+        }
+      } catch (err) {
+        const elapsed = Date.now() - start;
+        console.warn('[Header] loadServerProfile failed', { serviceNo, elapsed, err: err?.message || err });
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    if (showProfileMenu) {
+      loadServerProfile();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [showProfileMenu, user]);
+
+  // Use cached data URL from localStorage or user object on mount for immediate display
+  useEffect(() => {
+    const cached = (user && user.profilePic) || localStorage.getItem('profilePicData');
+    if (cached) setProfilePreview(cached);
+  }, [user]);
+  
+
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50">
       <div className="px-4 sm:px-6 lg:px-8">
@@ -139,11 +195,16 @@ const Header = () => {
             <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <div className="relative">
                 {profilePreview || user?.profilePic ? (
-                  <img
-                    src={profilePreview || user.profilePic}
-                    alt="Profile"
-                    className="h-8 w-8 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img
+                      src={profilePreview || user.profilePic}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    {loadingProfile && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full text-white text-xs">...</span>
+                    )}
+                  </div>
                 ) : (
                   <div
                     className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
