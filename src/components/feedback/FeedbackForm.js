@@ -94,7 +94,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
     jobCategory: "",
-    projectHandleLocation: "",
+    projectHandleLocation: null,
     startingDate: "",
     endingDate: "",
     jobStatus: "",
@@ -315,11 +315,20 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
 
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    if (dates.startingDate || dates.endingDate) {
+    if (
+      dates.startingDate ||
+      dates.endingDate ||
+      dates.projectHandleLocation !== undefined
+    ) {
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
         endingDate: dates.endingDate,
+        projectHandleLocation:
+          dates.projectHandleLocation !== undefined &&
+          dates.projectHandleLocation !== ""
+            ? dates.projectHandleLocation
+            : null,
       }));
     }
   }, [dates]);
@@ -1498,11 +1507,12 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                 <input
                   type="text"
                   value={
-                    formData.projectHandleLocation === null
-                      ? "null"
-                      : formData.projectHandleLocation
+                    formData.projectHandleLocation
+                      ? formData.projectHandleLocation
+                      : "No location"
                   }
                   readOnly
+                  disabled
                   className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                     validationErrors.projectHandleLocation
                       ? "border-red-500"

@@ -34,6 +34,7 @@ const initialState = {
   dates: {
     startingDate: "",
     endingDate: "",
+    projectHandleLocation: "",
   },
   duration: {
     afloatDays: 0,
@@ -106,12 +107,24 @@ const feedbackReducer = (state = initialState, action) => {
         action.payload.END_DATE ||
         "";
 
+      // Extract location code if present in API response
+      const locationCode =
+        resultData.FEEDBACK_Loc_Code ||
+        resultData.FEEDBACK_LOC_CODE ||
+        resultData.FEEDBACK_LOC ||
+        resultData.LOC_CODE ||
+        resultData.FEEDBACK_LOCATION_CODE ||
+        resultData.location ||
+        action.payload.projectHandleLocation ||
+        "";
+
       return {
         ...state,
         loading: false,
         dates: {
           startingDate: formatDate(startDate),
           endingDate: formatDate(endDate),
+          projectHandleLocation: locationCode || "",
         },
         error: null,
       };
