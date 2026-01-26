@@ -556,17 +556,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   // Validation for evaluation step
   const validateEvaluationStep = () => {
     const errors = {};
-    let hasAtLeastOneEvaluation = false;
 
-    // Check if at least one row has evaluation
-    Object.values(selectedRows).forEach((row, index) => {
-      if (row.evaluation && row.evaluation.trim() !== "") {
-        hasAtLeastOneEvaluation = true;
+    // Require evaluation for every criteria-unit row that exists
+    allCriteriaUnits.forEach((item, idx) => {
+      const row = selectedRows[idx] || {};
+      if (!row.evaluation || row.evaluation.toString().trim() === "") {
+        errors[`evaluation_${idx}`] = `Evaluation is required for ${
+          item.criteriaCode
+        } - ${item.unitCode}`;
       }
     });
 
-    if (!hasAtLeastOneEvaluation) {
-      errors.evaluationRows = "At least one evaluation must be provided";
+    // If there are any evaluation errors, also include a general message
+    if (Object.keys(errors).length > 0) {
+      errors.evaluationRows = "Please provide an evaluation for every listed item.";
     }
 
     return errors;
@@ -1863,6 +1866,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                     </div>
                                   </div>
 
+                                  {validationErrors[`evaluation_${itemIndexInAll}`] && (
+                                    <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                                      {validationErrors[`evaluation_${itemIndexInAll}`]}
+                                    </p>
+                                  )}
+
                                   {/* Yes/No */}
                                   <div className="mb-3">
                                     <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -1996,6 +2005,12 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                             {item.unitDescription}
                                           </div>
                                         </div>
+
+                                        {validationErrors[`evaluation_${itemIndexInAll}`] && (
+                                          <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+                                            {validationErrors[`evaluation_${itemIndexInAll}`]}
+                                          </p>
+                                        )}
                                       </td>
 
                                       {/* Evaluation */}
