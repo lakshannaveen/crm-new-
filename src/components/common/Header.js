@@ -73,7 +73,7 @@ const Header = () => {
           minWidth: "320px",
           zIndex: 99999,
         },
-      }
+      },
     );
   };
 

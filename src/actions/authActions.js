@@ -57,7 +57,7 @@ export const login = (phoneNumber) => async (dispatch) => {
       if (response.UserDetails)
         localStorage.setItem(
           "backendUser",
-          JSON.stringify(response.UserDetails)
+          JSON.stringify(response.UserDetails),
         );
       // Persist service number immediately so other services can call APIs
       const serviceNoFromResponse =
@@ -110,10 +110,18 @@ const normalizeUserDetails = (user) => {
   const normalized = {
     ...user,
     serviceNo: user.ServiceNo || user.serviceNo || user.Service_No || null,
-    name: user.FName && user.LName ? `${user.FName} ${user.LName}`.trim() : (user.FName || user.Name || user.name || user.fname || null),
+    name:
+      user.FName && user.LName
+        ? `${user.FName} ${user.LName}`.trim()
+        : user.FName || user.Name || user.name || user.fname || null,
     phone: user.PhoneNo || user.phone || user.mobile || null,
     email: user.Email || user.email || null,
-    role: user.UserType === 'E' ? 'owner' : user.UserType === 'A' ? 'admin' : 'owner', // Map UserType to role
+    role:
+      user.UserType === "E"
+        ? "owner"
+        : user.UserType === "A"
+          ? "admin"
+          : "owner", // Map UserType to role
   };
   return normalized;
 };
@@ -249,17 +257,23 @@ export const loadUser = () => async (dispatch) => {
     // Get full user details including jcat and jmain
     if (basicUser.serviceNo) {
       try {
-        const fullUserDetails = await userService.getUserByServiceNo(basicUser.serviceNo);
+        const fullUserDetails = await userService.getUserByServiceNo(
+          basicUser.serviceNo,
+        );
         // Merge the details, map JCAT to jcat, JMAIN to jmain
-        const user = { 
-          ...basicUser, 
+        const user = {
+          ...basicUser,
           ...fullUserDetails,
           jcat: fullUserDetails.JCAT || fullUserDetails.jcat || basicUser.jcat,
-          jmain: fullUserDetails.JMAIN || fullUserDetails.jmain || basicUser.jmain
+          jmain:
+            fullUserDetails.JMAIN || fullUserDetails.jmain || basicUser.jmain,
         };
         dispatch({ type: LOAD_USER_SUCCESS, payload: user });
       } catch (error) {
-        console.warn("Failed to get full user details, using basic user:", error);
+        console.warn(
+          "Failed to get full user details, using basic user:",
+          error,
+        );
         dispatch({ type: LOAD_USER_SUCCESS, payload: basicUser });
       }
     } else {

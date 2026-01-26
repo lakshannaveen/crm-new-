@@ -18,7 +18,7 @@ import { getMilestonesByShip } from "../../actions/projectActions";
 const ShipDetailsModal = ({ ship, onClose }) => {
   const dispatch = useDispatch();
   const { milestones, milestonesLoading } = useSelector(
-    (state) => state.projects
+    (state) => state.projects,
   );
 
   const statusColor = getStatusColor(ship.status);
@@ -278,8 +278,8 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                                       milestone.status === "completed"
                                         ? "bg-green-100 dark:bg-green-900/30"
                                         : milestone.status === "in_progress"
-                                        ? "bg-blue-100 dark:bg-blue-900/30"
-                                        : "bg-gray-100 dark:bg-gray-700"
+                                          ? "bg-blue-100 dark:bg-blue-900/30"
+                                          : "bg-gray-100 dark:bg-gray-700"
                                     }`}
                         >
                           {milestone.status === "completed" ? (
