@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
 import { FiStar, FiCalendar, FiPaperclip, FiSearch } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { shipService } from "../../services/shipService";
@@ -16,11 +15,6 @@ const FeedbackHistory = ({
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
   const [visibleCount, setVisibleCount] = useState(3);
 
-  // Access units and criterias from Redux so we can fallback to exact
-  // descriptions when feedback record doesn't contain them (used for PDF)
-  const { unitsDescriptions = [], criterias = [] } = useSelector(
-    (state) => state.feedback || {},
-  );
   // Sort and filter feedbacks
   useEffect(() => {
     let result = [...feedbacks];
@@ -168,43 +162,12 @@ const FeedbackHistory = ({
 
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
-
-    // Helper: lookup criteria/unit descriptions from loaded unitsDescriptions
-    const lookupUnitAndCriteria = (fb) => {
-      const critCode = fb?.FEEDBACK_CRITERIA_CODE || fb?.P_CRITERIA_CODE;
-      const unitCode = fb?.FEEDBACK_UNIT_CODE || fb?.P_CODE || fb?.FEEDBACK_CODE;
-
-      // Find matching unit description record
-      const match = (unitsDescriptions || []).find((u) => {
-        return (
-          String(u.FEEDBACK_CRITERIA_CODE) === String(critCode) &&
-          (String(u.FEEDBACK_UNIT_CODE) === String(unitCode) ||
-            String(u.FEEDBACK_CODE) === String(unitCode))
-        );
-      });
-
-      const unitDescription =
-        fb?.FEEDBACK_UNIT_DESCRIPTION || fb?.P_UNIT_DESC || match?.FEEDBACK_UNIT_DESCRIPTION ||
-        match?.UNIT_DESCRIPTION || "NA";
-
-      const criteriaDescription =
-        fb?.FEEDBACK_CRITERIA_DESC || fb?.P_CRITERIA_DESC || match?.FEEDBACK_CRITERIA_DESC ||
-        match?.FEEDBACK_CRITERIA_DESCRIPTION ||
-        // fallback to criterias list (top-level descriptions)
-        (criterias || []).find((c) => String(c.FEEDBACK_CRITERIA_CODE || c.FEEDBACK_CRITERIA) === String(critCode))?.FEEDBACK_CRITERIA_DESCRIPTION ||
-        "NA";
-
-      return { unitDescription, criteriaDescription };
-    };
-
-    const { unitDescription, criteriaDescription } = lookupUnitAndCriteria(feedback);
-
     const rows = [
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
       ["Vessel", getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")],
       ["Criteria Code", getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE")],
-      ["Criteria Description", criteriaDescription || getFieldValue(feedback, "FEEDBACK_CRITERIA_DESC")],
-      ["Unit Description", unitDescription || getFieldValue(feedback, "FEEDBACK_UNIT_DESCRIPTION", "P_UNIT_DESC")],
+      ["Criteria Description", getFieldValue(feedback, "FEEDBACK_CRITERIA_DESC")],
+      ["Unit Description", getFieldValue(feedback, "FEEDBACK_UNIT_DESCRIPTION", "P_UNIT_DESC")],
       ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
       ["Code Description", getFieldValue(feedback, "FEEDBACK_CODE_DESC", "P_CODE_DESC")],
