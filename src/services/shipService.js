@@ -215,6 +215,58 @@ class ShipService {
   }
 
   /**
+   * Upload a user profile picture.
+   * - Accepts PNG or JPEG only
+   * - Maximum size 5 MB
+   * - Sends auth header from authService
+   */
+  async uploadProfilePic(userId, imageFile) {
+    if (!imageFile) {
+      throw new Error('No image file provided');
+    }
+
+    // If an array was passed, ensure exactly one file
+    if (Array.isArray(imageFile)) {
+      if (imageFile.length !== 1) {
+        throw new Error('Only one image file is allowed');
+      }
+      imageFile = imageFile[0];
+    }
+
+    const isPng = imageFile.type === 'image/png';
+    const isJpeg = imageFile.type === 'image/jpeg' || imageFile.type === 'image/jpg';
+    const hasImageExt = typeof imageFile.name === 'string' && /\.(png|jpe?g)$/i.test(imageFile.name);
+    if (!isPng && !isJpeg && !hasImageExt) {
+      throw new Error('Invalid file type: only PNG or JPEG allowed');
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5 MB
+    if (typeof imageFile.size === 'number' && imageFile.size > maxSize) {
+      throw new Error('File too large: maximum allowed size is 5 MB');
+    }
+
+    const formData = new FormData();
+    if (userId) {
+      formData.append('userId', userId);
+      formData.append('userid', userId);
+    }
+    formData.append('file', imageFile);
+
+    const headers = {
+      ...authService.getAuthHeader(),
+      // do NOT set Content-Type so browser/axios can set multipart boundary
+    };
+
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/UploadProfilePic`,
+      formData,
+      { headers },
+    );
+
+    return response.data;
+  }
+
+  /**
    * Fetch feedback PDF preview for a ship (if exists).
    * Returns an object URL string for the PDF blob, or null if none available.
    */

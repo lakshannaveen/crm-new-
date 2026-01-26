@@ -17,6 +17,8 @@ import { useSidebar } from "../../context/SidebarContext";
 import { getShips } from "../../actions/shipActions";
 import { setSelectedShipJmain } from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { shipService } from "../../services/shipService";
+import { LOAD_USER_SUCCESS } from "../../constants/authActionTypes";
 
 // Import your logo image
 import logo from "../../assets/image/logo512.png"; // Make sure to add your logo file
@@ -28,6 +30,8 @@ const Header = () => {
   const { mode } = useSelector((state) => state.theme);
   const [searchQuery, setSearchQuery] = useState("");
   const inputRef = useRef(null);
+  const [profilePreview, setProfilePreview] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Use sidebar context
   const { mobileOpen, toggleMobileSidebar } = useSidebar();
@@ -79,6 +83,10 @@ const Header = () => {
   };
 
   const avatar = generateAvatar(user?.name || "User");
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedPreviewUrl, setSelectedPreviewUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50">
@@ -127,22 +135,163 @@ const Header = () => {
               )}
             </button>
 
-            {/* Profile Button */}
+            {/* Profile Button with upload */}
             <div className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-              <div
-                className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
-              >
-                <span className="text-white font-medium text-sm">
-                  {avatar.initials}
-                </span>
+              <div className="relative">
+                {profilePreview || user?.profilePic ? (
+                  <img
+                    src={profilePreview || user.profilePic}
+                    alt="Profile"
+                    className="h-8 w-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
+                    <span className="text-white font-medium text-sm">
+                      {avatar.initials}
+                    </span>
+                  </div>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files && e.target.files[0];
+                    if (!file) return;
+                    // set selected file and preview only; upload on submit
+                    setSelectedFile(file);
+                    try {
+                      const url = URL.createObjectURL(file);
+                      setSelectedPreviewUrl(url);
+                    } catch (err) {
+                      setSelectedPreviewUrl(null);
+                    }
+                  }}
+                />
               </div>
-              <div className="hidden md:block text-left">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {user?.name || "User"}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {user?.role === "admin" ? "Administrator" : "Employee"}
-                </p>
+              <div className="hidden md:block text-left relative">
+                <div
+                  onClick={() => setShowProfileMenu((s) => !s)}
+                  className="cursor-pointer"
+                >
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {user?.name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {user?.role === "admin" ? "Administrator" : "Employee"}
+                  </p>
+                </div>
+
+                {showProfileMenu && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    onClick={() => setShowProfileMenu(false)}
+                  >
+                    <div className="absolute inset-0 bg-black/40"></div>
+                    <div
+                      className="relative w-11/12 max-w-md bg-white dark:bg-gray-800 rounded-md shadow-lg p-4 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="mb-3">
+                          {selectedPreviewUrl || profilePreview || user?.profilePic ? (
+                            <img
+                              src={selectedPreviewUrl || profilePreview || user.profilePic}
+                              alt="Preview"
+                              className="h-28 w-28 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className={`h-28 w-28 rounded-full ${avatar.color} flex items-center justify-center`}>
+                              <span className="text-white text-2xl font-medium">{avatar.initials}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="w-full text-center mb-3">
+                          <button
+                            onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                            className="px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded text-sm"
+                          >
+                            Choose file
+                          </button>
+                        </div>
+
+                        {selectedFile && (
+                          <div className="w-full mb-3 text-center text-sm text-gray-700 dark:text-gray-300">
+                            <div className="truncate">{selectedFile.name}</div>
+                          </div>
+                        )}
+
+                        <div className="w-full flex gap-3">
+                          <button
+                            onClick={async () => {
+                              if (!selectedFile) {
+                                toast.error('Please choose an image first');
+                                return;
+                              }
+                              try {
+                                setUploading(true);
+                                const tId = toast.loading('Uploading profile image...');
+                                const resp = await shipService.uploadProfilePic(
+                                  user?.serviceNo || user?.id || null,
+                                  selectedFile
+                                );
+                                toast.dismiss(tId);
+                                toast.success('Profile image uploaded successfully');
+
+                                const url =
+                                  (resp && (resp.url || resp.profilePic || resp.fileUrl || resp.FilePath)) ||
+                                  null;
+                                const objectUrl = url || selectedPreviewUrl || URL.createObjectURL(selectedFile);
+                                setProfilePreview(objectUrl);
+
+                                const updatedUser = { ...(user || {}), profilePic: objectUrl };
+                                try {
+                                  localStorage.setItem('user', JSON.stringify(updatedUser));
+                                  dispatch({ type: LOAD_USER_SUCCESS, payload: updatedUser });
+                                } catch (err) {
+                                  // ignore
+                                }
+
+                                setSelectedFile(null);
+                                if (selectedPreviewUrl) {
+                                  try { URL.revokeObjectURL(selectedPreviewUrl); } catch(e){}
+                                  setSelectedPreviewUrl(null);
+                                }
+                                setShowProfileMenu(false);
+                              } catch (err) {
+                                toast.error(err?.message || 'Failed to upload image');
+                              } finally {
+                                setUploading(false);
+                              }
+                            }}
+                            disabled={uploading}
+                            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded text-sm disabled:opacity-60"
+                          >
+                            {uploading ? 'Uploading...' : 'Upload'}
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              if (selectedPreviewUrl) {
+                                try { URL.revokeObjectURL(selectedPreviewUrl); } catch(e){}
+                              }
+                              setSelectedFile(null);
+                              setSelectedPreviewUrl(null);
+                              setShowProfileMenu(false);
+                            }}
+                            className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

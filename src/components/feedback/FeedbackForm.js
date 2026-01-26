@@ -720,9 +720,8 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
   };
 
   const handleFileUpload = (e) => {
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB in bytes
-    const files = Array.from(e.target.files);
-    const pdfFiles = files.filter((file) => file.type === "application/pdf");
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const files = Array.from(e.target.files || []);
 
     // Enforce single attachment total
     if ((formData.attachments || []).length >= 1) {
@@ -734,56 +733,81 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       return;
     }
 
-    if (files.length !== pdfFiles.length) {
-      toast.error("Only PDF files are allowed", {
-        duration: 3000,
-        position: "top-center",
-      });
+    if (files.length === 0) {
+      e.target.value = "";
+      return;
     }
 
-    // Filter valid PDFs (correct type and size)
-    const validPdfs = [];
+    // Validate each selected file: allow only PDF by MIME or extension
+    const invalidFiles = [];
     const oversizedFiles = [];
+    const validFiles = [];
 
-    pdfFiles.forEach((file) => {
-      if (file.size > MAX_FILE_SIZE) {
-        oversizedFiles.push(file.name);
-      } else {
-        validPdfs.push(file);
+    files.forEach((file) => {
+      const name = (file.name || "").toString();
+      const lower = name.toLowerCase();
+      const hasPdfExtension = lower.endsWith(".pdf");
+      const isPdfMime = file.type === "application/pdf";
+
+      // Reject files that don't look like a PDF by extension or MIME
+      if (!hasPdfExtension && !isPdfMime) {
+        invalidFiles.push(name || "(unknown)");
+        return;
       }
+
+      // Reject if file too large
+      if (file.size > MAX_FILE_SIZE) {
+        oversizedFiles.push(name || "(unknown)");
+        return;
+      }
+
+      // Accept file
+      validFiles.push(file);
     });
 
-    if (oversizedFiles.length > 0) {
-      toast.error(`File(s) exceed 10 MB limit: ${oversizedFiles.join(", ")}`, {
+    if (invalidFiles.length > 0) {
+      toast.error(`Invalid file type (only PDF allowed): ${invalidFiles.join(", ")}`, {
         duration: 4000,
         position: "top-center",
       });
     }
 
-    if (validPdfs.length > 0) {
-      // Only keep one PDF (either the existing attachment or the first valid new one)
-      const allowedToAdd = Math.max(0, 1 - (formData.attachments || []).length);
-      const filesToAdd = validPdfs.slice(0, allowedToAdd);
+    if (oversizedFiles.length > 0) {
+      toast.error(`File(s) exceed 10 MB: ${oversizedFiles.join(", ")}`, {
+        duration: 4000,
+        position: "top-center",
+      });
+    }
 
-      const newAttachments = filesToAdd.map((file) => ({
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        file: file,
-        id: Math.random().toString(36).substr(2, 9),
-      }));
+    if (validFiles.length === 0) {
+      e.target.value = "";
+      return;
+    }
 
+    // Only allow adding up to the remaining allowed slots (usually 1)
+    const allowedToAdd = Math.max(0, 1 - (formData.attachments || []).length);
+    const filesToAdd = validFiles.slice(0, allowedToAdd);
+
+    const newAttachments = filesToAdd.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      file: file,
+      id: Math.random().toString(36).substr(2, 9),
+    }));
+
+    if (newAttachments.length > 0) {
       setFormData((prev) => ({
         ...prev,
-        attachments: [...prev.attachments, ...newAttachments],
+        attachments: [...(prev.attachments || []), ...newAttachments],
       }));
 
-      toast.success(`${newAttachments.length} PDF file(s) added`, {
+      toast.success(`${newAttachments.length} PDF added`, {
         duration: 2000,
         position: "top-center",
       });
 
-      if (validPdfs.length > allowedToAdd) {
+      if (validFiles.length > allowedToAdd) {
         toast.error("Only one PDF attachment is allowed; extras were ignored.", {
           duration: 3000,
           position: "top-center",
