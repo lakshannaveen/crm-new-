@@ -1255,18 +1255,10 @@ const FeedbackPage = () => {
               {/* breadcrumb title removed per request */}
             </div>
 
-            {/* Header */}
+            {/* Header removed per request */}
             <div className="mb-8">
               <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Service Feedback System
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Share your experience and view feedback history. All data is
-                    saved locally.
-                  </p>
-                </div>
+                <div>{/* header text removed */}</div>
 
                 {selectedVessel && (
                   <div className="mt-4 md:mt-0 flex space-x-3">
