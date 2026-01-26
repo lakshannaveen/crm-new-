@@ -16,6 +16,9 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
+  UPLOAD_SHIP_IMAGE_REQUEST,
+  UPLOAD_SHIP_IMAGE_SUCCESS,
+  UPLOAD_SHIP_IMAGE_FAILURE,
 } from "../constants/shipActionTypes";
 import { shipService } from "../services/shipService";
 
@@ -100,7 +103,7 @@ export const getShipDetails = (jmainNo) => async (dispatch, getState) => {
 
     if (!jmain) {
       throw new Error(
-        "Ship JMAIN number not found. Please select a ship first."
+        "Ship JMAIN number not found. Please select a ship first.",
       );
     }
 
@@ -160,5 +163,29 @@ export const updateShip = (shipId, shipData) => async (dispatch) => {
       payload: error.message,
     });
     toast.error("Failed to update ship");
+  }
+};
+
+// Upload ship image
+export const uploadShipImage = (jmain, imageFile) => async (dispatch) => {
+  try {
+    dispatch({ type: UPLOAD_SHIP_IMAGE_REQUEST });
+
+    const response = await shipService.uploadShipImage(jmain, imageFile);
+
+    dispatch({
+      type: UPLOAD_SHIP_IMAGE_SUCCESS,
+      payload: { jmain, response },
+    });
+
+    toast.success("Ship image uploaded successfully");
+    return response;
+  } catch (error) {
+    dispatch({
+      type: UPLOAD_SHIP_IMAGE_FAILURE,
+      payload: error.message,
+    });
+    toast.error(error.message || "Failed to upload ship image");
+    throw error;
   }
 };

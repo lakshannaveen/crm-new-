@@ -14,6 +14,9 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
+  UPLOAD_SHIP_IMAGE_REQUEST,
+  UPLOAD_SHIP_IMAGE_SUCCESS,
+  UPLOAD_SHIP_IMAGE_FAILURE,
 } from "../constants/shipActionTypes";
 
 const initialState = {
@@ -29,6 +32,7 @@ const shipReducer = (state = initialState, action) => {
     case GET_SHIP_DETAILS_REQUEST:
     case ADD_SHIP_REQUEST:
     case UPDATE_SHIP_REQUEST:
+    case UPLOAD_SHIP_IMAGE_REQUEST:
       return {
         ...state,
         loading: true,
@@ -70,15 +74,22 @@ const shipReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         ships: state.ships.map((ship) =>
-          ship.id === action.payload.id ? action.payload : ship
+          ship.id === action.payload.id ? action.payload : ship,
         ),
         currentShip: action.payload,
+      };
+
+    case UPLOAD_SHIP_IMAGE_SUCCESS:
+      return {
+        ...state,
+        loading: false,
       };
 
     case GET_SHIPS_FAILURE:
     case GET_SHIP_DETAILS_FAILURE:
     case ADD_SHIP_FAILURE:
     case UPDATE_SHIP_FAILURE:
+    case UPLOAD_SHIP_IMAGE_FAILURE:
       return {
         ...state,
         loading: false,

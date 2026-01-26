@@ -110,11 +110,7 @@
 
 // export const shipService = new ShipService();
 
-// Mock service for ship management
-import oceanQueenImage from "../assets/image/ocean_queen_12.jpg";
-import SeaVoyagerImage from "../assets/image/MV Sea Voyager.jpg";
-import BlueWaveImage from "../assets/image/MV Blue Wave.jpg";
-import EverUniqueImage from "../assets/image/unq.jpg";
+// Ship service for API calls
 import axios from "axios";
 import { BACKEND_BASE_URL } from "..";
 import { authService } from "./authService";
@@ -144,7 +140,7 @@ class ShipService {
       progress: 0,
       startDate: new Date().toISOString(),
       endDate: new Date().toISOString(),
-      image: this.getShipImage(apiShip),
+      image: null,
       raw: apiShip,
     };
   }
@@ -167,13 +163,58 @@ class ShipService {
     return map[code] || "Other";
   }
 
-  getShipImage(ship) {
-    const type = (ship.SHIP_VESSEL_TYPE || "").toString();
-    if (type === "7") return EverUniqueImage;
-    if (type === "1") return SeaVoyagerImage;
-    if (type === "2") return BlueWaveImage;
-    return oceanQueenImage;
+  async getShipImagePreview(jmain) {
+    if (!jmain) {
+      throw new Error("Missing ship JMAIN for image preview");
+    }
+
+    const headers = {
+      ...authService.getAuthHeader(),
+    };
+
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ShipicPreview`,
+      {
+        params: { jmain },
+        headers,
+        responseType: "blob",
+      },
+    );
+
+    const blob = response?.data;
+    if (!blob) {
+      throw new Error("Ship image not available");
+    }
+
+    return URL.createObjectURL(blob);
   }
+
+  async uploadShipImage(jmain, imageFile) {
+    if (!jmain) {
+      throw new Error("Missing ship JMAIN for image upload");
+    }
+    if (!imageFile) {
+      throw new Error("No image file provided");
+    }
+
+    const formData = new FormData();
+    formData.append("jmain", jmain);
+    formData.append("file", imageFile);
+
+    const headers = {
+      ...authService.getAuthHeader(),
+    };
+
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/UploadShipPic`,
+      formData,
+      { headers },
+    );
+
+    return response.data;
+  }
+
+
 
   async getShips(jcat, jmain) {
     if (!jcat || !jmain) {
@@ -185,7 +226,7 @@ class ShipService {
     };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetAllShips`,
-      { params: { p_jcat: jcat, p_jmain_no: jmain }, headers }
+      { params: { p_jcat: jcat, p_jmain_no: jmain }, headers },
     );
 
     const list = response.data?.ResultSet || [];
@@ -205,7 +246,7 @@ class ShipService {
           p_jmain_no: jmainNo,
         },
         headers,
-      }
+      },
     );
 
     const payload = response.data;
