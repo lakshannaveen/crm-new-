@@ -214,6 +214,59 @@ class ShipService {
     return response.data;
   }
 
+  /**
+   * Upload a single PDF feedback for a ship.
+   * - Only a single PDF file is allowed.
+   * - Validates file count and MIME/type before uploading.
+   */
+  async uploadShipFeedback(jmain, pdfFile, jcat = null) {
+    if (!jmain) {
+      throw new Error('Missing ship JMAIN for feedback upload');
+    }
+
+    if (!pdfFile) {
+      throw new Error('No file provided for feedback upload');
+    }
+
+    // If an array was passed, ensure exactly one file
+    if (Array.isArray(pdfFile)) {
+      if (pdfFile.length !== 1) {
+        throw new Error('Only one PDF file is allowed');
+      }
+      pdfFile = pdfFile[0];
+    }
+
+    // Basic client-side validation for PDF
+    const isPdfByType = pdfFile.type === 'application/pdf';
+    const isPdfByName = typeof pdfFile.name === 'string' && pdfFile.name.toLowerCase().endsWith('.pdf');
+    if (!isPdfByType && !isPdfByName) {
+      throw new Error('Invalid file type: only PDF is allowed');
+    }
+
+    const formData = new FormData();
+    // Backend may expect different key names (case variants). Include common variants.
+    formData.append('jmain', jmain);
+    formData.append('JMAIN', jmain);
+    if (jcat) {
+      formData.append('jacat', jcat);
+      formData.append('JACAT', jcat);
+    }
+    formData.append('file', pdfFile);
+
+    const headers = {
+      ...authService.getAuthHeader(),
+      // Let the browser/axios set Content-Type with proper boundary for multipart/form-data
+    };
+
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/UploadShipFeedback`,
+      formData,
+      { headers },
+    );
+
+    return response.data;
+  }
+
 
 
   async getShips(jcat, jmain) {

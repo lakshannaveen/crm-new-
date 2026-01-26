@@ -21,6 +21,7 @@ import {
 import useMobile from "../../hooks/useMobile";
 import { formatDate } from "../../utils/formatters";
 import { addFeedback } from "../../services/feedbackService";
+import { shipService } from "../../services/shipService";
 import {
   getFeedbackDates,
   getJmain,
@@ -723,6 +724,16 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     const files = Array.from(e.target.files);
     const pdfFiles = files.filter((file) => file.type === "application/pdf");
 
+    // Enforce single attachment total
+    if ((formData.attachments || []).length >= 1) {
+      toast.error("Only one PDF attachment is allowed", {
+        duration: 3000,
+        position: "top-center",
+      });
+      e.target.value = "";
+      return;
+    }
+
     if (files.length !== pdfFiles.length) {
       toast.error("Only PDF files are allowed", {
         duration: 3000,
@@ -750,7 +761,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
     }
 
     if (validPdfs.length > 0) {
-      const newAttachments = validPdfs.map((file) => ({
+      // Only keep one PDF (either the existing attachment or the first valid new one)
+      const allowedToAdd = Math.max(0, 1 - (formData.attachments || []).length);
+      const filesToAdd = validPdfs.slice(0, allowedToAdd);
+
+      const newAttachments = filesToAdd.map((file) => ({
         name: file.name,
         size: file.size,
         type: file.type,
@@ -763,10 +778,17 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         attachments: [...prev.attachments, ...newAttachments],
       }));
 
-      toast.success(`${validPdfs.length} PDF file(s) added`, {
+      toast.success(`${newAttachments.length} PDF file(s) added`, {
         duration: 2000,
         position: "top-center",
       });
+
+      if (validPdfs.length > allowedToAdd) {
+        toast.error("Only one PDF attachment is allowed; extras were ignored.", {
+          duration: 3000,
+          position: "top-center",
+        });
+      }
     }
 
     // Reset input
@@ -842,6 +864,27 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           position: "top-center",
         });
         return;
+      }
+
+      // If there is an attachment, upload it to the ShipDetails attachment endpoint
+      const attachments = formData.attachments || [];
+      if (attachments.length > 0) {
+        try {
+          // Upload first (and only) attachment file
+          const fileToUpload = attachments[0].file;
+          await shipService.uploadShipFeedback(
+            formData.projectNumber,
+            fileToUpload,
+            formData.jobCategory,
+          );
+          toast.success('Attachment uploaded successfully', { position: 'top-center' });
+        } catch (uploadError) {
+          console.error('Attachment upload failed:', uploadError);
+          toast.error('Feedback submitted but attachment upload failed', {
+            duration: 5000,
+            position: 'top-center',
+          });
+        }
       }
 
       setFeedbackSubmitted(true);
@@ -2250,9 +2293,9 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                       </div>
                       <input
                         type="file"
-                        multiple
-                        accept=".pdf"
+                        accept=".pdf,application/pdf"
                         onChange={handleFileUpload}
+                        disabled={formData.attachments && formData.attachments.length >= 1}
                         className="hidden"
                       />
                     </label>
