@@ -83,6 +83,26 @@ const Header = () => {
     console.log("Searching for:", searchQuery);
   };
 
+  const cacheBustUrl = (url) => {
+    if (!url) return url;
+    try {
+      const u = new URL(url, window.location.origin);
+      u.searchParams.set('cb', Date.now().toString());
+      return u.toString();
+    } catch (err) {
+      // fallback: append timestamp manually
+      return url + (url.includes('?') ? '&' : '?') + 'cb=' + Date.now();
+    }
+  };
+
+  const fileToDataUrl = (file) => new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = (e) => reject(e);
+    r.readAsDataURL(file);
+  });
+
   const avatar = generateAvatar(user?.name || "User");
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -372,18 +392,32 @@ const Header = () => {
                                 toast.dismiss(tId);
                                 toast.success('Profile image uploaded successfully');
 
-                                const url =
-                                  (resp && (resp.url || resp.profilePic || resp.fileUrl || resp.FilePath)) ||
-                                  null;
-                                const objectUrl = url || selectedPreviewUrl || URL.createObjectURL(selectedFile);
-                                setProfilePreview(objectUrl);
+                                const url = (resp && (resp.url || resp.profilePic || resp.fileUrl || resp.FilePath)) || null;
+                                // Convert file to persistent data URL when server didn't return a permanent URL.
+                                let storageUrl = null;
+                                if (!url && selectedFile) {
+                                  try {
+                                    storageUrl = await fileToDataUrl(selectedFile);
+                                  } catch (e) {
+                                    storageUrl = null;
+                                  }
+                                }
 
-                                const updatedUser = { ...(user || {}), profilePic: objectUrl };
+                                // For immediate display prefer server URL (cache-busted), then object URL preview, then data URL.
+                                const displayUrl = url ? cacheBustUrl(url) : (selectedPreviewUrl || storageUrl || null);
+                                if (displayUrl) setProfilePreview(displayUrl);
+
+                                // Persist a stable profile reference: prefer server URL (without cache-bust) or the data URL.
+                                const persistedProfile = url || storageUrl || null;
+                                const updatedUser = { ...(user || {}), profilePic: persistedProfile };
                                 try {
                                   localStorage.setItem('user', JSON.stringify(updatedUser));
+                                  if (storageUrl) {
+                                    localStorage.setItem('profilePicData', storageUrl);
+                                  }
                                   dispatch({ type: LOAD_USER_SUCCESS, payload: updatedUser });
                                 } catch (err) {
-                                  // ignore
+                                  // ignore storage errors
                                 }
 
                                 setSelectedFile(null);
