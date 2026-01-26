@@ -251,9 +251,11 @@ const ShipCard = ({ ship }) => {
                   }}
                 />
               ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400">
-                  <p className="text-sm font-medium">No image preview</p>
-                </div>
+                <img
+                  src={require("../../assets/image/No image available.png")}
+                  alt="No image available"
+                  className="w-full h-full object-cover"
+                />
               )}
 
               {/* Hidden File Input */}
