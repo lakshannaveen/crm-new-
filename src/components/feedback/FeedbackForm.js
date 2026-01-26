@@ -629,6 +629,20 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
         });
         return;
       }
+      // Require at least one PDF attachment before moving past Evaluation step
+      if (currentStep === 1) {
+        if (!formData.attachments || formData.attachments.length === 0) {
+          toast.error("PDF must be uploaded to go next.", {
+            duration: 4000,
+            position: "top-center",
+          });
+          setValidationErrors((prev) => ({
+            ...prev,
+            attachments: "Please upload at least one PDF before continuing.",
+          }));
+          return;
+        }
+      }
       // Validate current step before proceeding
       const errors = validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
