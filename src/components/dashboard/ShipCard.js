@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";import toast from "react-hot-toast";import { FiCalendar, FiAnchor, FiFlag, FiUpload } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { FiCalendar, FiAnchor, FiFlag, FiUpload } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
-import { setSelectedShipJmain, uploadShipImage } from "../../actions/shipActions";
+import {
+  setSelectedShipJmain,
+  uploadShipImage,
+} from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
 import { getFeedbackDates } from "../../actions/feedbackActions";
 import { shipService } from "../../services/shipService";
@@ -223,10 +228,18 @@ const ShipCard = ({ ship }) => {
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <div className="flex space-x-2">
                     <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
-                    <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Loading image...</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    Loading image...
+                  </p>
                 </div>
               ) : imageSrc && !hasImageError ? (
                 <img
@@ -242,7 +255,7 @@ const ShipCard = ({ ship }) => {
                   <p className="text-sm font-medium">No image preview</p>
                 </div>
               )}
-              
+
               {/* Hidden File Input */}
               <input
                 ref={fileInputRef}

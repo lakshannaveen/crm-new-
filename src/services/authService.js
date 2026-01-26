@@ -52,7 +52,7 @@ class AuthService {
   async sendOTP(phoneNumber) {
     // sendOTP (mock) is deprecated in API-only mode. Use requestOTPBackend instead.
     throw new Error(
-      "sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow"
+      "sendOTP is disabled. Use requestOTPBackend(phoneNumber) for API OTP flow",
     );
   }
 
@@ -118,7 +118,7 @@ class AuthService {
         console.warn(
           "requestOTPBackend fetch failed for key",
           key,
-          err && err.message
+          err && err.message,
         );
         lastError = err;
         continue;
@@ -195,7 +195,7 @@ class AuthService {
             "verifyOTPBackend fetch failed for",
             pKey,
             oKey,
-            err && err.message
+            err && err.message,
           );
           lastError = err;
           continue;
@@ -244,7 +244,7 @@ class AuthService {
         phone: user.phone,
         role: user.role,
         exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
-      })
+      }),
     )}.mock-signature`;
 
     return {
@@ -267,7 +267,7 @@ class AuthService {
 
     // Check if already pending
     const pendingUser = this.pendingRegistrations.find(
-      (u) => u.phone === userData.phone
+      (u) => u.phone === userData.phone,
     );
     if (pendingUser) {
       throw new Error("Registration request already pending.");
@@ -337,7 +337,7 @@ class AuthService {
     if (expiresInSeconds && Number.isFinite(Number(expiresInSeconds))) {
       localStorage.setItem(
         "tokenExpiry",
-        String(Date.now() + Number(expiresInSeconds) * 1000)
+        String(Date.now() + Number(expiresInSeconds) * 1000),
       );
     } else {
       // Try to infer expiry from JWT exp claim
@@ -433,7 +433,7 @@ class AuthService {
 
     const user = this.users.find((u) => u.phone === phoneNumber);
     const pending = this.pendingRegistrations.find(
-      (u) => u.phone === phoneNumber
+      (u) => u.phone === phoneNumber,
     );
 
     return {
@@ -456,7 +456,7 @@ class AuthService {
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const pendingIndex = this.pendingRegistrations.findIndex(
-      (u) => u.id === userId
+      (u) => u.id === userId,
     );
 
     if (pendingIndex === -1) {
@@ -485,7 +485,7 @@ class AuthService {
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     const pendingIndex = this.pendingRegistrations.findIndex(
-      (u) => u.id === userId
+      (u) => u.id === userId,
     );
 
     if (pendingIndex === -1) {
