@@ -599,6 +599,10 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
       case 1: // Evaluation Details
         const evalErrors = validateEvaluationStep();
         Object.assign(errors, evalErrors);
+        // Require at least one PDF attachment when on evaluation step
+        if (!formData.attachments || formData.attachments.length === 0) {
+          errors.attachments = "A PDF attachment is required";
+        }
         break;
 
       case 2: // Review - no validation needed
@@ -631,6 +635,11 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
           let errorElement = null;
 
           // Find the first error element in the DOM
+          if (firstErrorKey === "attachments") {
+            // Scroll to the PDF file input (accepts only PDF)
+            errorElement = document.querySelector('input[type="file"][accept=".pdf,application/pdf"]');
+          }
+
           if (firstErrorKey === "evaluationRows") {
             // Scroll to evaluation section
             errorElement = document.querySelector(
