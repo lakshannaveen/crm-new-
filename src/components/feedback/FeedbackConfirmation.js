@@ -15,6 +15,7 @@ const mapAnswerText = (raw) => {
   if (up === "Y") return "Yes";
   if (up === "N") return "No";
   if (up === "Z") return "Hidden";
+  if (up === "Z") return "HIDE";
   const num = Number(s);
   if (!isNaN(num)) {
     if (num >= 76) return "Excellent";
@@ -90,7 +91,9 @@ const FeedbackConfirmation = ({ formData }) => {
             <thead>
               <tr>
                 <th>Criteria</th>
+                <th>Criteria Description</th>
                 <th>Code</th>
+                <th>Code/Unit Description</th>
                 <th>Answer</th>
                 <th>Remarks</th>
                 <th>Action Taken</th>
@@ -99,13 +102,15 @@ const FeedbackConfirmation = ({ formData }) => {
             <tbody>
               ${feedbackItems
                 .map((it) => {
-                  const criteria = it.P_CRITERIA_CODE || it.criteriaCode || '';
-                  const code = it.P_CODE || it.unitCode || '';
+                  const criteria = it.P_CRITERIA_CODE || it.criteriaCode || it.FEEDBACK_CRITERIA_CODE || '';
+                  const criteriaDesc = it.P_CRITERIA_DESC || it.criteriaDescription || it.FEEDBACK_CRITERIA_DESC || '';
+                  const code = it.P_CODE || it.unitCode || it.P_CODE || it.P_UNIT_CODE || it.P_CODE || it.P_CODE || it.P_CODE || '';
+                  const codeDesc = it.P_CODE_DESC || it.unitDescription || it.P_UNIT_DESC || it.FEEDBACK_UNIT_DESCRIPTION || it.FEEDBACK_CODE_DESC || '';
                   const rawAns = it.P_ANSWER_TYPE || (it.yesNo ? (it.yesNo === true ? 'Y' : it.yesNo) : '');
                   const answer = mapAnswerText(rawAns);
                   const remarks = it.P_REMARKS || it.remarks || '';
                   const action = it.P_ACTION_TAKEN || it.actionTaken || '';
-                  return `<tr><td>${criteria}</td><td>${code}</td><td>${answer}</td><td>${remarks}</td><td>${action}</td></tr>`;
+                  return `<tr><td>${criteria}</td><td>${criteriaDesc}</td><td>${code}</td><td>${codeDesc}</td><td>${answer}</td><td>${remarks}</td><td>${action}</td></tr>`;
                 })
                 .join('')}
             </tbody>
