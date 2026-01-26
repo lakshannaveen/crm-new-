@@ -146,20 +146,17 @@ const ProfilePage = () => {
         <div className="flex-1">
           <Header />
 
-          <main className="p-4 sm:p-6 lg:p-8">
+          <main className="pt-0 p-4 sm:p-2 lg:p-4">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-2">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 Profile Settings
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Manage your account settings and preferences
-              </p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Left Column - Profile Card */}
               <div className="lg:col-span-1">
-                <div className="card sticky top-8">
+                <div className="card sticky top-4">
                   {/* Profile Photo */}
                   <div className="text-center mb-6">
                     <div className="relative inline-block">
@@ -267,6 +264,7 @@ const ProfilePage = () => {
                         {activeTab === 'notifications' && 'Configure how you receive notifications'}
                         {activeTab === 'preferences' && 'Set your application preferences'}
                       </p>
+                      <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences</p>
                     </div>
                     {/* {activeTab === 'personal' && (
                       <button
