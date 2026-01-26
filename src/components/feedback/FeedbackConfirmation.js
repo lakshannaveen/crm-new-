@@ -1,6 +1,38 @@
 import React from 'react';
 import { FiCheckCircle, FiDownload } from 'react-icons/fi';
 
+// Helper to map single-letter or numeric answers to full-text labels
+const mapAnswerText = (raw) => {
+  if (raw === undefined || raw === null) return "";
+  const s = String(raw).trim();
+  if (!s) return "";
+  const up = s.toUpperCase();
+  if (up === "P") return "Poor";
+  if (up === "A") return "Average";
+  if (up === "G") return "Good";
+  if (up === "E") return "Excellent";
+  if (up === "O") return "Not Relevant";
+  if (up === "Y") return "Yes";
+  if (up === "N") return "No";
+  if (up === "Z") return "Hidden";
+  const num = Number(s);
+  if (!isNaN(num)) {
+    if (num >= 76) return "Excellent";
+    if (num >= 51) return "Good";
+    if (num >= 26) return "Average";
+    return "Poor";
+  }
+  if (up === "POOR") return "Poor";
+  if (up === "AVERAGE") return "Average";
+  if (up === "GOOD") return "Good";
+  if (up === "EXCELLENT") return "Excellent";
+  if (up === "NOT RELEVANT" || up === "NOTRELEVANT" || up === "NOT_RELEVENT") return "Not Relevant";
+  if (up === "YES") return "Yes";
+  if (up === "NO") return "No";
+  if (up === "HIDE" || up === "HIDDEN") return "Hidden";
+  return s;
+};
+
 const FeedbackConfirmation = ({ formData }) => {
   const submittedOn = formData?.submittedAt
     ? new Date(formData.submittedAt)
@@ -69,7 +101,8 @@ const FeedbackConfirmation = ({ formData }) => {
                 .map((it) => {
                   const criteria = it.P_CRITERIA_CODE || it.criteriaCode || '';
                   const code = it.P_CODE || it.unitCode || '';
-                  const answer = it.P_ANSWER_TYPE || (it.yesNo ? (it.yesNo === true ? 'Y' : it.yesNo) : '');
+                  const rawAns = it.P_ANSWER_TYPE || (it.yesNo ? (it.yesNo === true ? 'Y' : it.yesNo) : '');
+                  const answer = mapAnswerText(rawAns);
                   const remarks = it.P_REMARKS || it.remarks || '';
                   const action = it.P_ACTION_TAKEN || it.actionTaken || '';
                   return `<tr><td>${criteria}</td><td>${code}</td><td>${answer}</td><td>${remarks}</td><td>${action}</td></tr>`;

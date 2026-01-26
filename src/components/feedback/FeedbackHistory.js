@@ -122,28 +122,39 @@ const FeedbackHistory = ({
 
     // Map letter codes to full text
     const up = s.toUpperCase();
-    if (up === "P") return "P - (POOR)";
-    if (up === "A") return "A - (AVERAGE)";
-    if (up === "G") return "G - (GOOD)";
-    if (up === "E") return "E - (EXCELLENT)";
-    if (up === "N") return "N - (Not Relevant)";
+    if (up === "P") return "Poor";
+    if (up === "A") return "Average";
+    if (up === "G") return "Good";
+    if (up === "E") return "Excellent";
+    if (up === "O") return "Not Relevant";
+    if (up === "Y") return "Yes";
+    if (up === "N") return "No";
+    if (up === "Z") return "Hidden";
 
     // If value is numeric, map to the rating labels
     const num = Number(s);
     if (!isNaN(num)) {
-      if (num >= 76) return "E - (EXCELLENT)";
-      if (num >= 51) return "G - (GOOD)";
-      if (num >= 26) return "A - (AVERAGE)";
-      return "P - (POOR)";
+      if (num >= 76) return "Excellent";
+      if (num >= 51) return "Good";
+      if (num >= 26) return "Average";
+      return "Poor";
     }
 
     // If already a textual rating, normalize to proper format
-    if (up === "POOR") return "P - (POOR)";
-    if (up === "AVERAGE") return "A - (AVERAGE)";
-    if (up === "GOOD") return "G - (GOOD)";
-    if (up === "EXCELLENT") return "E - (EXCELLENT)";
-    if (up === "NOT RELEVANT" || up === "NOTRELEVANT")
-      return "N - (Not Relevant)";
+    if (up === "POOR") return "Poor";
+    if (up === "AVERAGE") return "Average";
+    if (up === "GOOD") return "Good";
+    if (up === "EXCELLENT") return "Excellent";
+    if (
+      up === "NOT RELEVANT" ||
+      up === "NOTRELEVANT" ||
+      up === "NOT_RELEVANT" ||
+      up === "NOT_RELEVENT"
+    )
+      return "Not Relevant";
+    if (up === "YES") return "Yes";
+    if (up === "NO") return "No";
+    if (up === "HIDE" || up === "HIDDEN") return "Hidden";
 
     // Fallback: return raw string
     return s;
