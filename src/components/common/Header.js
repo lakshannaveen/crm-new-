@@ -279,30 +279,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Left side - Logo/Brand & Mobile Menu */}
           <div className="flex items-center">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={toggleMobileSidebar}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
-              aria-label="Open menu"
-            >
-              <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-            </button>
-
-            {/* Desktop Minimize/Expand Button */}
-            <button
-              onClick={toggleDesktopSidebar}
-              className="hidden md:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
-              aria-label={
-                desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"
-              }
-              title={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {desktopCollapsed ? (
-                <FiMaximize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <FiMinimize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              )}
-            </button>
+            {/* Sidebar controls removed to keep sidebar collapsed */}
 
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center">

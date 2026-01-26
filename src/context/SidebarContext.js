@@ -8,7 +8,8 @@ export const useSidebar = () => {
 
 export const SidebarProvider = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [desktopCollapsed, setDesktopCollapsed] = useState(false);
+  // Force desktop sidebar to be collapsed by default and prevent toggling
+  const [desktopCollapsed, setDesktopCollapsed] = useState(true);
 
   // Load collapsed state from localStorage on initial load
   useEffect(() => {
@@ -27,9 +28,8 @@ export const SidebarProvider = ({ children }) => {
     setMobileOpen(!mobileOpen);
   };
 
-  const toggleDesktopSidebar = () => {
-    setDesktopCollapsed(!desktopCollapsed);
-  };
+  // No-op toggle to keep sidebar collapsed
+  const toggleDesktopSidebar = () => {};
 
   const closeMobileSidebar = () => {
     setMobileOpen(false);
