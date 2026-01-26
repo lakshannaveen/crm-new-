@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiStar, FiCalendar, FiSearch } from "react-icons/fi";
+import { FiStar, FiCalendar, FiPaperclip, FiSearch } from "react-icons/fi";
 import toast from "react-hot-toast";
 import { shipService } from "../../services/shipService";
 
@@ -424,8 +424,9 @@ const FeedbackHistory = ({
                                     }
                                   }}
                                   className="inline-flex items-center gap-2 px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700"
+                                  title="View attachment"
                                 >
-                                  <FiSearch /> Preview
+                                  <FiPaperclip /> View attachment
                                 </button>
                               </div>
                             )}
