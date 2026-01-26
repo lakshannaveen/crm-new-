@@ -260,7 +260,7 @@ const Sidebar = ({ embedded = false }) => {
           fixed left-0 top-0 z-30 pt-16
         `}>
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4">
             {!desktopCollapsed && (
               <div className="flex items-center">
                 {/* {sidebarLogo ? (
@@ -368,7 +368,7 @@ const Sidebar = ({ embedded = false }) => {
           <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl pt-16">
             <aside className="h-full flex flex-col">
               {/* Mobile Sidebar Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between p-4">
                 <div className="flex items-center">
                   {sidebarLogo ? (
                     <img 
