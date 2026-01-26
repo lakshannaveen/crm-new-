@@ -2,7 +2,7 @@ export const countryCodes = [
   { code: "+1", name: "USA", flag: "🇺🇸", placeholder: "201 555 0123" },
   { code: "+44", name: "UK", flag: "🇬🇧", placeholder: "20 7946 0958" },
   { code: "+91", name: "India", flag: "🇮🇳", placeholder: "98765 43210" },
-  { code: "+94", name: "Sri Lanka", flag: "🇱🇰", placeholder: "77 123 4567" },
+  { code: "+94", name: "Sri Lanka", flag: "🇱🇰", placeholder: "077 123 4567" },
   { code: "+971", name: "UAE", flag: "🇦🇪", placeholder: "50 123 4567" },
   { code: "+65", name: "Singapore", flag: "🇸🇬", placeholder: "9876 5432" },
   { code: "+60", name: "Malaysia", flag: "🇲🇾", placeholder: "10 1234 5678" },
