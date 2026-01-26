@@ -94,16 +94,18 @@ const Header = () => {
     const loadServerProfile = async () => {
       const serviceNo = user?.serviceNo || localStorage.getItem("serviceNo");
       if (!serviceNo) return;
+      // if we already have a preview (from cache or user), skip background fetch
+      const cached = (user && user.profilePic) || localStorage.getItem('profilePicData');
+      if (cached) return;
       setLoadingProfile(true);
       const start = Date.now();
-      console.debug('[Header] loadServerProfile start', { serviceNo });
+      console.debug('[Header] background loadServerProfile start', { serviceNo });
       try {
         const result = await shipService.getProfilePicPreviewBlob(serviceNo);
         if (!active) return;
         const elapsed = Date.now() - start;
         if (result && result.blob) {
-          console.debug('[Header] loadServerProfile got blob', { serviceNo, elapsed, size: result.blob.size });
-          // convert blob to data URL for fast caching
+          console.debug('[Header] background loadServerProfile got blob', { serviceNo, elapsed, size: result.blob.size });
           const reader = new FileReader();
           reader.onload = () => {
             if (!active) return;
@@ -118,24 +120,23 @@ const Header = () => {
           reader.onerror = (e) => console.warn('FileReader error', e);
           reader.readAsDataURL(result.blob);
         } else {
-          console.debug('[Header] loadServerProfile no image returned', { serviceNo, elapsed });
+          console.debug('[Header] background loadServerProfile no image returned', { serviceNo, elapsed });
         }
       } catch (err) {
         const elapsed = Date.now() - start;
-        console.warn('[Header] loadServerProfile failed', { serviceNo, elapsed, err: err?.message || err });
+        console.warn('[Header] background loadServerProfile failed', { serviceNo, elapsed, err: err?.message || err });
       } finally {
         setLoadingProfile(false);
       }
     };
 
-    if (showProfileMenu) {
-      loadServerProfile();
-    }
+    // run once on mount or when user changes
+    loadServerProfile();
 
     return () => {
       active = false;
     };
-  }, [showProfileMenu, user]);
+  }, [user]);
 
   // Use cached data URL from localStorage or user object on mount for immediate display
   useEffect(() => {
