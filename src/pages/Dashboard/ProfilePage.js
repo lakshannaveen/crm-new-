@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getUserByServiceNo } from '../../actions/userActions';
+import { userService } from '../../services/userService';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import {
@@ -84,6 +85,10 @@ const ProfilePage = () => {
 
   const avatar = generateAvatar(profileData.personal.name || 'User');
   const [uploadedAvatar, setUploadedAvatar] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fetchedAvatarUrl, setFetchedAvatarUrl] = useState(null);
+  const [avatarError, setAvatarError] = useState(null);
   const avatarInputRef = useRef(null);
   // clean up object URL when component unmounts or avatar changes
   useEffect(() => {
@@ -91,8 +96,42 @@ const ProfilePage = () => {
       if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
         URL.revokeObjectURL(uploadedAvatar);
       }
+      if (fetchedAvatarUrl && fetchedAvatarUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(fetchedAvatarUrl);
+      }
     };
   }, [uploadedAvatar]);
+
+  // Load existing profile picture preview (if any) using authenticated fetch
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl = null;
+    const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+    if (!svc) return;
+
+    (async () => {
+      try {
+        const blob = await userService.fetchProfilePic(svc);
+        if (cancelled) return;
+        if (blob && blob.size > 0) {
+          blobUrl = URL.createObjectURL(blob);
+          setFetchedAvatarUrl(blobUrl);
+          setUploadedAvatar(blobUrl);
+        } else {
+          // no image available
+          setFetchedAvatarUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile picture:', err);
+        setAvatarError('Unable to load profile picture');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [user?.serviceNo, serviceUser]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -190,16 +229,72 @@ const ProfilePage = () => {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files && e.target.files[0];
-                          if (file) {
-                            if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
-                              URL.revokeObjectURL(uploadedAvatar);
-                            }
-                            const url = URL.createObjectURL(file);
-                            setUploadedAvatar(url);
-                            // TODO: upload to server or store in redux if persistence is needed
+                          if (!file) return;
+                          // create temporary preview and mark as pending (explicit save required)
+                          if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+                            URL.revokeObjectURL(uploadedAvatar);
                           }
+                          const tempUrl = URL.createObjectURL(file);
+                          setUploadedAvatar(tempUrl);
+                          setSelectedFile(file);
                         }}
                       />
+                      {/* Save/Cancel controls shown when a new file is selected */}
+                      {selectedFile && (
+                        <div className="mt-2 flex items-center justify-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+                              if (!svc) return;
+                              setUploading(true);
+                              try {
+                                await userService.uploadProfilePic(svc, selectedFile);
+                                // re-fetch saved image via authenticated fetch
+                                const blob = await userService.fetchProfilePic(svc);
+                                if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+                                  URL.revokeObjectURL(uploadedAvatar);
+                                }
+                                if (blob && blob.size > 0) {
+                                  const url = URL.createObjectURL(blob);
+                                  setFetchedAvatarUrl(url);
+                                  setUploadedAvatar(url);
+                                } else {
+                                  // fallback to direct preview URL
+                                  setUploadedAvatar(`${userService.getProfilePicUrl(svc)}&t=${Date.now()}`);
+                                }
+                                setSelectedFile(null);
+                                setAvatarError(null);
+                              } catch (err) {
+                                console.error('Upload failed:', err);
+                                setAvatarError('Upload failed. Try again.');
+                              } finally {
+                                setUploading(false);
+                              }
+                            }}
+                            className="btn-primary"
+                            disabled={uploading}
+                          >
+                            {uploading ? 'Uploading...' : 'Save Photo'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // cancel selection and restore fetched avatar
+                              if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+                                URL.revokeObjectURL(uploadedAvatar);
+                              }
+                              setUploadedAvatar(fetchedAvatarUrl || null);
+                              setSelectedFile(null);
+                              setAvatarError(null);
+                            }}
+                            className="btn-secondary"
+                            disabled={uploading}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
                     </div>
                     
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
