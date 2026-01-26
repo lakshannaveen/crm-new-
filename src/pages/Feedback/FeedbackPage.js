@@ -1252,10 +1252,7 @@ const FeedbackPage = () => {
                 <FiArrowLeft className="mr-2" />
                 Back to Dashboard
               </Link>
-              <span className="mx-3 text-gray-400">/</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                Service Feedback
-              </span>
+              {/* breadcrumb title removed per request */}
             </div>
 
             {/* Header */}
