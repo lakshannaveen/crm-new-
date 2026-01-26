@@ -1257,12 +1257,12 @@ const FeedbackPage = () => {
             </div>
 
             {/* Header removed per request */}
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
+            <div className="mb-4">
+              <div className="flex flex-col md:flex-row md:items-start justify-between">
                 <div>{/* header text removed */}</div>
 
                 {selectedVessel && (
-                  <div className="mt-4 md:mt-0 flex space-x-3">
+                  <div className="mt-0 -mt-10 md:-mt-14 flex space-x-3">
                     <button
                       onClick={handleNewFeedback}
                       className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
