@@ -170,12 +170,14 @@ const ProfilePage = () => {
                   
                   {/* Stats */}
                   <div className="mb-6">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2">
-                      <span className="text-gray-600 dark:text-gray-400">Member Since</span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {formatDate(profileData.personal.joinedDate, 'short')}
-                      </span>
-                    </div>
+                    {profileData.personal && profileData.personal.joinedDate && profileData.personal.joinedDate !== 'N/A' && (
+                      <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2">
+                        <span className="text-gray-600 dark:text-gray-400">Member Since</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formatDate(profileData.personal.joinedDate, 'short')}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <span className="text-gray-600 dark:text-gray-400">Account Status</span>
                       <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 
@@ -185,14 +187,9 @@ const ProfilePage = () => {
                     </div>
                   </div>
 
-                  {/* Navigation */}
+                  {/* Navigation (removed 'Personal Information' button) */}
                   <nav className="space-y-1">
-                    {[
-                      { id: 'personal', label: 'Personal Information', icon: FiUser },
-                      // { id: 'security', label: 'Security', icon: FiShield },
-                      // { id: 'notifications', label: 'Notifications', icon: FiBell },
-                      // { id: 'preferences', label: 'Preferences', icon: FiCheckCircle },
-                    ].map((item) => (
+                    {[].map((item) => (
                       <button
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
