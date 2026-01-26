@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiStar, FiCalendar, FiSearch } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { shipService } from "../../services/shipService";
 
 const FeedbackHistory = ({
   feedbacks = [],
@@ -398,6 +400,33 @@ const FeedbackHistory = ({
                                 <div className="font-medium text-sm">
                                   {jmainVal}
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Preview button */}
+                            {jmainVal !== "NA" && jcatVal !== "NA" && (
+                              <div className="ml-4">
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const url = await shipService.getFeedbackPreview(
+                                        jmainVal,
+                                        jcatVal,
+                                      );
+                                      if (!url) {
+                                        toast('No PDF preview available', { position: 'top-center' });
+                                        return;
+                                      }
+                                      window.open(url, '_blank');
+                                    } catch (err) {
+                                      console.error('Preview error', err);
+                                      toast.error('Failed to load preview', { position: 'top-center' });
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-2 px-2 py-1 text-xs rounded bg-gray-100 dark:bg-gray-700"
+                                >
+                                  <FiSearch /> Preview
+                                </button>
                               </div>
                             )}
                           </div>
