@@ -1517,36 +1517,7 @@ const FeedbackPage = () => {
                       )
                     )}
                   </div>
-                  {/* Vessel Info Card */}
-                  {selectedVessel && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="mb-4 md:mb-0">
-                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                            {selectedVessel.name}
-                          </h2>
-                          <div className="flex items-center text-gray-600 dark:text-gray-400">
-                            <span className="mr-4">
-                              {selectedVessel.imoNumber}
-                            </span>
-                            <span>{selectedVessel.type}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-                            Ready for Feedback
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Note:</strong> Your feedback will be
-                          automatically saved to your browser's local storage.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  {/* Vessel Info Card removed per request */}
 
                   {/* Feedback Form */}
                   {selectedVessel && !showConfirmation && (
