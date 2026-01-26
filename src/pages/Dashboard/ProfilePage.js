@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { getUserByServiceNo } from '../../actions/userActions';
 import Header from '../../components/common/Header';
@@ -6,7 +6,7 @@ import Sidebar from '../../components/common/Sidebar';
 import {
   FiUser, FiMail, FiPhone, FiMapPin, FiGlobe,
   FiCalendar, FiLock, FiBell, FiShield, FiSave,
-  FiCheckCircle
+  FiCheckCircle, FiCamera
 } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
 import { generateAvatar } from '../../utils/helpers';
@@ -83,6 +83,16 @@ const ProfilePage = () => {
   }, [profileData.personal]);
 
   const avatar = generateAvatar(profileData.personal.name || 'User');
+  const [uploadedAvatar, setUploadedAvatar] = useState(null);
+  const avatarInputRef = useRef(null);
+  // clean up object URL when component unmounts or avatar changes
+  useEffect(() => {
+    return () => {
+      if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+        URL.revokeObjectURL(uploadedAvatar);
+      }
+    };
+  }, [uploadedAvatar]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -153,11 +163,46 @@ const ProfilePage = () => {
                   {/* Profile Photo */}
                   <div className="text-center mb-6">
                     <div className="relative inline-block">
-                      <div className={`h-32 w-32 rounded-full ${avatar.color} flex items-center justify-center mx-auto mb-4`}>
-                        <span className="text-white text-4xl font-bold">
-                          {avatar.initials}
-                        </span>
-                      </div>
+                      {uploadedAvatar ? (
+                        <img
+                          src={uploadedAvatar}
+                          alt="Profile"
+                          className="h-32 w-32 rounded-full object-cover mx-auto mb-4"
+                        />
+                      ) : (
+                        <div className={`h-32 w-32 rounded-full ${avatar.color} flex items-center justify-center mx-auto mb-4`}>
+                          <span className="text-white text-4xl font-bold">
+                            {avatar.initials}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="absolute right-2 bottom-2 bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full shadow-md border"
+                        aria-label="Upload profile picture"
+                        title="Upload profile picture"
+                      >
+                        <FiCamera className="w-4 h-4" />
+                      </button>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (file) {
+                            if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+                              URL.revokeObjectURL(uploadedAvatar);
+                            }
+                            const url = URL.createObjectURL(file);
+                            setUploadedAvatar(url);
+                            // TODO: upload to server or store in redux if persistence is needed
+                          }
+                        }}
+                      />
                     </div>
                     
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
