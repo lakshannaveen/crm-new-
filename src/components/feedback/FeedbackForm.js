@@ -970,48 +970,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
-  // Mobile Progress Indicator
-  const MobileProgressIndicator = () => (
-    <div className="md:hidden mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={prevStep}
-          disabled={currentStep === 0}
-          className={`p-2 rounded-lg ${
-            currentStep === 0 ? "text-gray-400" : "text-blue-600"
-          }`}
-        >
-          <FiChevronLeft className="w-5 h-5" />
-        </button>
-
-        <div className="text-center">
-          <div className="text-sm font-medium text-gray-900 dark:text-white">
-            Step {currentStep + 1} of {steps.length}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {currentStepData?.title || "Step"}
-          </div>
-        </div>
-
-        <button
-          onClick={nextStep}
-          disabled={currentStep === steps.length - 1}
-          className={`p-2 rounded-lg ${
-            currentStep === steps.length - 1 ? "text-gray-400" : "text-blue-600"
-          }`}
-        >
-          <FiChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-          style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
+  // (Progress indicators removed)
 
   // Mobile Step Navigation Buttons
   const MobileStepButtons = () => {
@@ -3394,89 +3353,9 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
-
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4">
-      {/* Desktop Progress Bar */}
-      <div className="hidden md:block mb-8">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-          <span>
-            Step {currentStep + 1} of {steps.length}
-          </span>
-          <span>{Math.round(progress)}% Complete</span>
-        </div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between mt-6">
-          {steps.map((step, index) => {
-            // Check if all previous steps are validated
-            const canNavigate = () => {
-              // Complete step (step 4) can only be accessed if feedback was successfully submitted
-              if (index === 4) {
-                return feedbackSubmissionSuccess;
-              }
-              if (index <= currentStep) return true; // Can always go back
-              // Check all steps from current to target are valid
-              for (let i = currentStep; i < index; i++) {
-                const errors = validateStep(i);
-                if (Object.keys(errors).length > 0) return false;
-              }
-              return true;
-            };
-
-            const isClickable = canNavigate();
-
-            return (
-              <div key={step.id} className="flex flex-col items-center">
-                <button
-                  onClick={() => {
-                    if (isClickable) {
-                      setCurrentStep(step.id);
-                    }
-                  }}
-                  disabled={!isClickable}
-                  title={
-                    index === 4 && !feedbackSubmissionSuccess
-                      ? "Submit feedback first to complete"
-                      : ""
-                  }
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                    index === currentStep
-                      ? "bg-blue-600 text-white scale-110"
-                      : index < currentStep
-                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
-                        : isClickable
-                          ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
-                          : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
-                  }`}
-                >
-                  {index < currentStep ? <FiCheck /> : step.icon}
-                </button>
-                <span
-                  className={`mt-2 text-xs text-center ${
-                    index === currentStep
-                      ? "text-blue-600 dark:text-blue-400 font-medium"
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
-                >
-                  {step.title}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Mobile Progress Indicator */}
-      {isMobile && currentStep <= steps.length - 1 && (
-        <MobileProgressIndicator />
-      )}
+      {/* Progress indicators removed (desktop + mobile) */}
 
       {/* Main Content */}
       <div ref={questionSectionRef} className="mb-8">
