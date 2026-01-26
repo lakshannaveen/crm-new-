@@ -218,19 +218,87 @@ const Header = () => {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/png,image/jpeg"
+                  accept="image/png,image/jpeg,image/jpg,image/gif,image/webp,image/svg+xml"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files && e.target.files[0];
                     if (!file) return;
-                    // set selected file and preview only; upload on submit
-                    setSelectedFile(file);
-                    try {
-                      const url = URL.createObjectURL(file);
-                      setSelectedPreviewUrl(url);
-                    } catch (err) {
-                      setSelectedPreviewUrl(null);
+                    const allowedMimes = [
+                      'image/png',
+                      'image/jpeg',
+                      'image/jpg',
+                      'image/gif',
+                      'image/webp',
+                      'image/svg+xml',
+                    ];
+                    const allowedExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
+
+                    const name = (file.name || '').toString();
+                    const ext = name.split('.').pop()?.toLowerCase() || '';
+                    const isMimeOk = allowedMimes.includes(file.type);
+                    const isExtOk = allowedExts.includes(ext);
+
+                    if (!isMimeOk && !isExtOk) {
+                      toast.error(`Invalid file type. Allowed: ${allowedExts.join(', ')}`);
+                      try { e.target.value = null; } catch(e){}
+                      return;
                     }
+
+                    const validateContent = (file) => new Promise((resolve) => {
+                      const checkArrayBuffer = (buf) => {
+                        const arr = new Uint8Array(buf);
+                        if (arr.length >= 8 && arr[0] === 0x89 && arr[1] === 0x50 && arr[2] === 0x4E && arr[3] === 0x47) return 'png';
+                        if (arr.length >= 3 && arr[0] === 0xFF && arr[1] === 0xD8 && arr[2] === 0xFF) return 'jpeg';
+                        if (arr.length >= 6 && arr[0] === 0x47 && arr[1] === 0x49 && arr[2] === 0x46) return 'gif';
+                        if (arr.length >= 12 && arr[0] === 0x52 && arr[1] === 0x49 && arr[2] === 0x46 && arr[3] === 0x46 && arr[8] === 0x57 && arr[9] === 0x45 && arr[10] === 0x42 && arr[11] === 0x50) return 'webp';
+                        return null;
+                      };
+
+                      if (file.type === 'image/svg+xml' || ext === 'svg') {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const txt = (reader.result || '').toString().slice(0, 1024).toLowerCase();
+                          if (txt.includes('<svg')) resolve('svg'); else resolve(null);
+                        };
+                        reader.onerror = () => resolve(null);
+                        reader.readAsText(file.slice(0, 4096));
+                        return;
+                      }
+
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        try {
+                          const detected = checkArrayBuffer(reader.result);
+                          resolve(detected);
+                        } catch (err) {
+                          resolve(null);
+                        }
+                      };
+                      reader.onerror = () => resolve(null);
+                      reader.readAsArrayBuffer(file.slice(0, 64));
+                    });
+
+                    validateContent(file).then((detected) => {
+                      if (!detected) {
+                        toast.error('File content does not match an allowed image type');
+                        try { e.target.value = null; } catch(e){}
+                        return;
+                      }
+
+                      if (!allowedExts.includes(detected) && !(detected === 'jpeg' && ['jpg','jpeg'].includes(ext))) {
+                        toast.error('Detected file type is not allowed');
+                        try { e.target.value = null; } catch(e){}
+                        return;
+                      }
+
+                      setSelectedFile(file);
+                      try {
+                        const url = URL.createObjectURL(file);
+                        setSelectedPreviewUrl(url);
+                      } catch (err) {
+                        setSelectedPreviewUrl(null);
+                      }
+                    });
                   }}
                 />
               </div>
