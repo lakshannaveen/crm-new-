@@ -153,16 +153,37 @@ const ProfilePage = () => {
     const svc = user?.serviceNo || localStorage.getItem('serviceNo');
     if (!svc) return;
 
+    // fast-path: check localStorage cache for data URL image
+    try {
+      const cached = localStorage.getItem(`profilePic_${svc}`);
+      if (cached) {
+        setFetchedAvatarUrl(cached);
+        setUploadedAvatar(cached);
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+
+    // fetch latest image in background and update cache
     (async () => {
       try {
         const blob = await userService.fetchProfilePic(svc);
         if (cancelled) return;
         if (blob && blob.size > 0) {
-          blobUrl = URL.createObjectURL(blob);
-          setFetchedAvatarUrl(blobUrl);
-          setUploadedAvatar(blobUrl);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (cancelled) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem(`profilePic_${svc}`, dataUrl);
+            } catch (e) {
+              console.warn('Failed to save profile pic to localStorage', e);
+            }
+            setFetchedAvatarUrl(dataUrl);
+            setUploadedAvatar(dataUrl);
+          };
+          reader.readAsDataURL(blob);
         } else {
-          // no image available
           setFetchedAvatarUrl(null);
         }
       } catch (err) {
@@ -702,7 +723,7 @@ const ProfilePage = () => {
               >
                 Cancel
               </button>
-              <button
+                  <button
                 type="button"
                 className="btn-primary"
                 onClick={async () => {
@@ -716,17 +737,36 @@ const ProfilePage = () => {
                       URL.revokeObjectURL(uploadedAvatar);
                     }
                     if (blob && blob.size > 0) {
-                      const url = URL.createObjectURL(blob);
-                      setFetchedAvatarUrl(url);
-                      setUploadedAvatar(url);
+                      // convert blob to data URL and persist in localStorage so UI is fast on reload
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const dataUrl = reader.result;
+                        try {
+                          localStorage.setItem(`profilePic_${svc}`, dataUrl);
+                        } catch (e) {
+                          console.warn('Failed to save profile pic to localStorage', e);
+                        }
+                        setFetchedAvatarUrl(dataUrl);
+                        setUploadedAvatar(dataUrl);
+                      };
+                      reader.readAsDataURL(blob);
+                      // show success toast
+                      toast.success('Profile photo uploaded successfully');
                     } else {
-                      setUploadedAvatar(`${userService.getProfilePicUrl(svc)}&t=${Date.now()}`);
+                      // fallback to direct URL with cache-buster
+                      const fallback = `${userService.getProfilePicUrl(svc)}&t=${Date.now()}`;
+                      setUploadedAvatar(fallback);
+                      try {
+                        localStorage.removeItem(`profilePic_${svc}`);
+                      } catch (e) {}
+                      toast.success('Profile photo uploaded successfully');
                     }
                     setSelectedFile(null);
                     setAvatarError(null);
                   } catch (err) {
                     console.error('Upload failed:', err);
                     setAvatarError('Upload failed. Try again.');
+                        toast.error('Profile photo upload failed');
                   } finally {
                     setUploading(false);
                     if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);

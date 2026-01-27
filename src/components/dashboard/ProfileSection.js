@@ -39,13 +39,33 @@ const ProfileSection = () => {
     const svc = (serviceUser && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet[0]?.serviceNo) || localStorage.getItem('serviceNo');
     if (!svc) return;
 
+    // quick load from localStorage if available
+    try {
+      const cached = localStorage.getItem(`profilePic_${svc}`);
+      if (cached) {
+        setProfileImgUrl(cached);
+      }
+    } catch (e) {
+      // ignore
+    }
+
     (async () => {
       try {
         const blob = await userService.fetchProfilePic(svc);
         if (cancelled) return;
         if (blob && blob.size > 0) {
-          blobUrl = URL.createObjectURL(blob);
-          setProfileImgUrl(blobUrl);
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (cancelled) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem(`profilePic_${svc}`, dataUrl);
+            } catch (e) {
+              console.warn('Failed to save profile pic to localStorage', e);
+            }
+            setProfileImgUrl(dataUrl);
+          };
+          reader.readAsDataURL(blob);
         }
       } catch (err) {
         // ignore silently, keep avatar fallback
