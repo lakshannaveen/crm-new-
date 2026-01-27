@@ -1059,11 +1059,15 @@ import {
 } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
+import { fetchShipImage } from "../../actions/shipActions";
+import defaultShipImage from "../../assets/image/No image available.png";
 
 const ShipDetailsPage = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { currentShip, loading } = useSelector((state) => state.ships);
+  const { currentShip, loading, shipImages } = useSelector(
+    (state) => state.ships,
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -1080,6 +1084,26 @@ const ShipDetailsPage = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [dispatch, id]);
+
+  // Fetch ship image via Redux when currentShip changes
+  useEffect(() => {
+    if (
+      currentShip &&
+      currentShip.image &&
+      currentShip.image.startsWith("http")
+    ) {
+      const jmainNo =
+        currentShip.jmainNo || currentShip.SHIP_JMAIN || currentShip.id;
+      if (!shipImages[jmainNo]) {
+        dispatch(fetchShipImage(currentShip.image, jmainNo));
+      }
+    }
+  }, [currentShip, shipImages, dispatch]);
+
+  // Get image URL from Redux cache
+  const jmainNo =
+    currentShip?.jmainNo || currentShip?.SHIP_JMAIN || currentShip?.id;
+  const imageUrl = jmainNo ? shipImages[jmainNo] : null;
 
   // Helper function to pick fields from raw API data
   const pick = (apiData, ...keys) => {
@@ -1699,9 +1723,9 @@ const ShipDetailsPage = () => {
             <div className="card mb-6 overflow-hidden">
               <div className="flex flex-col space-y-6">
                 {/* Ship Image */}
-                <div className="relative h-48 sm:h-64 rounded-xl overflow-hidden -mx-4 sm:mx-0 -mt-4 sm:mt-0">
+                <div className="relative h-48 sm:h-64  rounded-xl overflow-hidden -mx-4 sm:mx-0 -mt-4 sm:mt-0">
                   <img
-                    src={currentShip.image}
+                    src={imageUrl || defaultShipImage}
                     alt={currentShip.name}
                     className="w-full h-full object-cover"
                   />

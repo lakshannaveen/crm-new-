@@ -14,11 +14,20 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
+  GET_SHIP_IMAGE_REQUEST,
+  GET_SHIP_IMAGE_SUCCESS,
+  GET_SHIP_IMAGE_FAILURE,
+  UPLOAD_SHIP_IMAGE_REQUEST,
+  UPLOAD_SHIP_IMAGE_SUCCESS,
+  UPLOAD_SHIP_IMAGE_FAILURE,
 } from "../constants/shipActionTypes";
 
 const initialState = {
   ships: [],
   currentShip: null,
+  shipImages: {}, // Cache ship images by jmainNo
+  imageLoading: false,
+  imageUploading: false,
   loading: false,
   error: null,
 };
@@ -70,7 +79,7 @@ const shipReducer = (state = initialState, action) => {
         ...state,
         loading: false,
         ships: state.ships.map((ship) =>
-          ship.id === action.payload.id ? action.payload : ship
+          ship.id === action.payload.id ? action.payload : ship,
         ),
         currentShip: action.payload,
       };
@@ -82,6 +91,49 @@ const shipReducer = (state = initialState, action) => {
       return {
         ...state,
         loading: false,
+        error: action.payload,
+      };
+
+    case GET_SHIP_IMAGE_REQUEST:
+      return {
+        ...state,
+        imageLoading: true,
+      };
+
+    case GET_SHIP_IMAGE_SUCCESS:
+      return {
+        ...state,
+        imageLoading: false,
+        shipImages: {
+          ...state.shipImages,
+          [action.payload.jmainNo]: action.payload.url,
+        },
+      };
+
+    case GET_SHIP_IMAGE_FAILURE:
+      return {
+        ...state,
+        imageLoading: false,
+        error: action.payload,
+      };
+
+    case UPLOAD_SHIP_IMAGE_REQUEST:
+      return {
+        ...state,
+        imageUploading: true,
+        error: null,
+      };
+
+    case UPLOAD_SHIP_IMAGE_SUCCESS:
+      return {
+        ...state,
+        imageUploading: false,
+      };
+
+    case UPLOAD_SHIP_IMAGE_FAILURE:
+      return {
+        ...state,
+        imageUploading: false,
         error: action.payload,
       };
 

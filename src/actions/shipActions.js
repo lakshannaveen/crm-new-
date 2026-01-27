@@ -1,4 +1,5 @@
 import toast from "react-hot-toast";
+import axios from "axios";
 import {
   GET_SHIPS_REQUEST,
   GET_SHIPS_SUCCESS,
@@ -16,8 +17,15 @@ import {
   FETCH_SHIPS_REQUEST,
   FETCH_SHIPS_SUCCESS,
   FETCH_SHIPS_FAILURE,
+  GET_SHIP_IMAGE_REQUEST,
+  GET_SHIP_IMAGE_SUCCESS,
+  GET_SHIP_IMAGE_FAILURE,
+  UPLOAD_SHIP_IMAGE_REQUEST,
+  UPLOAD_SHIP_IMAGE_SUCCESS,
+  UPLOAD_SHIP_IMAGE_FAILURE,
 } from "../constants/shipActionTypes";
 import { shipService } from "../services/shipService";
+import { authService } from "../services/authService";
 
 export const fetchOwnerShips = (serviceNo) => async (dispatch) => {
   dispatch({ type: FETCH_SHIPS_REQUEST });
@@ -90,7 +98,7 @@ export const getShipDetails = (jmainNo) => async (dispatch, getState) => {
 
     if (!jmain) {
       throw new Error(
-        "Ship JMAIN number not found. Please select a ship first."
+        "Ship JMAIN number not found. Please select a ship first.",
       );
     }
 
@@ -150,5 +158,68 @@ export const updateShip = (shipId, shipData) => async (dispatch) => {
       payload: error.message,
     });
     toast.error("Failed to update ship");
+  }
+};
+
+// Fetch ship image with auth header
+export const fetchShipImage = (imageUrl, jmainNo) => async (dispatch) => {
+  if (!imageUrl || !imageUrl.startsWith("http")) {
+    // Return null for local/missing images - let components use placeholder
+    dispatch({
+      type: GET_SHIP_IMAGE_SUCCESS,
+      payload: { jmainNo, url: null },
+    });
+    return null;
+  }
+
+  dispatch({ type: GET_SHIP_IMAGE_REQUEST });
+
+  try {
+    const response = await axios.get(imageUrl, {
+      headers: authService.getAuthHeader(),
+      responseType: "blob",
+    });
+
+    const objectUrl = URL.createObjectURL(response.data);
+
+    dispatch({
+      type: GET_SHIP_IMAGE_SUCCESS,
+      payload: { jmainNo, url: objectUrl },
+    });
+
+    return objectUrl;
+  } catch (error) {
+    console.error("Failed to fetch ship image", error);
+    dispatch({
+      type: GET_SHIP_IMAGE_FAILURE,
+      payload: error.message,
+    });
+    return null;
+  }
+};
+
+// Upload ship image
+export const uploadShipImage = (jmainNo, file) => async (dispatch) => {
+  dispatch({ type: UPLOAD_SHIP_IMAGE_REQUEST });
+
+  try {
+    await shipService.uploadShipImage(jmainNo, file);
+
+    dispatch({ type: UPLOAD_SHIP_IMAGE_SUCCESS });
+
+    // After successful upload, refetch the image to update the cache
+    const imageUrl = shipService.getShipImage({ SHIP_JMAIN: jmainNo });
+    if (imageUrl) {
+      dispatch(fetchShipImage(imageUrl, jmainNo));
+    }
+
+    toast.success("Ship image uploaded successfully");
+  } catch (error) {
+    console.error("Failed to upload ship image", error);
+    dispatch({
+      type: UPLOAD_SHIP_IMAGE_FAILURE,
+      payload: error.message,
+    });
+    toast.error("Failed to upload ship image");
   }
 };

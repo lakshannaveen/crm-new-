@@ -14,15 +14,22 @@ import {
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { fetchShipImage } from "../../actions/shipActions";
+import defaultShipImage from "../../assets/image/No image available.png";
 
 const ShipDetailsModal = ({ ship, onClose }) => {
   const dispatch = useDispatch();
   const { milestones, milestonesLoading } = useSelector(
-    (state) => state.projects
+    (state) => state.projects,
   );
+  const { shipImages } = useSelector((state) => state.ships);
 
   const statusColor = getStatusColor(ship.status);
   const statusText = getStatusText(ship.status);
+
+  // Get or fetch the image URL from Redux
+  const jmainNo = ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+  const imageUrl = shipImages[jmainNo];
 
   // Fetch milestones when modal opens
   useEffect(() => {
@@ -36,6 +43,15 @@ const ShipDetailsModal = ({ ship, onClose }) => {
     }
   }, [dispatch, ship]);
 
+  // Fetch ship image via Redux if available
+  useEffect(() => {
+    if (ship.image && ship.image.startsWith("http")) {
+      if (!shipImages[jmainNo]) {
+        dispatch(fetchShipImage(ship.image, jmainNo));
+      }
+    }
+  }, [ship.image, jmainNo, shipImages, dispatch]);
+
   const specifications = [
     { label: "IMO Number", value: ship.imoNumber, icon: FiAnchor },
     { label: "Ship Type", value: ship.type, icon: FiNavigation },
@@ -45,7 +61,6 @@ const ShipDetailsModal = ({ ship, onClose }) => {
     { label: "Length", value: ship.length },
     { label: "Beam", value: ship.beam },
     { label: "Draft", value: ship.draft },
-    // { label: "Year Built", value: ship.yearBuilt },
   ];
 
   const maintenance = [
@@ -111,7 +126,7 @@ const ShipDetailsModal = ({ ship, onClose }) => {
               <div>
                 <div className="rounded-lg overflow-hidden mb-6">
                   <img
-                    src={ship.image}
+                    src={imageUrl || defaultShipImage}
                     alt={ship.name}
                     className="w-full h-64 object-cover"
                   />
@@ -273,8 +288,8 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                                       milestone.status === "completed"
                                         ? "bg-green-100 dark:bg-green-900/30"
                                         : milestone.status === "in_progress"
-                                        ? "bg-blue-100 dark:bg-blue-900/30"
-                                        : "bg-gray-100 dark:bg-gray-700"
+                                          ? "bg-blue-100 dark:bg-blue-900/30"
+                                          : "bg-gray-100 dark:bg-gray-700"
                                     }`}
                         >
                           {milestone.status === "completed" ? (

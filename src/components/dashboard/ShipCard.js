@@ -1,16 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { FiCalendar, FiAnchor, FiFlag } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { FiCalendar, FiAnchor, FiFlag, FiUpload } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
-import { setSelectedShipJmain } from "../../actions/shipActions";
+import {
+  setSelectedShipJmain,
+  fetchShipImage,
+  uploadShipImage,
+} from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
 import ShipDetailsModal from "./ShipDetailsModal";
+import defaultShipImage from "../../assets/image/No image available.png";
 
 const ShipCard = ({ ship }) => {
   const dispatch = useDispatch();
+  const { shipImages, imageUploading } = useSelector((state) => state.ships);
   const [showDetails, setShowDetails] = useState(false);
+  const fileInputRef = useRef(null);
 
+  // Get or fetch the image URL from Redux
+  const jmainNo = ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+  const imageUrl = shipImages[jmainNo];
+
+  useEffect(() => {
+    if (ship.image && ship.image.startsWith("http")) {
+      // Only fetch if not already cached
+      if (!shipImages[jmainNo]) {
+        dispatch(fetchShipImage(ship.image, jmainNo));
+      }
+    }
+  }, [ship.image, jmainNo, shipImages, dispatch]);
   const handleViewDetails = () => {
     // Store the ship's JMAIN in localStorage before showing details
     if (ship.jmainNo || ship.SHIP_JMAIN) {
@@ -35,6 +54,17 @@ const ShipCard = ({ ship }) => {
     }
   };
 
+  const handleUploadImage = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file && jmainNo) {
+      dispatch(uploadShipImage(jmainNo, file));
+    }
+  };
+
   const getProgressColor = (progress) => {
     if (progress >= 75) return "bg-green-500";
     if (progress >= 50) return "bg-blue-500";
@@ -44,13 +74,28 @@ const ShipCard = ({ ship }) => {
 
   return (
     <>
-      <div className="card hover:shadow-lg transition-shadow duration-200">
+      <div className="card hover:shadow-lg transition-shadow duration-200 relative">
+        {/* Top-right upload button */}
+        <div className="absolute top-4 right-4 z-10">
+          <button
+            onClick={handleUploadImage}
+            disabled={imageUploading}
+            title="Upload Image"
+            className="px-3 py-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:scale-105 transform transition disabled:opacity-50 flex items-center gap-2"
+          >
+            <FiUpload className="text-lg text-gray-700 dark:text-gray-200" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              {imageUploading ? "Uploading..." : "Upload Image"}
+            </span>
+          </button>
+        </div>
+
         <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
           {/* Ship Image */}
           <div className="mb-4 md:mb-0 md:w-1/3">
             <div className="relative h-48 md:h-full rounded-lg overflow-hidden">
               <img
-                src={ship.image}
+                src={imageUrl || defaultShipImage}
                 alt={ship.name}
                 className="w-full h-full object-cover"
               />
@@ -155,6 +200,15 @@ const ShipCard = ({ ship }) => {
           </div>
         </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        style={{ display: "none" }}
+      />
 
       {showDetails && (
         <ShipDetailsModal ship={ship} onClose={() => setShowDetails(false)} />

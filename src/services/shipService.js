@@ -111,13 +111,10 @@
 // export const shipService = new ShipService();
 
 // Mock service for ship management
-import oceanQueenImage from "../assets/image/ocean_queen_12.jpg";
-import SeaVoyagerImage from "../assets/image/MV Sea Voyager.jpg";
-import BlueWaveImage from "../assets/image/MV Blue Wave.jpg";
-import EverUniqueImage from "../assets/image/unq.jpg";
 import axios from "axios";
 import { BACKEND_BASE_URL } from "..";
 import { authService } from "./authService";
+import config from "../config";
 
 class ShipService {
   // Transform API response to component-expected format
@@ -168,18 +165,24 @@ class ShipService {
   }
 
   getShipImage(ship) {
-    const type = (ship.SHIP_VESSEL_TYPE || "").toString();
-    if (type === "7") return oceanQueenImage, EverUniqueImage;
-    if (type === "1") return SeaVoyagerImage;
-    if (type === "2") return BlueWaveImage;
-    return oceanQueenImage;
+    const jmain = ship.SHIP_JMAIN;
+    if (jmain) {
+      return `${config.api.baseURL}/CDLRequirmentManagement/ShipDetails/ShipicPreview?jmain=${jmain}`;
+    }
+
+    // No backend image available for this ship — return null so
+    // caller (ShipCard) can use the project's placeholder image.
+    return null;
   }
 
   async getShips(serviceNo) {
-    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetOwnersShip`,
-      { params: { P_SERVICE_NO: "O0376"}, headers }
+      { params: { P_SERVICE_NO: "O0376" }, headers },
     );
 
     const list = response.data?.ResultSet || [];
@@ -187,16 +190,19 @@ class ShipService {
   }
 
   async getShipDetails(serviceNo, jmainNo) {
-    const headers = { 'Content-Type': 'application/json', ...authService.getAuthHeader() };
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/GetShipByJmainId`,
       {
         params: {
           p_service_no: "O0376",
-          p_jmain_no: "1260",
+          p_jmain_no: jmainNo,
         },
         headers,
-      }
+      },
     );
 
     const payload = response.data;
@@ -258,6 +264,24 @@ class ShipService {
   async getShipsByOwner(ownerId) {
     await new Promise((resolve) => setTimeout(resolve, 200));
     return this.ships.filter((ship) => ship.ownerId === parseInt(ownerId));
+  }
+
+  async uploadShipImage(jmainNo, file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axios.post(
+      `${config.api.baseURL}/CDLRequirmentManagement/ShipDetails/UploadShipPic?jmain=${jmainNo}`,
+      formData,
+      {
+        headers: {
+          ...authService.getAuthHeader(),
+          "Content-Type": "multipart/form-data",
+        },
+      },
+    );
+
+    return response.data;
   }
 }
 
