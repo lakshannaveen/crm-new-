@@ -289,3 +289,40 @@ const getMilestoneStatus = (milestone) => {
     return "pending";
   }
 };
+
+// Upload ship feedback attachment (multipart/form-data)
+export const uploadShipFeedback = async (formData) => {
+  try {
+    const headers = {
+      ...authService.getAuthHeader(),
+      // Let axios set Content-Type with boundary for multipart
+    };
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/UploadShipFeedback`,
+      formData,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("uploadShipFeedback error:", error);
+    throw error;
+  }
+};
+
+// Preview ship feedback (GET)
+export const previewShipFeedback = async (jmain, jacat) => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ShipFeedBackPreview`,
+      { params: { jmain, jacat }, headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("previewShipFeedback error:", error);
+    throw error;
+  }
+};

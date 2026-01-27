@@ -18,7 +18,7 @@ import {
   FiCheckCircle,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
-import { addFeedback } from "../../services/feedbackService";
+import { addFeedback, uploadShipFeedback } from "../../services/feedbackService";
 import {
   getFeedbackDates,
   getJmain,
@@ -912,7 +912,48 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
         return;
       }
 
-      // Mark submission as successful only after successful API call
+      // If we have an attachment, upload it AFTER feedback is successfully saved
+      if (formData.attachmentName && formData.attachmentData) {
+        try {
+          // Convert base64 dataURL to Blob
+          const dataUrl = formData.attachmentData;
+          const arr = dataUrl.split(",");
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : formData.attachmentType || "application/pdf";
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          const fileBlob = new Blob([u8arr], { type: mime });
+
+          const fd = new FormData();
+          // backend expects a file field - try 'file' and 'attachment'
+          fd.append("file", fileBlob, formData.attachmentName);
+          // include identifying metadata expected by preview endpoint
+          fd.append("jmain", formData.projectNumber || "");
+          fd.append("jacat", formData.jobCategory || "");
+
+          const uploadRes = await uploadShipFeedback(fd);
+
+          // Attach upload response to payload so history can show attachment
+          feedbackPayload.attachment = uploadRes?.ResultSet
+            ? uploadRes.ResultSet[0]
+            : uploadRes;
+        } catch (uploadErr) {
+          console.error("Attachment upload failed:", uploadErr);
+          setFeedbackSubmissionSuccess(false);
+          toast.error(
+            uploadErr.response?.data?.message ||
+              uploadErr.message ||
+              "Attachment upload failed. Feedback not saved with attachment.",
+          );
+          return;
+        }
+      }
+
+      // Mark submission as successful only after successful API call (and upload if present)
       setFeedbackSubmissionSuccess(true);
       // Move to Complete step only on successful submission
       setCurrentStep(4);
