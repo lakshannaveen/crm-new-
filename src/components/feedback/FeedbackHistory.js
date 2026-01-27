@@ -114,6 +114,24 @@ const FeedbackHistory = ({
     return raw;
   };
 
+  const mapAnswer = (val) => {
+    if (val === undefined || val === null) return "NA";
+    const s = String(val).trim();
+    if (s === "") return "NA";
+    const m = {
+      P: "POOR",
+      A: "AVERAGE",
+      G: "GOOD",
+      E: "EXCELLENT",
+      O: "NOT_RELEVENT",
+      Y: "YES",
+      N: "NO",
+      Z: "HIDE",
+    };
+    const up = s.toUpperCase();
+    return m[up] || s;
+  };
+
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
     const allRows = [
@@ -375,7 +393,7 @@ const FeedbackHistory = ({
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                     <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
-                    <div className="font-medium">{answerVal}</div>
+                    <div className="font-medium">{mapAnswer(answerVal)}</div>
                   </div>
 
                   <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
