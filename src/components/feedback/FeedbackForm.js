@@ -169,6 +169,10 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     poorAverageDetails: "",
     observations: "",
     shipManagerComments: "",
+    // Attachment (single PDF required)
+    attachmentName: "",
+    attachmentData: "",
+    attachmentType: "",
 
     // Durations (days)
     afloatDuration: 0,
@@ -552,6 +556,44 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    // Only accept PDF
+    if (file.type !== "application/pdf") {
+      setValidationErrors((prev) => ({
+        ...prev,
+        attachment: "Please upload a PDF file",
+      }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({
+        ...prev,
+        attachmentName: file.name,
+        attachmentData: reader.result,
+        attachmentType: file.type,
+      }));
+      setValidationErrors((prev) => {
+        const n = { ...prev };
+        delete n.attachment;
+        return n;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeAttachment = () => {
+    setFormData((prev) => ({
+      ...prev,
+      attachmentName: "",
+      attachmentData: "",
+      attachmentType: "",
+    }));
+  };
+
   const handleProjectNumberChange = (value) => {
     // Find the selected project from jmainList
     const selectedProject = jmainList.find(
@@ -684,6 +726,10 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       case 1: // Evaluation Details
         const evalErrors = validateEvaluationStep();
         Object.assign(errors, evalErrors);
+        // Require a PDF attachment before moving to Review
+        if (!formData.attachmentName) {
+          errors.attachment = "Please upload a PDF file (required)";
+        }
         break;
       case 2: // Review
         // No validation needed for review
@@ -2068,6 +2114,42 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                   />
                 </div>
 
+                  {/* Attachment: single PDF required */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Attach PDF (required)
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleFileChange}
+                        className="text-sm"
+                      />
+                      {formData.attachmentName && (
+                        <div className="flex items-center space-x-2">
+                          <a
+                            href={formData.attachmentData}
+                            download={formData.attachmentName}
+                            className="text-sm text-blue-600 dark:text-blue-300 underline"
+                          >
+                            {formData.attachmentName}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={removeAttachment}
+                            className="text-sm text-red-600 dark:text-red-400"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {validationErrors.attachment && (
+                      <p className="mt-2 text-sm text-red-600">{validationErrors.attachment}</p>
+                    )}
+                  </div>
+
                 {/* Duration Section */}
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
                   <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
@@ -2438,6 +2520,19 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                       {formData.poorAverageDetails}
                     </p>
+                  </div>
+                )}
+
+                {formData.attachmentName && (
+                  <div className="mt-4">
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Attached File</h5>
+                    <a
+                      href={formData.attachmentData}
+                      download={formData.attachmentName}
+                      className="text-sm text-blue-600 dark:text-blue-300 underline"
+                    >
+                      {formData.attachmentName}
+                    </a>
                   </div>
                 )}
               </div>
