@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getUserByServiceNo } from '../../actions/userActions';
+import { userService } from '../../services/userService';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import {
   FiUser, FiMail, FiPhone, FiMapPin, FiGlobe,
   FiCalendar, FiLock, FiBell, FiShield, FiSave,
-  FiCheckCircle
+  FiCheckCircle, FiCamera
 } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
+import toast from 'react-hot-toast';
 import { generateAvatar } from '../../utils/helpers';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const { serviceUser, serviceUserError } = useSelector(state => state.user);
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
+  const [isEditing, setIsEditing] = useState(false);
 
   // Use the logged-in user's serviceNo for profile API calls; fallback to localStorage
   React.useEffect(() => {
@@ -23,23 +30,23 @@ const ProfilePage = () => {
       dispatch(getUserByServiceNo(svc));
     }
   }, [dispatch, user?.serviceNo]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('personal');
-  const [isEditing, setIsEditing] = useState(false);
-
- 
-  // Only use fetched serviceUser data for profile details
   const profileData = React.useMemo(() => {
-    // Helper to show N/A if value is missing/empty
-    const showValue = v => (v && v !== '.' && v !== '' ? v : 'N/A');
-    if (serviceUser && typeof serviceUser === 'object' && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet.length > 0) {
+    const showValue = (v) => (v && v !== '.' && v !== '' ? v : 'N/A');
+    if (
+      serviceUser &&
+      typeof serviceUser === 'object' &&
+      Array.isArray(serviceUser.ResultSet) &&
+      serviceUser.ResultSet.length > 0
+    ) {
       const pod = serviceUser.ResultSet[0];
       return {
         personal: {
           name: showValue(pod.pod_name),
           email: showValue(pod.email),
           phone: showValue(pod.telno),
-          address: showValue(`${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim()),
+          address: showValue(
+            `${pod.address1 || ''} ${pod.address2 || ''} ${pod.pod_town || ''} ${pod.pod_city || ''} ${pod.pod_country || ''}`.replace(/\s+/g, ' ').trim(),
+          ),
           fax: showValue(pod.faxno),
           mobile: showValue(pod.pod_mobileno),
           contactPerson: showValue(pod.contactperson),
@@ -58,7 +65,16 @@ const ProfilePage = () => {
       };
     }
     return {
-      personal: { name: 'N/A', email: 'N/A', phone: 'N/A', address: 'N/A', fax: 'N/A', mobile: 'N/A', contactPerson: 'N/A', company: 'N/A' },
+      personal: {
+        name: 'N/A',
+        email: 'N/A',
+        phone: 'N/A',
+        address: 'N/A',
+        fax: 'N/A',
+        mobile: 'N/A',
+        contactPerson: 'N/A',
+        company: 'N/A',
+      },
       security: { twoFactorEnabled: false, lastPasswordChange: 'N/A', activeSessions: 0, loginHistory: [] },
       notifications: { email: {}, push: {} },
     };
@@ -79,10 +95,108 @@ const ProfilePage = () => {
   };
   const [formData, setFormData] = useState(safeFormData);
   React.useEffect(() => {
-    setFormData(safeFormData);
-  }, [profileData.personal]);
+    setFormData((prev) => {
+      // If user is currently editing, do not overwrite their changes
+      if (isEditing) return prev;
+      // If previous form values appear to be user-entered (not the default 'N/A'), avoid overwriting
+      const keys = Object.keys(safeFormData);
+      const hasUserChanges = keys.some((k) => {
+        const v = prev[k];
+        return v !== undefined && v !== null && v !== '' && v !== 'N/A' && v !== safeFormData[k];
+      });
+      if (hasUserChanges) return prev;
+      // Otherwise initialize/refresh from fetched profile
+      return safeFormData;
+    });
+  }, [profileData.personal, isEditing]);
 
   const avatar = generateAvatar(profileData.personal.name || 'User');
+  const [uploadedAvatar, setUploadedAvatar] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fetchedAvatarUrl, setFetchedAvatarUrl] = useState(null);
+  const [avatarError, setAvatarError] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [showAvatarPreviewModal, setShowAvatarPreviewModal] = useState(false);
+  const avatarInputRef = useRef(null);
+  // clean up object URL when component unmounts or avatar changes
+  useEffect(() => {
+    return () => {
+      if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+        URL.revokeObjectURL(uploadedAvatar);
+      }
+      if (fetchedAvatarUrl && fetchedAvatarUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(fetchedAvatarUrl);
+      }
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [uploadedAvatar, fetchedAvatarUrl, previewUrl]);
+
+  const getFieldValue = (key) => {
+    const v = formData[key];
+    if (!isEditing && (v === 'N/A' || v === undefined || v === null)) return '';
+    return v ?? '';
+  };
+
+  const getFieldPlaceholder = (key) => {
+    const v = formData[key];
+    if (!isEditing && v && v !== 'N/A') return v;
+    return '';
+  };
+
+  // Load existing profile picture preview (if any) using authenticated fetch
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl = null;
+    const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+    if (!svc) return;
+
+    // fast-path: check localStorage cache for data URL image
+    try {
+      const cached = localStorage.getItem(`profilePic_${svc}`);
+      if (cached) {
+        setFetchedAvatarUrl(cached);
+        setUploadedAvatar(cached);
+      }
+    } catch (e) {
+      // ignore storage errors
+    }
+
+    // fetch latest image in background and update cache
+    (async () => {
+      try {
+        const blob = await userService.fetchProfilePic(svc);
+        if (cancelled) return;
+        if (blob && blob.size > 0) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (cancelled) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem(`profilePic_${svc}`, dataUrl);
+            } catch (e) {
+              console.warn('Failed to save profile pic to localStorage', e);
+            }
+            setFetchedAvatarUrl(dataUrl);
+            setUploadedAvatar(dataUrl);
+          };
+          reader.readAsDataURL(blob);
+        } else {
+          setFetchedAvatarUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to fetch profile picture:', err);
+        setAvatarError('Unable to load profile picture');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [user?.serviceNo, serviceUser]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -136,28 +250,63 @@ const ProfilePage = () => {
         <div className="flex-1">
           <Header />
 
-          <main className="p-4 sm:p-6 lg:p-8">
+          <main className="pt-0 p-4 sm:p-2 lg:p-4">
             {/* Header */}
-            <div className="mb-8">
+            <div className="mb-2">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                 Profile Settings
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Manage your account settings and preferences
-              </p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Left Column - Profile Card */}
               <div className="lg:col-span-1">
-                <div className="card sticky top-8">
+                <div className="card sticky top-4">
                   {/* Profile Photo */}
                   <div className="text-center mb-6">
                     <div className="relative inline-block">
-                      <div className={`h-32 w-32 rounded-full ${avatar.color} flex items-center justify-center mx-auto mb-4`}>
-                        <span className="text-white text-4xl font-bold">
-                          {avatar.initials}
-                        </span>
-                      </div>
+                      {uploadedAvatar ? (
+                        <img
+                          src={uploadedAvatar}
+                          alt="Profile"
+                          className="h-32 w-32 rounded-full object-cover mx-auto mb-4"
+                        />
+                      ) : (
+                        <div className={`h-32 w-32 rounded-full ${avatar.color} flex items-center justify-center mx-auto mb-4`}>
+                          <span className="text-white text-4xl font-bold">
+                            {avatar.initials}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="absolute right-2 bottom-2 bg-white/90 dark:bg-gray-800/90 p-1.5 rounded-full shadow-md border"
+                        aria-label="Upload profile picture"
+                        title="Upload profile picture"
+                      >
+                        <FiCamera className="w-4 h-4" />
+                      </button>
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (!file) return;
+                          // create temporary preview and show modal for explicit save/cancel
+                          if (previewUrl && previewUrl.startsWith('blob:')) {
+                            URL.revokeObjectURL(previewUrl);
+                          }
+                          const tempUrl = URL.createObjectURL(file);
+                          setPreviewUrl(tempUrl);
+                          setSelectedFile(file);
+                          setShowAvatarPreviewModal(true);
+                        }}
+                      />
+                      {/* Preview modal is shown when a new file is selected */}
+                      {/* preview modal is rendered at top-level via portal */}
                     </div>
                     
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -170,12 +319,14 @@ const ProfilePage = () => {
                   
                   {/* Stats */}
                   <div className="mb-6">
-                    <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2">
-                      <span className="text-gray-600 dark:text-gray-400">Member Since</span>
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {formatDate(profileData.personal.joinedDate, 'short')}
-                      </span>
-                    </div>
+                    {profileData.personal && profileData.personal.joinedDate && profileData.personal.joinedDate !== 'N/A' && (
+                      <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg mb-2">
+                        <span className="text-gray-600 dark:text-gray-400">Member Since</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {formatDate(profileData.personal.joinedDate, 'short')}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <span className="text-gray-600 dark:text-gray-400">Account Status</span>
                       <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 
@@ -185,14 +336,9 @@ const ProfilePage = () => {
                     </div>
                   </div>
 
-                  {/* Navigation */}
+                  {/* Navigation (removed 'Personal Information' button) */}
                   <nav className="space-y-1">
-                    {[
-                      { id: 'personal', label: 'Personal Information', icon: FiUser },
-                      // { id: 'security', label: 'Security', icon: FiShield },
-                      // { id: 'notifications', label: 'Notifications', icon: FiBell },
-                      // { id: 'preferences', label: 'Preferences', icon: FiCheckCircle },
-                    ].map((item) => (
+                    {[].map((item) => (
                       <button
                         key={item.id}
                         onClick={() => setActiveTab(item.id)}
@@ -225,6 +371,7 @@ const ProfilePage = () => {
                         {activeTab === 'notifications' && 'Configure how you receive notifications'}
                         {activeTab === 'preferences' && 'Set your application preferences'}
                       </p>
+                      <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your account settings and preferences</p>
                     </div>
                     {/* {activeTab === 'personal' && (
                       <button
@@ -255,7 +402,8 @@ const ProfilePage = () => {
                             <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                               type="text"
-                              value={formData.name}
+                              value={getFieldValue('name')}
+                              placeholder={getFieldPlaceholder('name')}
                               onChange={(e) => handleInputChange('name', e.target.value)}
                               disabled={!isEditing}
                               className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
@@ -270,7 +418,8 @@ const ProfilePage = () => {
                             <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                               type="email"
-                              value={formData.email}
+                              value={getFieldValue('email')}
+                              placeholder={getFieldPlaceholder('email')}
                               onChange={(e) => handleInputChange('email', e.target.value)}
                               disabled={!isEditing}
                               className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
@@ -285,7 +434,8 @@ const ProfilePage = () => {
                             <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                               type="tel"
-                              value={formData.phone}
+                              value={getFieldValue('phone')}
+                              placeholder={getFieldPlaceholder('phone')}
                               onChange={(e) => handleInputChange('phone', e.target.value)}
                               disabled={!isEditing}
                               className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
@@ -296,24 +446,24 @@ const ProfilePage = () => {
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Address</label>
                           <div className="relative">
                             <FiMapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input type="text" value={formData.address} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                            <input type="text" value={getFieldValue('address')} placeholder={getFieldPlaceholder('address')} onChange={(e) => handleInputChange('address', e.target.value)} disabled={!isEditing} className={`input-field pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                           </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fax Number</label>
-                          <input type="text" value={formData.fax} onChange={(e) => handleInputChange('fax', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                          <input type="text" value={getFieldValue('fax')} placeholder={getFieldPlaceholder('fax')} onChange={(e) => handleInputChange('fax', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mobile Number</label>
-                          <input type="text" value={formData.mobile} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                          <input type="text" value={getFieldValue('mobile')} placeholder={getFieldPlaceholder('mobile')} onChange={(e) => handleInputChange('mobile', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact Person</label>
-                          <input type="text" value={formData.contactPerson} onChange={(e) => handleInputChange('contactPerson', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                          <input type="text" value={getFieldValue('contactPerson')} placeholder={getFieldPlaceholder('contactPerson')} onChange={(e) => handleInputChange('contactPerson', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company</label>
-                          <input type="text" value={formData.company} onChange={(e) => handleInputChange('company', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
+                          <input type="text" value={getFieldValue('company')} placeholder={getFieldPlaceholder('company')} onChange={(e) => handleInputChange('company', e.target.value)} disabled={!isEditing} className={`input-field ${!isEditing ? 'bg-gray-50 dark:bg-gray-700' : ''}`} />
                         </div>
                       </div>
 
@@ -543,6 +693,96 @@ const ProfilePage = () => {
           </main>
         </div>
       </div>
+      {showAvatarPreviewModal && previewUrl && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={() => {
+              if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+              setPreviewUrl(null);
+              setSelectedFile(null);
+              setShowAvatarPreviewModal(false);
+            }}
+          />
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 z-10 max-w-md w-full">
+            <h3 className="text-lg font-bold mb-2">Preview Photo</h3>
+            <div className="mb-4 flex justify-center">
+              <img src={previewUrl} alt="Preview" className="max-h-72 object-contain rounded" />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => {
+                  if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+                  setPreviewUrl(null);
+                  setSelectedFile(null);
+                  setShowAvatarPreviewModal(false);
+                }}
+                disabled={uploading}
+              >
+                Cancel
+              </button>
+                  <button
+                type="button"
+                className="btn-primary"
+                onClick={async () => {
+                  const svc = user?.serviceNo || localStorage.getItem('serviceNo');
+                  if (!svc || !selectedFile) return;
+                  setUploading(true);
+                  try {
+                    await userService.uploadProfilePic(svc, selectedFile);
+                    const blob = await userService.fetchProfilePic(svc);
+                    if (uploadedAvatar && uploadedAvatar.startsWith('blob:')) {
+                      URL.revokeObjectURL(uploadedAvatar);
+                    }
+                    if (blob && blob.size > 0) {
+                      // convert blob to data URL and persist in localStorage so UI is fast on reload
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        const dataUrl = reader.result;
+                        try {
+                          localStorage.setItem(`profilePic_${svc}`, dataUrl);
+                        } catch (e) {
+                          console.warn('Failed to save profile pic to localStorage', e);
+                        }
+                        setFetchedAvatarUrl(dataUrl);
+                        setUploadedAvatar(dataUrl);
+                      };
+                      reader.readAsDataURL(blob);
+                      // show success toast
+                      toast.success('Profile photo uploaded successfully');
+                    } else {
+                      // fallback to direct URL with cache-buster
+                      const fallback = `${userService.getProfilePicUrl(svc)}&t=${Date.now()}`;
+                      setUploadedAvatar(fallback);
+                      try {
+                        localStorage.removeItem(`profilePic_${svc}`);
+                      } catch (e) {}
+                      toast.success('Profile photo uploaded successfully');
+                    }
+                    setSelectedFile(null);
+                    setAvatarError(null);
+                  } catch (err) {
+                    console.error('Upload failed:', err);
+                    setAvatarError('Upload failed. Try again.');
+                        toast.error('Profile photo upload failed');
+                  } finally {
+                    setUploading(false);
+                    if (previewUrl && previewUrl.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+                    setPreviewUrl(null);
+                    setShowAvatarPreviewModal(false);
+                  }
+                }}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : 'Save Photo'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 };

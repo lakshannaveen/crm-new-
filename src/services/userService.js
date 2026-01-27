@@ -112,6 +112,51 @@ class UserService {
     }
   }
 
+  async uploadProfilePic(serviceNo, file) {
+    if (!serviceNo) throw new Error('Service number is required to upload profile picture');
+    if (!file) throw new Error('File is required');
+    try {
+      const base = (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test';
+      const url = `${base}/CDLRequirmentManagement/ShipDetails/UploadProfilePic`;
+      const formData = new FormData();
+      // backend may expect a particular field name; use generic 'file' and include serviceNo
+      formData.append('file', file);
+      formData.append('serviceNo', serviceNo);
+
+      const headers = {
+        ...authService.getAuthHeader(),
+        // Let axios set the multipart boundary
+      };
+
+      const response = await axios.post(url, formData, { headers });
+      return response.data;
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      throw error;
+    }
+  }
+
+  getProfilePicUrl(serviceNo) {
+    const base = (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test';
+    return `${base}/CDLRequirmentManagement/ShipDetails/ProfilePicPreview?serviceNo=${encodeURIComponent(serviceNo)}`;
+  }
+
+  async fetchProfilePic(serviceNo) {
+    if (!serviceNo) throw new Error('Service number is required to fetch profile picture');
+    try {
+      const base = (config && config.api && config.api.baseURL) || 'https://esystems.cdl.lk/backend-test';
+      const url = `${base}/CDLRequirmentManagement/ShipDetails/ProfilePicPreview?serviceNo=${encodeURIComponent(serviceNo)}&t=${Date.now()}`;
+      const headers = {
+        ...authService.getAuthHeader(),
+      };
+      const response = await axios.get(url, { headers, responseType: 'blob' });
+      return response.data; // Blob
+    } catch (error) {
+      console.error('Error fetching profile picture blob:', error);
+      throw error;
+    }
+  }
+
   async rejectUser(userId) {
     // Mock rejection
     return { success: true };

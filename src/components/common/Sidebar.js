@@ -257,10 +257,10 @@ const Sidebar = ({ embedded = false }) => {
           ${desktopCollapsed ? 'w-16' : 'w-64'}
           flex flex-col
           h-screen
-          fixed left-0 top-0 z-30
+          fixed left-0 top-0 z-30 pt-16
         `}>
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between p-4">
             {!desktopCollapsed && (
               <div className="flex items-center">
                 {/* {sidebarLogo ? (
@@ -276,44 +276,7 @@ const Sidebar = ({ embedded = false }) => {
               </div>
             )}
             
-            {/* Desktop Collapse/Expand Button */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleDesktopSidebar}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
-                         transition-colors group relative"
-                aria-label={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                title={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {desktopCollapsed ? (
-                  <FiMaximize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                ) : (
-                  <FiMinimize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                )}
-                {/* Tooltip for collapsed state */}
-                {desktopCollapsed && (
-                  <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 
-                                bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 
-                                transition-opacity whitespace-nowrap pointer-events-none">
-                    Expand
-                  </div>
-                )}
-              </button>
-              
-              {/* Alternative Chevron Button */}
-              <button
-                onClick={toggleDesktopSidebar}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 
-                         transition-colors"
-                aria-label={desktopCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {desktopCollapsed ? (
-                  <FiChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                ) : (
-                  <FiChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                )}
-              </button>
-            </div>
+            {/* Sidebar expand/collapse controls removed to keep sidebar collapsed */}
           </div>
 
           {/* Navigation */}
@@ -402,10 +365,10 @@ const Sidebar = ({ embedded = false }) => {
             className="absolute inset-0 bg-black bg-opacity-50" 
             onClick={closeMobileSidebar}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl">
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl pt-16">
             <aside className="h-full flex flex-col">
               {/* Mobile Sidebar Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between p-4">
                 <div className="flex items-center">
                   {sidebarLogo ? (
                     <img 

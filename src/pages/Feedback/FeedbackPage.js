@@ -722,6 +722,7 @@ import {
 } from "react-icons/fi";
 import { getShips } from "../../actions/shipActions";
 import { getAllFeedbacks } from "../../actions/feedbackActions";
+import CustomDropdown from "../../components/common/Dropdown";
 
 // Feedbacks are loaded from the API. No hardcoded sample data.
 
@@ -775,6 +776,48 @@ const FeedbackPage = () => {
     if (!showAllShips) setShipVisibleCount(base);
   }, [showAllShips]);
 
+  // Helpers to normalize API/cached payloads to the app feedback shape
+  const mapApiRow = (r, i) => ({
+    id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
+    vesselName:
+      r.FEEDBACK_VESSEL_NAME || r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
+    feedbackRef: r.FEEDBACK_CODE || "",
+    submittedBy: r.FEEDBACK_ANSWER || "API",
+    submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
+    overallScore: 0,
+    observations: r.FEEDBACK_REMARKS || r.FEEDBACK_REMARK || "",
+    raw: r,
+  });
+
+  const rowsFromSaved = (parsed) => {
+    if (!parsed) return [];
+    if (Array.isArray(parsed)) return parsed;
+    if (parsed.ResultSet && Array.isArray(parsed.ResultSet)) return parsed.ResultSet;
+    if (parsed.Result && Array.isArray(parsed.Result)) return parsed.Result;
+    return [parsed];
+  };
+
+  const getFieldValueLocal = (feedback, ...names) => {
+    for (const name of names) {
+      const val = feedback?.[name] ?? feedback?.raw?.[name];
+      if (val !== undefined && val !== null && String(val).trim() !== "") return String(val);
+    }
+    return "NA";
+  };
+
+  const formatDateLocal = (dateString) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      return "Invalid Date";
+    }
+  };
+
   // Load feedbacks from API on component mount (fallback to local sample data)
   useEffect(() => {
     let mounted = true;
@@ -791,19 +834,8 @@ const FeedbackPage = () => {
         const res = await dispatch(
           getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
-        const rows = res?.ResultSet || res?.Result || [];
-
-        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
-          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
-          overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
-          raw: r,
-        }));
+        const rows = rowsFromSaved(res);
+        const apiFeedbacks = rows.map((r, i) => mapApiRow(r, i));
 
         // persist API cache for offline/fallback use
         try {
@@ -820,7 +852,12 @@ const FeedbackPage = () => {
           let savedFeedbacks = [];
           if (saved) {
             try {
-              savedFeedbacks = JSON.parse(saved);
+              const parsed = JSON.parse(saved);
+              const fromSavedRows = rowsFromSaved(parsed);
+              savedFeedbacks = fromSavedRows.map((item, idx) => {
+                if (item && (item.id || item.raw)) return item;
+                return mapApiRow(item, idx);
+              });
             } catch (e) {
               savedFeedbacks = [];
             }
@@ -835,17 +872,24 @@ const FeedbackPage = () => {
         const cached = localStorage.getItem("cdplc_feedbacks_api_cache");
         if (cached) {
           try {
-            const cachedApi = JSON.parse(cached);
-            const saved = localStorage.getItem("cdplc_feedbacks");
-            let savedFeedbacks = [];
-            if (saved) {
-              try {
-                savedFeedbacks = JSON.parse(saved);
-              } catch (e) {
-                savedFeedbacks = [];
-              }
-            }
-            if (mounted) setFeedbacks([...savedFeedbacks, ...cachedApi]);
+                const cachedApi = JSON.parse(cached);
+                const cachedRows = rowsFromSaved(cachedApi);
+                const cachedMapped = cachedRows.map((r, i) => mapApiRow(r, i));
+                const saved = localStorage.getItem("cdplc_feedbacks");
+                let savedFeedbacks = [];
+                if (saved) {
+                  try {
+                    const parsed = JSON.parse(saved);
+                    const fromSavedRows = rowsFromSaved(parsed);
+                    savedFeedbacks = fromSavedRows.map((item, idx) => {
+                      if (item && (item.id || item.raw)) return item;
+                      return mapApiRow(item, idx);
+                    });
+                  } catch (e) {
+                    savedFeedbacks = [];
+                  }
+                }
+                if (mounted) setFeedbacks([...savedFeedbacks, ...cachedMapped]);
             return;
           } catch (e) {
             // ignore parse errors
@@ -883,18 +927,8 @@ const FeedbackPage = () => {
         const res = await dispatch(
           getAllFeedbacks(selectedJobCategory, selectedProjectNumber),
         );
-        const rows = res?.ResultSet || res?.Result || [];
-        const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
-          id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
-          vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
-          submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
-          overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
-          raw: r,
-        }));
+        const rows = rowsFromSaved(res);
+        const apiFeedbacks = rows.map((r, i) => mapApiRow(r, i));
         try {
           localStorage.setItem(
             "cdplc_feedbacks_api_cache",
@@ -905,7 +939,12 @@ const FeedbackPage = () => {
         let savedFeedbacks = [];
         if (saved) {
           try {
-            savedFeedbacks = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            const fromSavedRows = rowsFromSaved(parsed);
+            savedFeedbacks = fromSavedRows.map((item, idx) => {
+              if (item && (item.id || item.raw)) return item;
+              return mapApiRow(item, idx);
+            });
           } catch (e) {
             savedFeedbacks = [];
           }
@@ -1064,7 +1103,7 @@ const FeedbackPage = () => {
 
           <div class="info-row">
             <span class="label">Overall Score:</span>
-            <span class="score-box">${feedback.overallScore}/100</span>
+            <span class="score-box">${feedback.overallScore}</span>
           </div>
 
           <div class="info-row">
@@ -1214,27 +1253,16 @@ const FeedbackPage = () => {
                 <FiArrowLeft className="mr-2" />
                 Back to Dashboard
               </Link>
-              <span className="mx-3 text-gray-400">/</span>
-              <span className="text-gray-900 dark:text-white font-medium">
-                Service Feedback
-              </span>
+              {/* breadcrumb title removed per request */}
             </div>
 
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                    Service Feedback System
-                  </h1>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    Share your experience and view feedback history. All data is
-                    saved locally.
-                  </p>
-                </div>
+            {/* Header removed per request */}
+            <div className="mb-4">
+              <div className="flex flex-col md:flex-row md:items-start justify-between">
+                <div>{/* header text removed */}</div>
 
                 {selectedVessel && (
-                  <div className="mt-4 md:mt-0 flex space-x-3">
+                  <div className="mt-0 -mt-10 md:-mt-14 flex space-x-3">
                     <button
                       onClick={handleNewFeedback}
                       className={`px-4 py-2 rounded-lg transition-colors flex items-center ${
@@ -1406,120 +1434,45 @@ const FeedbackPage = () => {
                         </div>
                       </div>
                     ) : (
-                      ships.length > 1 && (
+                      ships.length > 0 && (
                         <div className="card mb-8">
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                             Select Vessel for Feedback
                           </h3>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {ships.slice(0, shipVisibleCount).map((ship) => (
-                              <button
-                                key={ship.id}
-                                onClick={() => setSelectedVessel(ship)}
-                                className={`p-4 border rounded-lg transition-all ${
-                                  selectedVessel?.id === ship.id
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
-                                    : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
-                                }`}
-                              >
-                                <div className="flex items-start">
-                                  <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3 flex-shrink-0">
-                                    <FiFileText className="text-blue-600 dark:text-blue-300" />
-                                  </div>
-                                  <div className="text-left flex-1 min-w-0">
-                                    <p className="font-medium text-gray-900 dark:text-white truncate">
-                                      {ship.name}
-                                    </p>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                      {ship.imoNumber}
-                                    </p>
-                                    <div className="mt-3 space-y-2 text-xs">
-                                      <div>
-                                        <span className="text-gray-500 dark:text-gray-400">
-                                          Category:
-                                        </span>
-                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                          {ship.raw?.SHIP_JCAT ||
-                                            ship.raw?.SHIP_JOB_CATEGORY ||
-                                            "N/A"}
-                                        </p>
-                                      </div>
-                                      <div>
-                                        <span className="text-gray-500 dark:text-gray-400">
-                                          Project Number:
-                                        </span>
-                                        <p className="text-gray-700 dark:text-gray-300 font-medium">
-                                          {ship.raw?.SHIP_JMAIN ||
-                                            ship.jmainNo ||
-                                            ship.id ||
-                                            "N/A"}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </button>
-                            ))}
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                              Vessel
+                            </label>
+                            <CustomDropdown
+                              value={selectedVessel ? String(selectedVessel.id) : ""}
+                              onChange={(val) => {
+                                const ship = ships.find((s) => String(s.id) === String(val));
+                                setSelectedVessel(ship || null);
+                              }}
+                              options={ships.map((ship) => ({
+                                value: String(ship.id),
+                                label: `${ship.name}${ship.imoNumber ? ` (${ship.imoNumber})` : ""}`,
+                              }))}
+                              placeholder="-- Select Vessel --"
+                              openDownward={true}
+                            />
+
+                            {selectedVessel && (
+                              <div className="mt-3 p-3 border rounded bg-gray-50 dark:bg-gray-800">
+                                <p className="font-medium text-gray-900 dark:text-white truncate">
+                                  {selectedVessel.name}
+                                </p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {selectedVessel.imoNumber || "IMO N/A"} • Category: {selectedVessel.raw?.SHIP_JCAT || selectedVessel.raw?.SHIP_JOB_CATEGORY || "N/A"}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                          {ships.length > baseShipVisibleCount && (
-                            <div className="mt-4 flex justify-center">
-                              {!showAllShips ? (
-                                <button
-                                  onClick={() => {
-                                    setShowAllShips(true);
-                                    setShipVisibleCount(ships.length);
-                                  }}
-                                  className="text-blue-600 hover:text-blue-800 font-medium"
-                                >
-                                  Load more
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => {
-                                    setShowAllShips(false);
-                                    setShipVisibleCount(baseShipVisibleCount);
-                                  }}
-                                  className="text-gray-600 hover:text-gray-800 font-medium"
-                                >
-                                  Show less
-                                </button>
-                              )}
-                            </div>
-                          )}
                         </div>
                       )
                     )}
                   </div>
-                  {/* Vessel Info Card */}
-                  {selectedVessel && (
-                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="mb-4 md:mb-0">
-                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                            {selectedVessel.name}
-                          </h2>
-                          <div className="flex items-center text-gray-600 dark:text-gray-400">
-                            <span className="mr-4">
-                              {selectedVessel.imoNumber}
-                            </span>
-                            <span>{selectedVessel.type}</span>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full text-sm font-medium">
-                            Ready for Feedback
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          <strong>Note:</strong> Your feedback will be
-                          automatically saved to your browser's local storage.
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                  {/* Vessel Info Card removed per request */}
 
                   {/* Feedback Form */}
                   {selectedVessel && !showConfirmation && (
@@ -1532,68 +1485,7 @@ const FeedbackPage = () => {
                     </div>
                   )}
 
-                  {/* Recent Feedback Preview */}
-                  {feedbacks.length > 0 && (
-                    <div className="card mb-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          Recent Feedback Submissions
-                        </h3>
-                        <button
-                          onClick={handleViewHistory}
-                          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                        >
-                          View All →
-                        </button>
-                      </div>
-
-                      <div className="space-y-3">
-                        {feedbacks.slice(0, 3).map((feedback, index) => (
-                          <div
-                            key={feedback.id}
-                            className={`p-4 border rounded-lg ${
-                              index === 0
-                                ? "border-blue-300 dark:border-blue-700"
-                                : "border-gray-200 dark:border-gray-700"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex-1">
-                                <div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Vessel
-                                  </div>
-                                  <h4 className="font-medium text-gray-900 dark:text-white">
-                                    {feedback.vesselName}
-                                  </h4>
-                                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                    Date
-                                  </div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    {new Date(
-                                      feedback.submittedAt,
-                                    ).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                              </div>
-                            </div>
-                            {feedback.observations && (
-                              <div className="mt-2">
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Remarks
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                                  {feedback.observations}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  
 
                   {/* Local storage info removed per request */}
                 </>

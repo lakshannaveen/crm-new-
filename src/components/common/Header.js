@@ -170,6 +170,7 @@ import { useSidebar } from "../../context/SidebarContext";
 import { getShips } from "../../actions/shipActions";
 import { setSelectedShipJmain } from "../../actions/shipActions";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { userService } from "../../services/userService";
 
 // Import your logo image
 import logo from "../../assets/image/logo512.png"; // Make sure to add your logo file
@@ -272,6 +273,42 @@ const Header = () => {
     : [];
 
   const avatar = generateAvatar(user?.name || "User");
+  const [profileImgUrl, setProfileImgUrl] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl = null;
+    const svc = user?.serviceNo || localStorage.getItem("serviceNo");
+    if (!svc) return;
+
+    (async () => {
+      setProfileLoading(true);
+      setProfileError(null);
+      try {
+        const blob = await userService.fetchProfilePic(svc);
+        if (cancelled) return;
+        if (blob && blob.size > 0) {
+          blobUrl = URL.createObjectURL(blob);
+          setProfileImgUrl(blobUrl);
+        } else {
+          setProfileImgUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to load header profile pic', err);
+        setProfileError('Failed to load image');
+        setProfileImgUrl(null);
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [user?.serviceNo]);
 
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-sm z-50">
@@ -279,30 +316,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Left side - Logo/Brand & Mobile Menu */}
           <div className="flex items-center">
-            {/* Mobile Menu Button */}
-            <button
-              onClick={toggleMobileSidebar}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
-              aria-label="Open menu"
-            >
-              <FiMenu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
-            </button>
-
-            {/* Desktop Minimize/Expand Button */}
-            <button
-              onClick={toggleDesktopSidebar}
-              className="hidden md:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 mr-2"
-              aria-label={
-                desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"
-              }
-              title={desktopCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            >
-              {desktopCollapsed ? (
-                <FiMaximize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              ) : (
-                <FiMinimize2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-              )}
-            </button>
+            {/* Sidebar controls removed to keep sidebar collapsed */}
 
             {/* Logo */}
             <Link to="/dashboard" className="flex items-center">
@@ -460,13 +474,17 @@ const Header = () => {
                 className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100
                          dark:hover:bg-gray-700 transition-colors"
               >
-                <div
-                  className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
-                >
-                  <span className="text-white font-medium text-sm">
-                    {avatar.initials}
-                  </span>
-                </div>
+                {profileImgUrl ? (
+                  <img src={profileImgUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div
+                    className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}
+                  >
+                    <span className="text-white font-medium text-sm">
+                      {avatar.initials}
+                    </span>
+                  </div>
+                )}
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user?.name || "User"}

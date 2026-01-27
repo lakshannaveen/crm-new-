@@ -19,7 +19,7 @@ export const getFeedbackDates = async (jobCategory, projectNumber) => {
           P_JMAIN: projectNumber,
         },
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -46,7 +46,7 @@ export const getDuration = async (jobCategory, jmain) => {
           p_jmain: jmain,
         },
         headers,
-      }
+      },
     );
     console.log("API Response - getDuration:", response.data);
     return response.data;
@@ -70,7 +70,7 @@ export const getJmain = async (jobCategory) => {
           P_JOB_CATEGORY: jobCategory,
         },
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -88,7 +88,7 @@ export const addFeedback = async (feedbackData) => {
     const response = await axios.post(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/Addfeedback`,
       feedbackData,
-      { headers }
+      { headers },
     );
     return response.data;
   } catch (error) {
@@ -105,7 +105,24 @@ export const getUnitsDescriptions = async () => {
     };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/GetUnitsDescriptions`,
-      { headers }
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Get Criteria Descriptions
+export const getCriterias = async () => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/Feedback/Getcriterias`,
+      { headers },
     );
     return response.data;
   } catch (error) {
@@ -123,7 +140,7 @@ export const addMilestone = async (milestoneData) => {
     const response = await axios.post(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/Milestone/AddMilestone`,
       milestoneData,
-      { headers }
+      { headers },
     );
     return response.data;
   } catch (error) {
@@ -140,7 +157,7 @@ export const getMilestoneTypes = async () => {
     };
     const response = await axios.get(
       `${BACKEND_BASE_URL}/CDLRequirmentManagement/Milestone/GetAllMilestoneTypes`,
-      { headers }
+      { headers },
     );
     return response.data;
   } catch (error) {
@@ -163,7 +180,7 @@ export const getAllFeedback = async (jobCategory, jmain) => {
           p_jmain: jmain,
         },
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -186,7 +203,7 @@ export const getMilestonesByShip = async (jobCategory, jmain) => {
           P_JMAIN: jmain,
         },
         headers,
-      }
+      },
     );
 
     const milestones = response.data?.ResultSet || [];
@@ -206,7 +223,7 @@ export const getMilestonesByShip = async (jobCategory, jmain) => {
     });
 
     return milestones.map((milestone) =>
-      transformMilestoneData(milestone, milestoneDescMap)
+      transformMilestoneData(milestone, milestoneDescMap),
     );
   } catch (error) {
     console.error("Error fetching milestones:", error);
@@ -270,5 +287,42 @@ const getMilestoneStatus = (milestone) => {
     return "in_progress";
   } else {
     return "pending";
+  }
+};
+
+// Upload ship feedback attachment (multipart/form-data)
+export const uploadShipFeedback = async (formData) => {
+  try {
+    const headers = {
+      ...authService.getAuthHeader(),
+      // Let axios set Content-Type with boundary for multipart
+    };
+    const response = await axios.post(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/UploadShipFeedback`,
+      formData,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("uploadShipFeedback error:", error);
+    throw error;
+  }
+};
+
+// Preview ship feedback (GET)
+export const previewShipFeedback = async (jmain, jacat) => {
+  try {
+    const headers = {
+      "Content-Type": "application/json",
+      ...authService.getAuthHeader(),
+    };
+    const response = await axios.get(
+      `${BACKEND_BASE_URL}/CDLRequirmentManagement/ShipDetails/ShipFeedBackPreview`,
+      { params: { jmain, jacat }, headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.error("previewShipFeedback error:", error);
+    throw error;
   }
 };

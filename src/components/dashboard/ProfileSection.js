@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { FiMapPin, FiPhone, FiMail, FiGlobe, FiCalendar, FiStar, FiUser } from 'react-icons/fi';
 import { formatDate } from '../../utils/formatters';
 import { generateAvatar } from '../../utils/helpers';
+import { userService } from '../../services/userService';
 
 const ProfileSection = () => {
   const { serviceUser } = useSelector(state => state.user);
@@ -31,15 +32,65 @@ const ProfileSection = () => {
     };
   }
   const avatar = generateAvatar(userData.name !== 'N/A' ? userData.name : 'User');
+  const [profileImgUrl, setProfileImgUrl] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl = null;
+    const svc = (serviceUser && Array.isArray(serviceUser.ResultSet) && serviceUser.ResultSet[0]?.serviceNo) || localStorage.getItem('serviceNo');
+    if (!svc) return;
+
+    // quick load from localStorage if available
+    try {
+      const cached = localStorage.getItem(`profilePic_${svc}`);
+      if (cached) {
+        setProfileImgUrl(cached);
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    (async () => {
+      try {
+        const blob = await userService.fetchProfilePic(svc);
+        if (cancelled) return;
+        if (blob && blob.size > 0) {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            if (cancelled) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem(`profilePic_${svc}`, dataUrl);
+            } catch (e) {
+              console.warn('Failed to save profile pic to localStorage', e);
+            }
+            setProfileImgUrl(dataUrl);
+          };
+          reader.readAsDataURL(blob);
+        }
+      } catch (err) {
+        // ignore silently, keep avatar fallback
+        console.debug('No profile pic for dashboard section', err?.message || err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [serviceUser]);
   return (
     <div className="card p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <div className={`h-10 w-10 rounded-full ${avatar.color} flex items-center justify-center mr-3 flex-shrink-0`}>
-            <span className="text-white font-bold text-lg">
-              {avatar.initials}
-            </span>
-          </div>
+          {profileImgUrl ? (
+            <img src={profileImgUrl} alt="Profile" className="h-10 w-10 rounded-full mr-3 flex-shrink-0 object-cover" />
+          ) : (
+            <div className={`h-10 w-10 rounded-full ${avatar.color} flex items-center justify-center mr-3 flex-shrink-0`}>
+              <span className="text-white font-bold text-lg">
+                {avatar.initials}
+              </span>
+            </div>
+          )}
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-base font-bold text-gray-900 dark:text-white">

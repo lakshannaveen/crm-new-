@@ -13,9 +13,12 @@ import {
   FiTrendingUp,
   FiSearch,
   FiX,
+  FiClock,
+  FiFlag,
+  FiCheckCircle,
 } from "react-icons/fi";
 import useMobile from "../../hooks/useMobile";
-import { addFeedback } from "../../services/feedbackService";
+import { addFeedback, uploadShipFeedback } from "../../services/feedbackService";
 import {
   getFeedbackDates,
   getJmain,
@@ -24,8 +27,11 @@ import {
   submitMilestone,
   clearFeedbackDates,
   getDuration,
+  getCriterias,
 } from "../../actions/feedbackActions";
 import CustomDropdown from "../common/Dropdown";
+import { formatDate } from "../../utils/formatters";
+import { getMilestonesByShip } from "../../actions/projectActions";
 
 const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   const dispatch = useDispatch();
@@ -39,17 +45,37 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     jmainLoading = false,
     unitsDescriptions = [],
     unitsDescriptionsLoading = false,
+    criterias = [],
+    criteriasLoading = false,
     milestoneTypes = [],
     milestoneTypesLoading = false,
     milestoneSubmitting = false,
     milestoneSubmitSuccess = false,
     error: datesError = null,
   } = useSelector((state) => state.feedback || {});
+  const { milestones = [], milestonesLoading = false } = useSelector(
+    (state) => state.projects || {},
+  );
   const isMobile = useMobile();
+
+  // Format various incoming date values to YYYY-MM-DD for consistent display
+  const formatISOToYMD = (val) => {
+    if (!val) return "";
+    if (typeof val === "string") {
+      // If string already contains a YYYY-MM-DD pattern, return it
+      const m = val.match(/\d{4}-\d{2}-\d{2}/);
+      if (m) return m[0];
+    }
+    const d = new Date(val);
+    if (isNaN(d)) return String(val);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
 
   const questionSectionRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(0);
-  const [visibleRowsCount, setVisibleRowsCount] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [milestonesSubmitted, setMilestonesSubmitted] = useState(false);
   const [feedbackSubmissionSuccess, setFeedbackSubmissionSuccess] =
@@ -60,21 +86,15 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   const [openMilestoneIndex, setOpenMilestoneIndex] = useState(null);
   const milestoneDropdownRefs = useRef({});
   const [openLocationIndex, setOpenLocationIndex] = useState(null);
-  const [evaluationRows, setEvaluationRows] = useState(
-    Array(11)
-      .fill(null)
-      .map(() => ({
-        criteriaCode: "",
-        unitCode: "",
-        description: "",
-        evaluation: "",
-        yesNo: "",
-      })),
-  );
+
+  // New state for evaluation (like employee side)
+  const [allCriteriaUnits, setAllCriteriaUnits] = useState([]);
+  const [selectedRows, setSelectedRows] = useState({});
+
   const [formData, setFormData] = useState({
     // Project Information (replacing vessel information)
     jobCategory: "",
-    projectHandleLocation: "",
+    projectHandleLocation: null,
     startingDate: "",
     endingDate: "",
     jobStatus: "",
@@ -149,6 +169,10 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     poorAverageDetails: "",
     observations: "",
     shipManagerComments: "",
+    // Attachment (single PDF required)
+    attachmentName: "",
+    attachmentData: "",
+    attachmentType: "",
 
     // Durations (days)
     afloatDuration: 0,
@@ -160,9 +184,6 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       .substr(2, 6)
       .toUpperCase()}`,
 
-    // Top-level remarks and action taken
-    remarks: "",
-    actionTaken: "",
     // Removed vessel fields (vesselName, vesselIMO)
 
     // Milestones
@@ -231,9 +252,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   const steps = [
     { id: 0, title: "Project Details", icon: <FiCalendar /> },
     { id: 1, title: "Evaluation Details", icon: <FiStar /> },
-    { id: 2, title: "Milestones", icon: <FiTrendingUp /> },
-    { id: 3, title: "Review", icon: <FiCheck /> },
-    { id: 4, title: "Complete", icon: <FiCheck /> },
+    { id: 2, title: "Review", icon: <FiCheck /> },
+    { id: 3, title: "Complete", icon: <FiCheck /> },
   ];
 
   // Ensure currentStep is within bounds
@@ -244,6 +264,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
   useEffect(() => {
     dispatch(getUnitsDescriptions());
     dispatch(getMilestoneTypes());
+    dispatch(getCriterias());
   }, [dispatch]);
 
   // Cleanup: Clear dates when component unmounts
@@ -283,13 +304,31 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   }, [formData.jobCategory, formData.projectNumber, dispatch]);
 
+  // Fetch milestones when job category and project number are selected
+  useEffect(() => {
+    if (formData.jobCategory && formData.projectNumber) {
+      dispatch(
+        getMilestonesByShip(formData.jobCategory, formData.projectNumber),
+      );
+    }
+  }, [formData.jobCategory, formData.projectNumber, dispatch]);
+
   // Update form data when dates are loaded from Redux
   useEffect(() => {
-    if (dates.startingDate || dates.endingDate) {
+    if (
+      dates.startingDate ||
+      dates.endingDate ||
+      dates.projectHandleLocation !== undefined
+    ) {
       setFormData((prev) => ({
         ...prev,
         startingDate: dates.startingDate,
         endingDate: dates.endingDate,
+        projectHandleLocation:
+          dates.projectHandleLocation !== undefined &&
+          dates.projectHandleLocation !== ""
+            ? dates.projectHandleLocation
+            : null,
       }));
     }
   }, [dates]);
@@ -361,6 +400,70 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   }, [jmainList, autoProjectForVessel, vessel]);
 
+  // Prepare all criteria-unit combinations when unitsDescriptions loads (like employee side)
+  useEffect(() => {
+    if (unitsDescriptions.length > 0) {
+      const uniqueCombinations = [];
+      const seen = new Set();
+
+      unitsDescriptions.forEach((item) => {
+        const criteriaCode = item.FEEDBACK_CRITERIA_CODE;
+        const unitCode = item.FEEDBACK_UNIT_CODE;
+        const unitDescription = item.FEEDBACK_UNIT_DESCRIPTION || "";
+        // Accept both FEEDBACK_CRITERIA_DESC and FEEDBACK_CRITERIA_DESCRIPTION
+        const criteriaDescription =
+          item.FEEDBACK_CRITERIA_DESC ||
+          item.FEEDBACK_CRITERIA_DESCRIPTION ||
+          item.FEEDBACK_CRITERIA_DESCRIPTION_LONG ||
+          "";
+
+        if (criteriaCode && unitCode) {
+          const key = `${criteriaCode}-${unitCode}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueCombinations.push({
+              criteriaCode,
+              unitCode,
+              unitDescription,
+              criteriaDescription,
+              fullDescription: `${criteriaDescription} - ${unitDescription}`,
+            });
+          }
+        }
+      });
+
+      // Sort by criteria code then unit code
+      uniqueCombinations.sort((a, b) => {
+        // Handle numeric and dotted codes like "3.1", "3.2"
+        const aParts = a.criteriaCode.split(".");
+        const bParts = b.criteriaCode.split(".");
+
+        for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+          const aVal = parseInt(aParts[i] || 0);
+          const bVal = parseInt(bParts[i] || 0);
+          if (aVal !== bVal) return aVal - bVal;
+        }
+        return a.unitCode.localeCompare(b.unitCode);
+      });
+
+      setAllCriteriaUnits(uniqueCombinations);
+
+      // Initialize selected rows with empty evaluation
+      const initialSelectedRows = {};
+      uniqueCombinations.forEach((item, index) => {
+        initialSelectedRows[index] = {
+          criteriaCode: item.criteriaCode,
+          unitCode: item.unitCode,
+          evaluation: "",
+          yesNo: "",
+          remarks: "",
+          actionTaken: "",
+        };
+      });
+      setSelectedRows(initialSelectedRows);
+    }
+  }, [unitsDescriptions]);
+
   // Handle click outside project dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -396,6 +499,38 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     };
   }, []);
 
+  // Group criteria by parent category (e.g., 3.0, 4.0, 5.0 etc) - like employee side
+  const groupCriteriaByParent = () => {
+    const groups = {};
+
+    // Build a lookup from `criterias` (from API) in case it contains the
+    // top-level criteria descriptions (e.g., FEEDBACK_CRITERIA_DESCRIPTION).
+    const criteriaLookup = {};
+    (criterias || []).forEach((c) => {
+      const code = String(c.FEEDBACK_CRITERIA_CODE || c.FEEDBACK_CRITERIA || "");
+      const desc = c.FEEDBACK_CRITERIA_DESCRIPTION || c.FEEDBACK_CRITERIA_DESC || "";
+      if (code) criteriaLookup[code] = desc;
+    });
+
+    allCriteriaUnits.forEach((item) => {
+      const mainCategory = String(item.criteriaCode).split(".")[0]; // Get "3" from "3.1"
+
+      if (!groups[mainCategory]) {
+        // Prefer description from `criterias` API; fallback to item.criteriaDescription
+        const mainDesc = criteriaLookup[mainCategory] || item.criteriaDescription || "";
+        groups[mainCategory] = {
+          mainCode: mainCategory,
+          mainDescription: mainDesc,
+          items: [],
+        };
+      }
+
+      groups[mainCategory].items.push(item);
+    });
+
+    return groups;
+  };
+
   const handleRatingChange = (category, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -419,6 +554,44 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
         return newErrors;
       });
     }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    // Only accept PDF
+    if (file.type !== "application/pdf") {
+      setValidationErrors((prev) => ({
+        ...prev,
+        attachment: "Please upload a PDF file",
+      }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormData((prev) => ({
+        ...prev,
+        attachmentName: file.name,
+        attachmentData: reader.result,
+        attachmentType: file.type,
+      }));
+      setValidationErrors((prev) => {
+        const n = { ...prev };
+        delete n.attachment;
+        return n;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeAttachment = () => {
+    setFormData((prev) => ({
+      ...prev,
+      attachmentName: "",
+      attachmentData: "",
+      attachmentType: "",
+    }));
   };
 
   const handleProjectNumberChange = (value) => {
@@ -492,180 +665,42 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
-  // Handle evaluation row changes
-  const handleEvaluationRowChange = (index, field, value) => {
-    setEvaluationRows((prev) => {
-      const newRows = [...prev];
-
-      // For evaluation field, toggle if clicking the same value
-      if (field === "evaluation" && newRows[index].evaluation === value) {
-        newRows[index] = {
-          ...newRows[index],
-          [field]: "",
-        };
-      } else if (field === "yesNo" && newRows[index].yesNo === value) {
-        // For yesNo field, toggle if clicking the same value
-        newRows[index] = {
-          ...newRows[index],
-          [field]: "",
-        };
-      } else {
-        newRows[index] = {
-          ...newRows[index],
-          [field]: value,
-        };
-      }
-
-      // If criteria or unit code changes, update description
-      if (field === "criteriaCode" || field === "unitCode") {
-        const criteriaCode =
-          field === "criteriaCode" ? value : newRows[index].criteriaCode;
-        const unitCode = field === "unitCode" ? value : newRows[index].unitCode;
-
-        // Clear unit code if criteria code changes
-        if (field === "criteriaCode") {
-          newRows[index].unitCode = "";
-          newRows[index].description = "";
-        }
-
-        if (criteriaCode && unitCode) {
-          const matchingItem = unitsDescriptions.find(
-            (item) =>
-              item.FEEDBACK_CRITERIA_CODE === criteriaCode &&
-              item.FEEDBACK_UNIT_CODE === unitCode,
-          );
-
-          if (matchingItem) {
-            newRows[index].description =
-              matchingItem.FEEDBACK_UNIT_DESCRIPTION ||
-              matchingItem.FEEDBACK_DESC ||
-              matchingItem.DESCRIPTION ||
-              "";
-          } else {
-            newRows[index].description = "";
-          }
-
-          // Show next row if both criteria and unit code are selected and we're on the last visible row
-          if (index === visibleRowsCount - 1 && visibleRowsCount < 11) {
-            setVisibleRowsCount((prev) => prev + 1);
-          }
-
-          // Clear evaluation validation error when user fills a row
-          if (validationErrors.evaluationRows) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors.evaluationRows;
-              return newErrors;
-            });
-          }
-        } else {
-          // Clear description if either dropdown is empty
-          if (field === "unitCode" && !unitCode) {
-            newRows[index].description = "";
-          }
-        }
-      }
-
-      // Clear specific field validation errors
-      if (field === "criteriaCode" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`criteriaCode_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "unitCode" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`unitCode_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "evaluation" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`evaluation_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      if (field === "yesNo" && value) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[`yesNo_${index}`];
-          delete newErrors.evaluationRows;
-          return newErrors;
-        });
-      }
-
-      return newRows;
-    });
+  // Get the index of an item in allCriteriaUnits (like employee side)
+  const getItemIndex = (criteriaCode, unitCode) => {
+    return allCriteriaUnits.findIndex(
+      (item) =>
+        item.criteriaCode === criteriaCode && item.unitCode === unitCode,
+    );
   };
 
-  // Get unique criteria codes
-  const getCriteriaCodes = () => {
-    const codes = [
-      ...new Set(unitsDescriptions.map((item) => item.FEEDBACK_CRITERIA_CODE)),
-    ];
-    return codes.filter(Boolean).sort((a, b) => {
-      // Convert to numbers for proper numeric sorting
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      // Fallback to string comparison
-      return a.localeCompare(b);
-    });
-  };
-
-  // Get selected combinations excluding current row
-  const getSelectedCombinations = (excludeIndex) => {
-    return evaluationRows
-      .map((row, index) => {
-        if (index === excludeIndex) return null;
-        if (row.criteriaCode && row.unitCode) {
-          return `${row.criteriaCode}-${row.unitCode}`;
-        }
-        return null;
-      })
-      .filter(Boolean);
-  };
-
-  // Check if a combination is already selected
-  const isCombinationSelected = (criteriaCode, unitCode, currentIndex) => {
-    const combination = `${criteriaCode}-${unitCode}`;
-    const selectedCombinations = getSelectedCombinations(currentIndex);
-    return selectedCombinations.includes(combination);
-  };
-
-  // Get unit codes for a specific criteria
-  const getUnitCodesForCriteria = (criteriaCode, currentIndex) => {
-    if (!criteriaCode) return [];
-    const codes = unitsDescriptions
-      .filter((item) => item.FEEDBACK_CRITERIA_CODE === criteriaCode)
-      .map((item) => item.FEEDBACK_UNIT_CODE);
-    const uniqueCodes = [...new Set(codes)].filter(Boolean).sort((a, b) => {
-      // Convert to numbers for proper numeric sorting
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (!isNaN(numA) && !isNaN(numB)) {
-        return numA - numB;
-      }
-      // Fallback to string comparison
-      return a.localeCompare(b);
-    });
-
-    // Return objects with code and disabled status
-    return uniqueCodes.map((code) => ({
-      code,
-      disabled: isCombinationSelected(criteriaCode, code, currentIndex),
+  // Handle evaluation row changes (like employee side)
+  const handleEvaluationChange = (rowIndex, field, value) => {
+    setSelectedRows((prev) => ({
+      ...prev,
+      [rowIndex]: {
+        ...prev[rowIndex],
+        [field]: value,
+      },
     }));
+  };
+
+  // Validation for evaluation step
+  const validateEvaluationStep = () => {
+    const errors = {};
+    let hasAtLeastOneEvaluation = false;
+
+    // Check if at least one row has evaluation
+    Object.values(selectedRows).forEach((row, index) => {
+      if (row.evaluation && row.evaluation.trim() !== "") {
+        hasAtLeastOneEvaluation = true;
+      }
+    });
+
+    if (!hasAtLeastOneEvaluation) {
+      errors.evaluationRows = "At least one evaluation must be provided";
+    }
+
+    return errors;
   };
 
   // Validation for each step
@@ -687,67 +722,16 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
         if (!formData.customerFeedbackStatus)
           errors.customerFeedbackStatus =
             "Customer Feedback Status is required";
-        if (!formData.projectHandleLocation)
-          errors.projectHandleLocation = "Project Handle Location is required";
         break;
       case 1: // Evaluation Details
-        // Check each row that has been started
-        let hasAtLeastOneCompleteRow = false;
-        evaluationRows.forEach((row, index) => {
-          const hasCriteria = !!row.criteriaCode;
-          const hasUnit = !!row.unitCode;
-          const hasAnyField = hasCriteria || hasUnit || row.evaluation;
-
-          // If any field is filled, all required fields must be filled
-          if (hasAnyField) {
-            if (!row.criteriaCode) {
-              errors[`criteriaCode_${index}`] = "Criteria code is required";
-            }
-            if (!row.unitCode) {
-              errors[`unitCode_${index}`] = "Unit code is required";
-            }
-            if (!row.evaluation) {
-              errors[`evaluation_${index}`] = "Evaluation rating is required";
-            }
-
-            // Check if this row is complete
-            if (row.criteriaCode && row.unitCode && row.evaluation) {
-              hasAtLeastOneCompleteRow = true;
-            }
-          }
-        });
-
-        // At least one row must be completely filled
-        if (!hasAtLeastOneCompleteRow) {
-          errors.evaluationRows =
-            "At least one evaluation row must be completed";
+        const evalErrors = validateEvaluationStep();
+        Object.assign(errors, evalErrors);
+        // Require a PDF attachment before moving to Review
+        if (!formData.attachmentName) {
+          errors.attachment = "Please upload a PDF file (required)";
         }
         break;
-      case 2: // Milestones
-        // Validate that at least one milestone with milestone name is provided
-        const hasValidMilestone = formData.milestones.some(
-          (milestone) =>
-            milestone.milestone && milestone.milestone.trim() !== "",
-        );
-        if (!hasValidMilestone) {
-          errors.milestones = "At least one milestone is required";
-        }
-        // Validate each milestone that has a milestone name
-        formData.milestones.forEach((milestone, index) => {
-          if (milestone.milestone && milestone.milestone.trim() !== "") {
-            if (!milestone.code) {
-              errors[`milestone_code_${index}`] = "Code is required";
-            }
-            if (!milestone.date) {
-              errors[`milestone_date_${index}`] = "Date is required";
-            }
-            if (!milestone.location) {
-              errors[`milestone_location_${index}`] = "Location is required";
-            }
-          }
-        });
-        break;
-      case 3: // Review
+      case 2: // Review
         // No validation needed for review
         break;
       default:
@@ -759,69 +743,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
 
   const nextStep = () => {
     if (currentStep < steps.length - 1) {
-      // Check if on milestone step and milestones not submitted
-      if (currentStep === 2 && !milestonesSubmitted) {
-        toast(
-          (t) => (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-start gap-3">
-                <FiAlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">
-                    Submit Milestones?
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    You haven't submitted any milestones yet. Do you want to
-                    submit milestones?
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    // User chose to skip, clear any errors and proceed
-                    setValidationErrors({});
-                    setCurrentStep((prev) => {
-                      const next = Math.min(prev + 1, steps.length - 1);
-                      setTimeout(scrollToQuestionSection, 100);
-                      return next;
-                    });
-                  }}
-                  className="btn-secondary text-sm"
-                >
-                  Skip
-                </button>
-                <button
-                  onClick={() => {
-                    toast.dismiss(t.id);
-                    // User wants to submit milestones, stay on current step
-                    setValidationErrors({
-                      milestones:
-                        "Please fill out the milestone form and click 'Submit Milestones' button",
-                    });
-                    setTimeout(scrollToQuestionSection, 100);
-                  }}
-                  className="btn-primary text-sm"
-                >
-                  Fill Milestones
-                </button>
-              </div>
-            </div>
-          ),
-          {
-            duration: Infinity,
-            position: "top-center",
-            style: {
-              maxWidth: "500px",
-            },
-          },
-        );
-        return;
-      }
-
-      // Validate current step before proceeding (skip milestone validation)
-      const errors = currentStep === 2 ? {} : validateStep(currentStep);
+      // Validate current step before proceeding
+      const errors = validateStep(currentStep);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
 
@@ -836,14 +759,6 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
             errorElement = document.querySelector(
               '[class*="bg-red-50"][class*="border-red-500"]',
             );
-          } else if (
-            firstErrorKey.startsWith("criteriaCode_") ||
-            firstErrorKey.startsWith("unitCode_") ||
-            firstErrorKey.startsWith("evaluation_") ||
-            firstErrorKey.startsWith("yesNo_")
-          ) {
-            // Scroll to specific evaluation row error
-            errorElement = document.querySelector('[class*="text-red-600"]');
           } else {
             // Scroll to first field with error class or by finding input with error
             const fieldSelectors = [
@@ -892,12 +807,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
         setTimeout(scrollToQuestionSection, 100);
         return prevStep;
       });
-      // Reset milestones submitted flag when going back to milestone step
-      if (currentStep === 3) {
-        setMilestonesSubmitted(false);
-      }
       // Reset feedback submission success flag when going back from Complete step
-      if (currentStep === 4) {
+      if (currentStep === 3) {
         setFeedbackSubmissionSuccess(false);
       }
     }
@@ -916,8 +827,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       N: 0, // Not Relevant (excluded)
     };
 
-    // Get evaluation scores from evaluation rows
-    const evaluationScores = evaluationRows
+    // Get evaluation scores from selected rows
+    const evaluationScores = Object.values(selectedRows)
       .filter((row) => row.evaluation && row.evaluation !== "N")
       .map((row) => evaluationScoreMap[row.evaluation] || 0)
       .filter((score) => score > 0);
@@ -946,34 +857,103 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       return;
     }
 
+    // Convert selectedRows to the required format (like employee side)
+    const feedbackList = Object.values(selectedRows)
+      .filter(
+        (row) =>
+          row.criteriaCode &&
+          row.unitCode &&
+          row.evaluation &&
+          row.evaluation.trim() !== "",
+      )
+      .map((row) => {
+        const answer = (row.evaluation || "").toString().toUpperCase();
+        const validAnswers = ["P", "A", "G", "E", "N"];
+
+        return {
+          P_CRITERIA_CODE: row.criteriaCode,
+          P_CODE: row.unitCode,
+          P_ANSWER_TYPE: validAnswers.includes(answer) ? answer : "N",
+          P_REMARKS: row.remarks || "",
+          P_ACTION_TAKEN: row.actionTaken || "",
+        };
+      });
+
+    // Only submit if we have evaluations
+    if (feedbackList.length === 0) {
+      toast.error("Please provide at least one evaluation before submitting.", {
+        duration: 4000,
+        position: "top-center",
+      });
+      return;
+    }
+
     // Only send the required JSON structure for feedback
     const feedbackPayload = {
       P_JOB_CATEGORY: formData.jobCategory,
       P_JMAIN: formData.projectNumber,
-      P_REMARKS: formData.remarks || "",
-      P_ACTION_TAKEN: formData.actionTaken || "",
-      FeedbackList: evaluationRows
-        .filter((row) => row.criteriaCode && row.unitCode)
-        .map((row) => {
-          // Use only evaluation letters P, A, G, E, N. If evaluation missing or invalid, send 'N'.
-          const answer = (() => {
-            const val = (row.evaluation || "").toString().toUpperCase();
-            return ["P", "A", "G", "E", "N"].includes(val) ? val : "N";
-          })();
-
-          return {
-            P_CRITERIA_CODE: row.criteriaCode,
-            P_CODE: row.unitCode,
-            P_ANSWER_TYPE: answer,
-            P_REMARKS: row.remarks || formData.remarks || "",
-            P_ACTION_TAKEN: row.actionTaken || formData.actionTaken || "",
-          };
-        }),
+      P_REMARKS: "",
+      P_ACTION_TAKEN: "",
+      FeedbackList: feedbackList,
     };
 
     try {
-      await addFeedback(feedbackPayload);
-      // Mark submission as successful only after successful API call
+      const res = await addFeedback(feedbackPayload);
+
+      // If backend reports existing unit/criteria codes, show error and stop
+      const existsInResultSet = Array.isArray(res?.ResultSet)
+        && res.ResultSet.some((item) =>
+          (item?.Result || "").toString().toUpperCase().includes("EXIST")
+        );
+
+      if (existsInResultSet) {
+        setFeedbackSubmissionSuccess(false);
+        toast.error("Unit code or criteria code already used. Please use a different one.");
+        return;
+      }
+
+      // If we have an attachment, upload it AFTER feedback is successfully saved
+      if (formData.attachmentName && formData.attachmentData) {
+        try {
+          // Convert base64 dataURL to Blob
+          const dataUrl = formData.attachmentData;
+          const arr = dataUrl.split(",");
+          const mimeMatch = arr[0].match(/:(.*?);/);
+          const mime = mimeMatch ? mimeMatch[1] : formData.attachmentType || "application/pdf";
+          const bstr = atob(arr[1]);
+          let n = bstr.length;
+          const u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+          const fileBlob = new Blob([u8arr], { type: mime });
+
+          const fd = new FormData();
+          // backend expects a file field - try 'file' and 'attachment'
+          fd.append("file", fileBlob, formData.attachmentName);
+          // include identifying metadata expected by preview endpoint
+          fd.append("jmain", formData.projectNumber || "");
+          fd.append("jacat", formData.jobCategory || "");
+
+          const uploadRes = await uploadShipFeedback(fd);
+
+          // Attach upload response to payload so history can show attachment
+          feedbackPayload.attachment = uploadRes?.ResultSet
+            ? uploadRes.ResultSet[0]
+            : uploadRes;
+        } catch (uploadErr) {
+          console.error("Attachment upload failed:", uploadErr);
+          setFeedbackSubmissionSuccess(false);
+          toast.error(
+            uploadErr.response?.data?.message ||
+              uploadErr.message ||
+              "Attachment upload failed. Feedback not saved with attachment.",
+          );
+          return;
+        }
+      }
+
+      // Mark submission as successful only after successful API call (and upload if present)
       setFeedbackSubmissionSuccess(true);
       // Move to Complete step only on successful submission
       setCurrentStep(4);
@@ -993,48 +973,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
-  // Mobile Progress Indicator
-  const MobileProgressIndicator = () => (
-    <div className="md:hidden mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={prevStep}
-          disabled={currentStep === 0}
-          className={`p-2 rounded-lg ${
-            currentStep === 0 ? "text-gray-400" : "text-blue-600"
-          }`}
-        >
-          <FiChevronLeft className="w-5 h-5" />
-        </button>
-
-        <div className="text-center">
-          <div className="text-sm font-medium text-gray-900 dark:text-white">
-            Step {currentStep + 1} of {steps.length}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            {currentStepData?.title || "Step"}
-          </div>
-        </div>
-
-        <button
-          onClick={nextStep}
-          disabled={currentStep === steps.length - 1}
-          className={`p-2 rounded-lg ${
-            currentStep === steps.length - 1 ? "text-gray-400" : "text-blue-600"
-          }`}
-        >
-          <FiChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-          style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
+  // (Progress indicators removed)
 
   // Mobile Step Navigation Buttons
   const MobileStepButtons = () => {
@@ -1439,8 +1378,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     )}
                   </label>
                   <input
-                    type="date"
-                    value={formData.startingDate}
+                    type="text"
+                    value={formatISOToYMD(formData.startingDate)}
                     readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.startingDate ? "border-red-500" : ""
@@ -1466,8 +1405,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     )}
                   </label>
                   <input
-                    type="date"
-                    value={formData.endingDate}
+                    type="text"
+                    value={formatISOToYMD(formData.endingDate)}
                     readOnly
                     className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                       validationErrors.endingDate ? "border-red-500" : ""
@@ -1483,15 +1422,6 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                   </div>
                 </div>
               </div>
-
-              {/* Show error if dates fetch fails */}
-              {/* {datesError && (
-                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    Note: Could not auto-load dates. Please enter them manually.
-                  </p>
-                </div>
-              )} */}
 
               {/* Status Fields */}
               <div
@@ -1570,16 +1500,19 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                 </label>
                 <input
                   type="text"
-                  value={formData.projectHandleLocation}
-                  onChange={(e) =>
-                    handleInputChange("projectHandleLocation", e.target.value)
+                  value={
+                    formData.projectHandleLocation
+                      ? formData.projectHandleLocation
+                      : "No location"
                   }
+                  readOnly
+                  disabled
                   className={`input-field ${isMobile ? "py-2 text-sm" : ""} ${
                     validationErrors.projectHandleLocation
                       ? "border-red-500"
                       : ""
                   }`}
-                  placeholder="Enter project location"
+                  placeholder="Project Handle Location"
                 />
                 <div className="min-h-[20px]">
                   {validationErrors.projectHandleLocation && (
@@ -1593,533 +1526,13 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
           </div>
         );
 
-      case 2:
-        // Milestones Step
-        const handleMilestoneChange = (index, field, value) => {
-          const updatedMilestones = [...formData.milestones];
-
-          // If changing code field, auto-populate milestone description
-          if (field === "code") {
-            const selectedMilestone = milestoneTypes.find(
-              (mt) =>
-                (mt.MILESTONE_TYPE_CODE || mt.MILESTONE_CODE || mt.CODE) ===
-                value,
-            );
-            if (selectedMilestone) {
-              updatedMilestones[index] = {
-                ...updatedMilestones[index],
-                code: value,
-                milestone:
-                  selectedMilestone.MILESTONE_DESCRIPTION ||
-                  selectedMilestone.MILESTONE_TYPE_DESC ||
-                  selectedMilestone.DESCRIPTION ||
-                  selectedMilestone.DESC ||
-                  "",
-              };
-            } else {
-              updatedMilestones[index] = {
-                ...updatedMilestones[index],
-                [field]: value,
-              };
-            }
-          } else {
-            updatedMilestones[index] = {
-              ...updatedMilestones[index],
-              [field]: value,
-            };
-          }
-
-          setFormData((prev) => ({
-            ...prev,
-            milestones: updatedMilestones,
-          }));
-
-          // Reset submitted state when changes are made
-          if (milestonesSubmitted) {
-            setMilestonesSubmitted(false);
-          }
-
-          // Clear validation errors
-          if (validationErrors[`milestone_${field}_${index}`]) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors[`milestone_${field}_${index}`];
-              return newErrors;
-            });
-          }
-          if (validationErrors.milestones) {
-            setValidationErrors((prev) => {
-              const newErrors = { ...prev };
-              delete newErrors.milestones;
-              return newErrors;
-            });
-          }
-        };
-
-        const addMilestone = () => {
-          setFormData((prev) => ({
-            ...prev,
-            milestones: [
-              ...prev.milestones,
-              { code: "", milestone: "", date: "", location: "", remarks: "" },
-            ],
-          }));
-          // Reset submitted state when adding new milestone
-          if (milestonesSubmitted) {
-            setMilestonesSubmitted(false);
-          }
-        };
-
-        const removeMilestone = (index) => {
-          if (formData.milestones.length > 1) {
-            const updatedMilestones = formData.milestones.filter(
-              (_, i) => i !== index,
-            );
-            setFormData((prev) => ({
-              ...prev,
-              milestones: updatedMilestones,
-            }));
-            // Reset submitted state when removing milestone
-            if (milestonesSubmitted) {
-              setMilestonesSubmitted(false);
-            }
-          }
-        };
-
-        const handleSubmitMilestones = async () => {
-          // Validate milestones before submitting
-          const errors = validateStep(2);
-          if (Object.keys(errors).length > 0) {
-            setValidationErrors(errors);
-            // Scroll to first error
-            setTimeout(() => {
-              const errorElement = document.querySelector(
-                '[class*="text-red-600"]',
-              );
-              if (errorElement) {
-                errorElement.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center",
-                });
-              }
-            }, 100);
-            return;
-          }
-
-          // Prepare the milestone payload
-          const milestonePayload = {
-            p_job_category: formData.jobCategory,
-            p_jmain: formData.projectNumber,
-            MilestoneList: formData.milestones
-              .filter(
-                (milestone) =>
-                  milestone.milestone && milestone.milestone.trim() !== "",
-              )
-              .map((milestone) => ({
-                p_milestone_code: milestone.code,
-                p_milestone_date: milestone.date,
-                p_remarks: milestone.remarks || "",
-                p_milestone_location: milestone.location || "",
-              })),
-          };
-
-          try {
-            await dispatch(submitMilestone(milestonePayload));
-            // Mark milestones as submitted on success
-            setMilestonesSubmitted(true);
-            setValidationErrors({});
-          } catch (error) {
-            console.error("Failed to submit milestones:", error);
-            setValidationErrors({
-              milestones:
-                error.message ||
-                "Failed to submit milestones. Please try again.",
-            });
-          }
-        };
-
-        return (
-          <div
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
-          >
-            <div className="mb-4">
-              <h2
-                className={`font-bold text-gray-900 dark:text-white ${titleClass}`}
-              >
-                Project Milestones
-              </h2>
-              <p className={`text-gray-600 dark:text-gray-400 ${descClass}`}>
-                Track key milestones and achievements for this project
-              </p>
-            </div>
-
-            {validationErrors.milestones && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {validationErrors.milestones}
-                </p>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              {formData.milestones.map((milestone, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900"
-                >
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Milestone {index + 1}
-                    </h3>
-                    {formData.milestones.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeMilestone(index)}
-                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <div
-                    className={`grid ${
-                      isMobile ? "grid-cols-1 gap-3" : "grid-cols-2 gap-4"
-                    }`}
-                  >
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Code
-                      </label>
-                      <div
-                        className="relative"
-                        ref={(el) =>
-                          (milestoneDropdownRefs.current[index] = el)
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenMilestoneIndex(
-                              openMilestoneIndex === index ? null : index,
-                            )
-                          }
-                          disabled={milestoneTypesLoading}
-                          className={`w-full text-left input-field flex items-center justify-between ${
-                            isMobile ? "py-2 text-sm" : ""
-                          } ${
-                            validationErrors[`milestone_code_${index}`]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        >
-                          <span>
-                            {milestone.code
-                              ? milestone.code
-                              : milestoneTypesLoading
-                                ? "Loading codes..."
-                                : "Select milestone code"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 ml-2 text-gray-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </button>
-
-                        {openMilestoneIndex === index && (
-                          <div
-                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
-                            style={{ maxHeight: "10rem", overflowY: "auto" }}
-                          >
-                            {milestoneTypes
-                              .slice()
-                              .sort((a, b) => {
-                                const aCode =
-                                  a.MILESTONE_TYPE_CODE ||
-                                  a.MILESTONE_CODE ||
-                                  a.CODE;
-                                const bCode =
-                                  b.MILESTONE_TYPE_CODE ||
-                                  b.MILESTONE_CODE ||
-                                  b.CODE;
-                                const na = parseInt(aCode, 10);
-                                const nb = parseInt(bCode, 10);
-                                if (!isNaN(na) && !isNaN(nb)) return na - nb;
-                                return String(aCode).localeCompare(
-                                  String(bCode),
-                                );
-                              })
-                              .map((mt, idx) => {
-                                const code =
-                                  mt.MILESTONE_TYPE_CODE ||
-                                  mt.MILESTONE_CODE ||
-                                  mt.CODE;
-                                return (
-                                  <div
-                                    key={idx}
-                                    onClick={() => {
-                                      handleMilestoneChange(
-                                        index,
-                                        "code",
-                                        code,
-                                      );
-                                      setOpenMilestoneIndex(null);
-                                    }}
-                                    className={`px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                                      milestone.code === code
-                                        ? "bg-blue-50 dark:bg-blue-900/30"
-                                        : ""
-                                    }`}
-                                  >
-                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                      {code}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                          </div>
-                        )}
-                      </div>
-                      {validationErrors[`milestone_code_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_code_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Milestone
-                      </label>
-                      <input
-                        type="text"
-                        value={milestone.milestone}
-                        readOnly
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_milestone_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        } bg-gray-100 dark:bg-gray-700 cursor-not-allowed`}
-                        placeholder="Select a milestone code first"
-                      />
-                      {validationErrors[`milestone_milestone_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_milestone_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        value={milestone.date}
-                        onChange={(e) =>
-                          handleMilestoneChange(index, "date", e.target.value)
-                        }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          validationErrors[`milestone_date_${index}`]
-                            ? "border-red-500"
-                            : ""
-                        }`}
-                      />
-                      {validationErrors[`milestone_date_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_date_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Location
-                      </label>
-                      <div
-                        className="relative"
-                        ref={(el) =>
-                          (milestoneDropdownRefs.current[`loc_${index}`] = el)
-                        }
-                      >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenLocationIndex(
-                              openLocationIndex === index ? null : index,
-                            )
-                          }
-                          className={`w-full text-left input-field flex items-center justify-between ${
-                            isMobile ? "py-2 text-sm" : ""
-                          } ${
-                            validationErrors[`milestone_location_${index}`]
-                              ? "border-red-500"
-                              : ""
-                          }`}
-                        >
-                          <span>
-                            {milestone.location
-                              ? (
-                                  milestoneLocationOptions.find(
-                                    (o) => o.value === milestone.location,
-                                  ) || { label: milestone.location }
-                                ).label
-                              : "Select Location"}
-                          </span>
-                          <svg
-                            className="w-4 h-4 ml-2 text-gray-500"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
-                            />
-                          </svg>
-                        </button>
-
-                        {openLocationIndex === index && (
-                          <div
-                            className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg"
-                            style={{ maxHeight: "8rem", overflowY: "auto" }}
-                          >
-                            {milestoneLocationOptions.map((option) => (
-                              <div
-                                key={option.value}
-                                onClick={() => {
-                                  handleMilestoneChange(
-                                    index,
-                                    "location",
-                                    option.value,
-                                  );
-                                  setOpenLocationIndex(null);
-                                }}
-                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
-                              >
-                                <div className="text-sm text-gray-900 dark:text-white">
-                                  {option.label}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {validationErrors[`milestone_location_${index}`] && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {validationErrors[`milestone_location_${index}`]}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className={isMobile ? "" : "col-span-2"}>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Remarks
-                      </label>
-                      <textarea
-                        value={milestone.remarks}
-                        onChange={(e) =>
-                          handleMilestoneChange(
-                            index,
-                            "remarks",
-                            e.target.value,
-                          )
-                        }
-                        className={`input-field ${
-                          isMobile ? "py-2 text-sm" : ""
-                        } ${
-                          isMobile ? "h-20" : "h-24"
-                        } resize-none overflow-auto`}
-                        placeholder="Add any remarks about this milestone..."
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <button
-                type="button"
-                onClick={addMilestone}
-                className="btn-secondary w-full flex items-center justify-center gap-2"
-              >
-                <FiTrendingUp className="w-5 h-5" />
-                Add Another Milestone
-              </button>
-            </div>
-
-            {/* Submit Milestones Button */}
-            <div className="mt-6">
-              {milestonesSubmitted ? (
-                <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-500 rounded-lg flex items-center gap-3">
-                  <FiCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-                    Milestones submitted successfully! You can now proceed to
-                    the next step.
-                  </span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmitMilestones}
-                  disabled={milestoneSubmitting}
-                  className={`btn-primary w-full flex items-center justify-center gap-2 ${
-                    milestoneSubmitting ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  {milestoneSubmitting ? (
-                    <>
-                      <svg
-                        className="animate-spin h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <FiCheck className="w-5 h-5" />
-                      Submit Milestones
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+      case 1:
+        // EVALUATION DETAILS SECTION - UPDATED TO MATCH EMPLOYEE SIDE
+        const groupedCriteria = groupCriteriaByParent();
+        const sortedGroupKeys = Object.keys(groupedCriteria).sort(
+          (a, b) => parseInt(a) - parseInt(b),
         );
 
-      case 1:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2135,24 +1548,14 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                   Provide detailed evaluation for each criteria
                 </p>
               </div>
-              {unitsDescriptionsLoading && (
-                <div className="text-sm text-blue-600 dark:text-blue-400 mt-2 md:mt-0">
-                  Loading criteria...
-                </div>
-              )}
+              <div className="flex items-center gap-2 mt-2 md:mt-0">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  ({allCriteriaUnits.length} total items)
+                </span>
+              </div>
             </div>
 
-            {/* Debug Info */}
-            {!unitsDescriptionsLoading && unitsDescriptions.length === 0 && (
-              <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  No criteria data loaded. Total items:{" "}
-                  {unitsDescriptions.length}
-                </p>
-              </div>
-            )}
-
-            {/* Validation Error for Evaluation Rows */}
+            {/* Validation Error */}
             {validationErrors.evaluationRows && (
               <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-500 rounded-lg">
                 <p className="text-sm text-red-600 dark:text-red-400">
@@ -2161,637 +1564,712 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
               </div>
             )}
 
-            {/* Evaluation Table - Responsive for Mobile */}
-            <div className="mb-6">
-              {isMobile ? (
-                <div className="space-y-4">
-                  {evaluationRows
-                    .slice(0, Math.min(visibleRowsCount, 5))
-                    .map((row, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
-                      >
-                        <div className="mb-2">
-                          <div className="mb-2">
-                            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                              Criteria Code
-                            </label>
+            {/* Loading State */}
+            {unitsDescriptionsLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600 dark:text-gray-400">
+                  Loading evaluation criteria...
+                </p>
+              </div>
+            ) : allCriteriaUnits.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No evaluation criteria available.
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Scrollable Evaluation Section */}
+                <div className="mb-6 max-h-[70vh] overflow-y-auto pr-2">
+                  {sortedGroupKeys.map((groupKey) => {
+                    const group = groupedCriteria[groupKey];
 
-                            <CustomDropdown
-                              value={row.criteriaCode}
-                              options={getCriteriaCodes()}
-                              placeholder="Select.."
-                              disabled={unitsDescriptionsLoading}
-                              onChange={(val) =>
-                                handleEvaluationRowChange(
-                                  index,
-                                  "criteriaCode",
-                                  val,
-                                )
-                              }
-                              openDownward={true}
-                            />
+                    return (
+                      <div key={groupKey} className="mb-6 last:mb-0">
+                        {/* Main Category Header - PDF Style */}
+                        <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg mb-3 border border-gray-300 dark:border-gray-700">
+                          <div className="flex items-center">
+                            <div className="bg-blue-100 dark:bg-blue-900 h-8 w-8 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-blue-600 dark:text-blue-300 font-bold text-sm">
+                                {groupKey}
+                              </span>
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-gray-900 dark:text-white">
+                                {group.mainDescription}
+                              </h3>
+                            </div>
+                          </div>
+                        </div>
 
-                            {validationErrors[`criteriaCode_${index}`] && (
-                              <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                                {validationErrors[`criteriaCode_${index}`]}
-                              </p>
-                            )}
-                          </div>
+                        {/* Evaluation Table */}
+                        {isMobile ? (
+                          // Mobile View
+                          <div className="space-y-3">
+                            {group.items.map((item) => {
+                              const itemIndexInAll = getItemIndex(
+                                item.criteriaCode,
+                                item.unitCode,
+                              );
+                              const rowData =
+                                selectedRows[itemIndexInAll] || {};
 
-                          {validationErrors[`criteriaCode_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`criteriaCode_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Unit Code
-                          </label>
-                          <div className="mb-2">
-                            <CustomDropdown
-                              value={row.unitCode}
-                              options={getUnitCodesForCriteria(
-                                row.criteriaCode,
-                                index,
-                              )
-                                .filter((item) => !item.disabled)
-                                .map((item) => item.code)}
-                              placeholder="Select..."
-                              disabled={
-                                !row.criteriaCode || unitsDescriptionsLoading
-                              }
-                              onChange={(val) =>
-                                handleEvaluationRowChange(
-                                  index,
-                                  "unitCode",
-                                  val,
-                                )
-                              }
-                              openDownward={true}
-                            />
-                          </div>
-
-                          {validationErrors[`unitCode_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`unitCode_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Description
-                          </label>
-                          <input
-                            type="text"
-                            value={row.description}
-                            readOnly
-                            placeholder="DESCRIPTION"
-                            title={
-                              row.description || "No description available"
-                            }
-                            className="w-full px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                          />
-                        </div>
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Evaluation
-                          </label>
-                          <div className="flex flex-wrap gap-2">
-                            {["P", "A", "G", "E", "N"].map((val) => (
-                              <label
-                                key={val}
-                                className="flex items-center gap-1"
-                              >
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value={val}
-                                  checked={row.evaluation === val}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                                <span className="text-xs">{val}</span>
-                              </label>
-                            ))}
-                          </div>
-                          {validationErrors[`evaluation_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`evaluation_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        {/*
-                        <div className="mb-2">
-                          <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                            Yes/No
-                          </label>
-                          <div className="flex gap-4">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="YES"
-                                checked={row.yesNo === "YES"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                              <span className="text-xs">YES</span>
-                            </label>
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="radio"
-                                name={`deck-yesno-${index}`}
-                                value="NO"
-                                checked={row.yesNo === "NO"}
-                                onChange={(e) =>
-                                  handleEvaluationRowChange(
-                                    index,
-                                    "yesNo",
-                                    e.target.value
-                                  )
-                                }
-                                className="w-4 h-4"
-                              />
-                              <span className="text-xs">NO</span>
-                            </label>
-                          </div>
-                          {validationErrors[`yesNo_${index}`] && (
-                            <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                              {validationErrors[`yesNo_${index}`]}
-                            </p>
-                          )}
-                        </div>
-                        */}
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
-                  <table className="min-w-[700px] md:min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-xs md:text-sm">
-                    <thead className="bg-gray-100 dark:bg-gray-800">
-                      <tr>
-                        <th
-                          colSpan="2"
-                          className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap "
-                        >
-                          Criteria
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-3 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          Evaluation Type
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-red-600 dark:bg-red-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          P
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-orange-600 dark:bg-orange-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          A
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-yellow-600 dark:bg-yellow-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          G
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-green-600 dark:bg-green-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          E
-                        </th>
-                        <th
-                          rowSpan="2"
-                          className="px-2 py-3 text-center font-semibold text-gray-800 dark:text-gray-300 bg-gray-600 dark:bg-gray-900 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap"
-                        >
-                          N
-                        </th>
-                      </tr>
-                      <tr>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
-                          Criteria Code
-                        </th>
-                        <th className="px-3 py-2 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600 whitespace-nowrap text-xs bg-gray-200 dark:bg-gray-700">
-                          Unit Code
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
-                      {evaluationRows
-                        .slice(0, visibleRowsCount)
-                        .map((row, index) => (
-                          <React.Fragment key={index}>
-                            <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <CustomDropdown
-                                  value={row.criteriaCode}
-                                  options={getCriteriaCodes()}
-                                  onChange={(val) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "criteriaCode",
-                                      val,
-                                    )
-                                  }
-                                  disabled={unitsDescriptionsLoading}
-                                  openDownward={true}
-                                />
-                              </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <CustomDropdown
-                                  value={row.unitCode}
-                                  options={getUnitCodesForCriteria(
-                                    row.criteriaCode,
-                                    index,
-                                  )
-                                    .filter((i) => !i.disabled)
-                                    .map((i) => i.code)}
-                                  onChange={(val) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "unitCode",
-                                      val,
-                                    )
-                                  }
-                                  disabled={
-                                    !row.criteriaCode ||
-                                    unitsDescriptionsLoading
-                                  }
-                                  openDownward={true}
-                                />
-                              </td>
-                              <td className="px-3 py-2 border-r border-gray-300 dark:border-gray-600 min-w-[120px]">
-                                <input
-                                  type="text"
-                                  value={row.description}
-                                  readOnly
-                                  placeholder="DESCRIPTION"
-                                  title={
-                                    row.description ||
-                                    "No description available"
-                                  }
-                                  className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs"
-                                />
-                              </td>
-                              {/* ...existing code for radio buttons... */}
-                              <td className="px-2 py-2 text-center bg-red-200 dark:bg-red-600/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="P"
-                                  checked={row.evaluation === "P"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-orange-200 dark:bg-orange-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="A"
-                                  checked={row.evaluation === "A"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-yellow-50 dark:bg-yellow-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="G"
-                                  checked={row.evaluation === "G"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-green-200 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="E"
-                                  checked={row.evaluation === "E"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-gray-200 dark:bg-gray-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-eval-${index}`}
-                                  value="N"
-                                  checked={row.evaluation === "N"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "evaluation",
-                                      e.target.value,
-                                    )
-                                  }
-                                  className="w-4 h-4 cursor-pointer"
-                                />
-                              </td>
-                              {/*
-                              <td className="px-2 py-2 text-center bg-green-50 dark:bg-green-900/20 border-r border-gray-300 dark:border-gray-600">
-                                <input
-                                  type="radio"
-                                  name={`deck-yesno-${index}`}
-                                  value="YES"
-                                  checked={row.yesNo === "YES"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "yesNo",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-4 h-4"
-                                />
-                              </td>
-                              <td className="px-2 py-2 text-center bg-red-50 dark:bg-red-900/20">
-                                <input
-                                  type="radio"
-                                  name={`deck-yesno-${index}`}
-                                  value="NO"
-                                  checked={row.yesNo === "NO"}
-                                  onChange={(e) =>
-                                    handleEvaluationRowChange(
-                                      index,
-                                      "yesNo",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-4 h-4"
-                                />
-                              </td>
-                              */}
-                            </tr>
-                            {/* Inline error messages for desktop table */}
-                            {(validationErrors[`criteriaCode_${index}`] ||
-                              validationErrors[`unitCode_${index}`] ||
-                              validationErrors[`evaluation_${index}`]) && (
-                              <tr>
-                                <td
-                                  colSpan="10"
-                                  className="px-3 py-2 bg-red-50 dark:bg-red-900/20"
+                              return (
+                                <div
+                                  key={`${item.criteriaCode}-${item.unitCode}`}
+                                  className="border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-900"
                                 >
-                                  <div className="flex gap-4 text-xs text-red-600 dark:text-red-400">
-                                    {validationErrors[
-                                      `criteriaCode_${index}`
-                                    ] && (
-                                      <span>
-                                        •{" "}
-                                        {
-                                          validationErrors[
-                                            `criteriaCode_${index}`
-                                          ]
-                                        }
+                                  {/* Criteria and Unit Info */}
+                                  <div className="mb-3">
+                                    <div className="mb-1">
+                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                        Criteria:
                                       </span>
-                                    )}
-                                    {validationErrors[`unitCode_${index}`] && (
-                                      <span>
-                                        •{" "}
-                                        {validationErrors[`unitCode_${index}`]}
+                                      <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                        {item.criteriaCode} -{" "}
+                                        {item.criteriaDescription}
                                       </span>
-                                    )}
-                                    {validationErrors[
-                                      `evaluation_${index}`
-                                    ] && (
-                                      <span>
-                                        •{" "}
-                                        {
-                                          validationErrors[
-                                            `evaluation_${index}`
-                                          ]
-                                        }
+                                    </div>
+                                    <div>
+                                      <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                        Unit:
                                       </span>
-                                    )}
+                                      <span className="text-xs text-gray-900 dark:text-white ml-2">
+                                        {item.unitCode} - {item.unitDescription}
+                                      </span>
+                                    </div>
                                   </div>
-                                </td>
-                              </tr>
-                            )}
-                          </React.Fragment>
+
+                                  {/* Evaluation */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                      Evaluation
+                                    </label>
+                                    <div className="flex gap-2 flex-nowrap overflow-x-auto">
+                                      {[
+                                        {
+                                          value: "P",
+                                          label: "P",
+                                          title: "Poor",
+                                          color:
+                                            "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                        },
+                                        {
+                                          value: "A",
+                                          label: "A",
+                                          title: "Average",
+                                          color:
+                                            "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                        },
+                                        {
+                                          value: "G",
+                                          label: "G",
+                                          title: "Good",
+                                          color:
+                                            "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                        },
+                                        {
+                                          value: "E",
+                                          label: "E",
+                                          title: "Excellent",
+                                          color:
+                                            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                        },
+                                        {
+                                          value: "N",
+                                          label: "N",
+                                          title: "Not Relevant",
+                                          color:
+                                            "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                        },
+                                      ].map((option) => (
+                                        <button
+                                          key={option.value}
+                                          type="button"
+                                          title={option.title}
+                                          onClick={() =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "evaluation",
+                                              option.value,
+                                            )
+                                          }
+                                          className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                            rowData.evaluation === option.value
+                                              ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                          }`}
+                                        >
+                                          {option.label}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
+                                  {/* Yes/No */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                      Yes/No
+                                    </label>
+                                    <div className="flex gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleEvaluationChange(
+                                            itemIndexInAll,
+                                            "yesNo",
+                                            "YES",
+                                          )
+                                        }
+                                        className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                          rowData.yesNo === "YES"
+                                            ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
+                                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                        }`}
+                                      >
+                                        YES
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleEvaluationChange(
+                                            itemIndexInAll,
+                                            "yesNo",
+                                            "NO",
+                                          )
+                                        }
+                                        className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                          rowData.yesNo === "NO"
+                                            ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                        }`}
+                                      >
+                                        NO
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Remarks */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                      Remarks
+                                    </label>
+                                    <textarea
+                                      value={rowData.remarks || ""}
+                                      onChange={(e) =>
+                                        handleEvaluationChange(
+                                          itemIndexInAll,
+                                          "remarks",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="Add remarks..."
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                      rows="2"
+                                    />
+                                  </div>
+
+                                  {/* Action Taken */}
+                                  <div className="mb-3">
+                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                      Action Taken
+                                    </label>
+                                    <textarea
+                                      value={rowData.actionTaken || ""}
+                                      onChange={(e) =>
+                                        handleEvaluationChange(
+                                          itemIndexInAll,
+                                          "actionTaken",
+                                          e.target.value,
+                                        )
+                                      }
+                                      placeholder="Action taken..."
+                                      className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-xs bg-white dark:bg-gray-800 resize-none"
+                                      rows="2"
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          // Desktop View
+                          <div className="overflow-x-auto border border-gray-300 dark:border-gray-600 rounded-lg">
+                            <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-600 text-sm">
+                              <thead className="bg-gray-100 dark:bg-gray-800">
+                                <tr>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Criteria
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Unit
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Evaluation
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Yes/No
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300 border-r border-gray-300 dark:border-gray-600">
+                                    Remarks
+                                  </th>
+                                  <th className="px-4 py-3 text-left font-semibold text-gray-700 dark:text-gray-300">
+                                    Action Taken
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-300 dark:divide-gray-600">
+                                {group.items.map((item) => {
+                                  const itemIndexInAll = getItemIndex(
+                                    item.criteriaCode,
+                                    item.unitCode,
+                                  );
+                                  const rowData =
+                                    selectedRows[itemIndexInAll] || {};
+
+                                  return (
+                                    <tr
+                                      key={`${item.criteriaCode}-${item.unitCode}`}
+                                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    >
+                                      {/* Criteria */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="text-gray-900 dark:text-white">
+                                          <div className="font-medium">
+                                            {item.criteriaCode}
+                                          </div>
+                                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            {item.criteriaDescription}
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                      {/* Unit */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="text-gray-900 dark:text-white">
+                                          <div className="font-medium">
+                                            {item.unitCode}
+                                          </div>
+                                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                                            {item.unitDescription}
+                                          </div>
+                                        </div>
+                                      </td>
+
+                                      {/* Evaluation */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="flex gap-1 flex-nowrap overflow-x-auto">
+                                          {[
+                                            {
+                                              value: "P",
+                                              label: "P",
+                                              color:
+                                                "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+                                            },
+                                            {
+                                              value: "A",
+                                              label: "A",
+                                              color:
+                                                "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+                                            },
+                                            {
+                                              value: "G",
+                                              label: "G",
+                                              color:
+                                                "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+                                            },
+                                            {
+                                              value: "E",
+                                              label: "E",
+                                              color:
+                                                "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+                                            },
+                                            {
+                                              value: "N",
+                                              label: "N",
+                                              color:
+                                                "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                            },
+                                          ].map((option) => (
+                                            <button
+                                              key={option.value}
+                                              type="button"
+                                              onClick={() =>
+                                                handleEvaluationChange(
+                                                  itemIndexInAll,
+                                                  "evaluation",
+                                                  option.value,
+                                                )
+                                              }
+                                              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                                                rowData.evaluation ===
+                                                option.value
+                                                  ? `${option.color} border-${option.value === "P" ? "red" : option.value === "A" ? "orange" : option.value === "G" ? "yellow" : option.value === "E" ? "green" : "gray"}-500`
+                                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                              }`}
+                                            >
+                                              {option.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      </td>
+
+                                      {/* Yes/No */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <div className="flex gap-2">
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleEvaluationChange(
+                                                itemIndexInAll,
+                                                "yesNo",
+                                                "YES",
+                                              )
+                                            }
+                                            className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                              rowData.yesNo === "YES"
+                                                ? "bg-green-100 text-green-800 border-green-500 dark:bg-green-900 dark:text-green-300"
+                                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                            }`}
+                                          >
+                                            YES
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleEvaluationChange(
+                                                itemIndexInAll,
+                                                "yesNo",
+                                                "NO",
+                                              )
+                                            }
+                                            className={`px-3 py-1 text-xs rounded border transition-colors ${
+                                              rowData.yesNo === "NO"
+                                                ? "bg-red-100 text-red-800 border-red-500 dark:bg-red-900 dark:text-red-300"
+                                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100"
+                                            }`}
+                                          >
+                                            NO
+                                          </button>
+                                        </div>
+                                      </td>
+
+                                      {/* Remarks */}
+                                      <td className="px-4 py-3 border-r border-gray-300 dark:border-gray-600">
+                                        <textarea
+                                          value={rowData.remarks || ""}
+                                          onChange={(e) =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "remarks",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Add remarks..."
+                                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                          rows="2"
+                                        />
+                                      </td>
+
+                                      {/* Action Taken */}
+                                      <td className="px-4 py-3">
+                                        <textarea
+                                          value={rowData.actionTaken || ""}
+                                          onChange={(e) =>
+                                            handleEvaluationChange(
+                                              itemIndexInAll,
+                                              "actionTaken",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder="Action taken..."
+                                          className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 resize-none"
+                                          rows="2"
+                                        />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Legend */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
+                    Evaluation Legend
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        P - POOR
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        A - AVERAGE
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        G - GOOD
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        E - EXCELLENT
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        N - NOT RELEVANT
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Project Milestones */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-white dark:bg-gray-800 mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Project Milestones
+                    </h4>
+                    {milestones.length > 5 && (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Showing {Math.min(5, milestones.length)} of{" "}
+                        {milestones.length} milestones
+                      </span>
+                    )}
+                  </div>
+                  {milestonesLoading ? (
+                    <div className="flex items-center justify-center py-6">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
+                        Loading milestones...
+                      </span>
+                    </div>
+                  ) : milestones.length === 0 ? (
+                    <div className="text-center py-6">
+                      <FiClock className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        No milestones available for this project
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="relative max-h-64 overflow-y-auto pr-2">
+                      {/* Timeline line */}
+                      <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+
+                      <div className="space-y-4">
+                        {milestones.map((milestone, index) => (
+                          <div
+                            key={milestone.id || index}
+                            className="relative flex items-start"
+                          >
+                            <div
+                              className={`z-10 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                                    border-4 border-white dark:border-gray-800 shadow ${
+                                      milestone.status === "completed"
+                                        ? "bg-green-100 dark:bg-green-900/30"
+                                        : milestone.status === "in_progress"
+                                          ? "bg-blue-100 dark:bg-blue-900/30"
+                                          : "bg-gray-100 dark:bg-gray-700"
+                                    }`}
+                            >
+                              {milestone.status === "completed" ? (
+                                <FiCheckCircle
+                                  size={16}
+                                  className="text-green-600 dark:text-green-400"
+                                />
+                              ) : (
+                                <FiClock size={16} className="text-gray-400" />
+                              )}
+                            </div>
+                            <div className="ml-4 flex-1 pb-4">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
+                                <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                  {milestone.title}
+                                </h5>
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                           bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                                >
+                                  <FiCalendar className="mr-1" size={10} />
+                                  {formatDate(milestone.date, "short")}
+                                </span>
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 mb-2 text-xs text-gray-600 dark:text-gray-400">
+                                {milestone.location && (
+                                  <div className="flex items-center">
+                                    <FiFlag
+                                      className="mr-1 text-blue-500"
+                                      size={12}
+                                    />
+                                    <span>{milestone.location}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {milestone.remarks && (
+                                <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                  <p className="text-xs text-gray-700 dark:text-gray-300">
+                                    {milestone.remarks}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         ))}
-                    </tbody>
-                  </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Criteria Details Legend */}
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 mb-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3 text-sm">
-                Criteria Details
-              </h4>
-              <div
-                className={`grid ${
-                  isMobile ? "grid-cols-2" : "grid-cols-2 md:grid-cols-5"
-                } gap-3`}
-              >
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-red-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    P - POOR
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-orange-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    A - AVERAGE
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    G - GOOD
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    E - EXCELLENT
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-                  <span className="text-xs text-gray-700 dark:text-gray-300">
-                    N - NOT RELEVANT
-                  </span>
-                </div>
-              </div>
-            </div>
+                {/* Top-level Action Taken and Remarks inputs removed */}
 
-            {/* Action Taken and Remarks */}
-            <div
-              className={`grid ${
-                isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
-              } gap-4 mb-6`}
-            >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Action Taken
-                </label>
-                <textarea
-                  value={formData.actionTaken}
-                  onChange={(e) =>
-                    handleInputChange("actionTaken", e.target.value)
-                  }
-                  placeholder="Describe the action taken (e.g., corrective steps)"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                  rows={isMobile ? "3" : "4"}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Remarks
-                </label>
-                <textarea
-                  value={formData.remarks}
-                  onChange={(e) => handleInputChange("remarks", e.target.value)}
-                  placeholder="Add any remarks or observations"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                  rows={isMobile ? "3" : "4"}
-                />
-              </div>
-            </div>
-
-            {/* Notes & Recommendation */}
-            <div className="mb-6">
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Notes & Recommendation
-              </label>
-              <textarea
-                value={formData.observations}
-                onChange={(e) =>
-                  handleInputChange("observations", e.target.value)
-                }
-                placeholder="Notes & recommendations for follow-up or improvements"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
-                rows={isMobile ? "2" : "3"}
-              />
-            </div>
-
-            {/* Duration Section */}
-            <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
-                Duration (Days)
-              </h4>
-              <div
-                className={`grid ${
-                  isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
-                } gap-4`}
-              >
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Afloat
+                {/* Notes & Recommendation */}
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Notes & Recommendation
                   </label>
-                  <input
-                    disabled
-                    type="number"
-                    min="0"
-                    placeholder="Days afloat (e.g. 5)"
-                    value={
-                      formData.afloatDuration === 0
-                        ? "0"
-                        : formData.afloatDuration
-                    }
+                  <textarea
+                    value={formData.observations}
                     onChange={(e) =>
-                      handleInputChange(
-                        "afloatDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0,
-                      )
+                      handleInputChange("observations", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    placeholder="Notes & recommendations for follow-up or improvements"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none overflow-y-auto"
+                    rows={isMobile ? "2" : "3"}
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Indock
-                  </label>
-                  <input
-                    disabled
-                    type="number"
-                    min="0"
-                    placeholder="Days in dock (e.g. 2)"
-                    value={
-                      formData.indockDuration === 0
-                        ? "0"
-                        : formData.indockDuration
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "indockDuration",
-                        e.target.value ? parseInt(e.target.value, 10) : 0,
-                      )
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
+
+                  {/* Attachment: single PDF required */}
+                  <div className="mb-6">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Attach PDF (required)
+                    </label>
+                    <div className="flex items-center space-x-3">
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleFileChange}
+                        className="text-sm"
+                      />
+                      {formData.attachmentName && (
+                        <div className="flex items-center space-x-2">
+                          <a
+                            href={formData.attachmentData}
+                            download={formData.attachmentName}
+                            className="text-sm text-blue-600 dark:text-blue-300 underline"
+                          >
+                            {formData.attachmentName}
+                          </a>
+                          <button
+                            type="button"
+                            onClick={removeAttachment}
+                            className="text-sm text-red-600 dark:text-red-400"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    {validationErrors.attachment && (
+                      <p className="mt-2 text-sm text-red-600">{validationErrors.attachment}</p>
+                    )}
+                  </div>
+
+                {/* Duration Section */}
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-sm">
+                    Duration (Days)
+                  </h4>
+                  <div
+                    className={`grid ${
+                      isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-3"
+                    } gap-4`}
+                  >
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Afloat
+                      </label>
+                      <input
+                        disabled
+                        type="number"
+                        min="0"
+                        placeholder="Days afloat (e.g. 5)"
+                        value={
+                          formData.afloatDuration === 0
+                            ? "0"
+                            : formData.afloatDuration
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "afloatDuration",
+                            e.target.value ? parseInt(e.target.value, 10) : 0,
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Indock
+                      </label>
+                      <input
+                        disabled
+                        type="number"
+                        min="0"
+                        placeholder="Days in dock (e.g. 2)"
+                        value={
+                          formData.indockDuration === 0
+                            ? "0"
+                            : formData.indockDuration
+                        }
+                        onChange={(e) =>
+                          handleInputChange(
+                            "indockDuration",
+                            e.target.value ? parseInt(e.target.value, 10) : 0,
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Total
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Total days (calculated)"
+                        value={
+                          Number(formData.afloatDuration) +
+                          Number(formData.indockDuration)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        readOnly
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Total
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="Total days (calculated)"
-                    value={
-                      Number(formData.afloatDuration) +
-                      Number(formData.indockDuration)
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    readOnly
-                  />
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         );
 
-      case 3:
+      case 2:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -2885,12 +2363,9 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         Overall Score:
                       </span>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {calculateOverallScore()}
-                        </div>
-                        <span className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full text-xs font-medium">
-                          /100
-                        </span>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                              {calculateOverallScore()}
+                            </div>
                       </div>
                     </div>
                   </div>
@@ -2898,71 +2373,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
               </div>
             </div>
 
-            {/* Milestones Summary - only show if milestones were submitted */}
-            {milestonesSubmitted &&
-              formData.milestones.filter((m) => m.milestone).length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-4">
-                    Project Milestones
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {formData.milestones
-                      .filter((milestone) => milestone.milestone)
-                      .map((milestone, index) => {
-                        return (
-                          <div
-                            key={index}
-                            className="p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                  <span className="inline-flex w-fit px-2.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-md text-xs font-medium">
-                                    {milestone.code}
-                                  </span>
-                                  <h5 className="font-medium text-gray-900 dark:text-white break-words">
-                                    {milestone.milestone}
-                                  </h5>
-                                </div>
-
-                                <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                  <div className="flex items-center">
-                                    <FiCalendar className="w-4 h-4 mr-1 flex-shrink-0" />
-                                    <span className="break-words">
-                                      {milestone.date
-                                        ? new Date(
-                                            milestone.date,
-                                          ).toLocaleDateString()
-                                        : "No date set"}
-                                    </span>
-                                  </div>
-                                  {milestone.location && (
-                                    <div className="flex items-center min-w-0">
-                                      <span className="mr-1 flex-shrink-0">
-                                        📍
-                                      </span>
-                                      <span className="break-words">
-                                        {milestone.location}
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {milestone.remarks && (
-                              <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap break-words">
-                                  {milestone.remarks}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
+            {/* Project Milestones summary removed per request */}
 
             {/* Ratings Summary */}
             <div className="mb-6">
@@ -2971,7 +2382,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
               </h4>
 
               {/* Evaluation Details Ratings */}
-              {evaluationRows.filter(
+              {Object.values(selectedRows).filter(
                 (row) => row.evaluation && row.evaluation !== "N",
               ).length > 0 && (
                 <>
@@ -2979,9 +2390,16 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     Evaluation Details
                   </h5>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6">
-                    {evaluationRows
+                    {Object.values(selectedRows)
                       .filter((row) => row.evaluation && row.evaluation !== "N")
                       .map((row, index) => {
+                        const item = allCriteriaUnits.find(
+                          (item) =>
+                            item.criteriaCode === row.criteriaCode &&
+                            item.unitCode === row.unitCode,
+                        );
+                        if (!item) return null;
+
                         const evaluationScoreMap = {
                           P: 25, // Poor
                           A: 50, // Average
@@ -3005,8 +2423,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                           >
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                               <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white break-words">
-                                {row.description ||
-                                  `${row.criteriaCode}-${row.unitCode}`}
+                                {item.unitDescription ||
+                                  `${item.criteriaCode}-${item.unitCode}`}
                               </span>
                               <span
                                 className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${getScoreColor(
@@ -3108,7 +2526,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
               )}
 
               <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                {evaluationRows.filter(
+                {Object.values(selectedRows).filter(
                   (row) => row.evaluation && row.evaluation !== "N",
                 ).length +
                   Object.values(formData.ratings).filter((r) => r > 0)
@@ -3143,6 +2561,19 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                     <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
                       {formData.poorAverageDetails}
                     </p>
+                  </div>
+                )}
+
+                {formData.attachmentName && (
+                  <div className="mt-4">
+                    <h5 className="text-sm font-medium text-gray-900 dark:text-white mb-2">Attached File</h5>
+                    <a
+                      href={formData.attachmentData}
+                      download={formData.attachmentName}
+                      className="text-sm text-blue-600 dark:text-blue-300 underline"
+                    >
+                      {formData.attachmentName}
+                    </a>
                   </div>
                 )}
               </div>
@@ -3181,7 +2612,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div
             className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${cardClass}`}
@@ -3227,7 +2658,7 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                       Score:
                     </span>
                     <span className="font-medium text-gray-900 dark:text-white">
-                      {calculateOverallScore()}/100
+                      {calculateOverallScore()}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -3282,17 +2713,8 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
                         },
                       ],
                     });
-                    setEvaluationRows(
-                      Array(11)
-                        .fill(null)
-                        .map(() => ({
-                          criteriaCode: "",
-                          unitCode: "",
-                          description: "",
-                          evaluation: "",
-                          yesNo: "",
-                        })),
-                    );
+                    setSelectedRows({});
+                    setAllCriteriaUnits([]);
                     setCurrentStep(0);
                   }}
                   className={`${
@@ -3362,89 +2784,9 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
     }
   };
 
-  const progress = ((currentStep + 1) / steps.length) * 100;
-
   return (
     <div className="max-w-6xl mx-auto px-2 sm:px-4">
-      {/* Desktop Progress Bar */}
-      <div className="hidden md:block mb-8">
-        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-          <span>
-            Step {currentStep + 1} of {steps.length}
-          </span>
-          <span>{Math.round(progress)}% Complete</span>
-        </div>
-        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-
-        <div className="flex justify-between mt-6">
-          {steps.map((step, index) => {
-            // Check if all previous steps are validated
-            const canNavigate = () => {
-              // Complete step (step 4) can only be accessed if feedback was successfully submitted
-              if (index === 4) {
-                return feedbackSubmissionSuccess;
-              }
-              if (index <= currentStep) return true; // Can always go back
-              // Check all steps from current to target are valid
-              for (let i = currentStep; i < index; i++) {
-                const errors = validateStep(i);
-                if (Object.keys(errors).length > 0) return false;
-              }
-              return true;
-            };
-
-            const isClickable = canNavigate();
-
-            return (
-              <div key={step.id} className="flex flex-col items-center">
-                <button
-                  onClick={() => {
-                    if (isClickable) {
-                      setCurrentStep(step.id);
-                    }
-                  }}
-                  disabled={!isClickable}
-                  title={
-                    index === 4 && !feedbackSubmissionSuccess
-                      ? "Submit feedback first to complete"
-                      : ""
-                  }
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-all ${
-                    index === currentStep
-                      ? "bg-blue-600 text-white scale-110"
-                      : index < currentStep
-                        ? "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300 cursor-pointer"
-                        : isClickable
-                          ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600"
-                          : "bg-gray-100 text-gray-300 dark:bg-gray-700 dark:text-gray-600 cursor-not-allowed opacity-50"
-                  }`}
-                >
-                  {index < currentStep ? <FiCheck /> : step.icon}
-                </button>
-                <span
-                  className={`mt-2 text-xs text-center ${
-                    index === currentStep
-                      ? "text-blue-600 dark:text-blue-400 font-medium"
-                      : "text-gray-500 dark:text-gray-400"
-                  }`}
-                >
-                  {step.title}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Mobile Progress Indicator */}
-      {isMobile && currentStep <= steps.length - 1 && (
-        <MobileProgressIndicator />
-      )}
+      {/* Progress indicators removed (desktop + mobile) */}
 
       {/* Main Content */}
       <div ref={questionSectionRef} className="mb-8">
@@ -3452,16 +2794,10 @@ const FeedbackForm = ({ vessel, onSubmit, shipSelectionRef }) => {
       </div>
 
       {/* Mobile Step Buttons */}
-      {isMobile &&
-        currentStep < steps.length - 1 &&
-        currentStep !== 3 &&
-        currentStep !== 4 && <MobileStepButtons />}
+      {isMobile && currentStep < steps.length - 1 && <MobileStepButtons />}
 
       {/* Desktop Navigation */}
-      {!isMobile &&
-        currentStep < steps.length - 1 &&
-        currentStep !== 3 &&
-        currentStep !== 4 && (
+      {!isMobile && currentStep < steps.length - 1 && (
           <div className="flex justify-between mt-8">
             <button
               onClick={prevStep}

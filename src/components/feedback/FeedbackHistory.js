@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiStar, FiCalendar, FiSearch } from "react-icons/fi";
+import toast from "react-hot-toast";
+import { previewShipFeedback } from "../../services/feedbackService";
 
 const FeedbackHistory = ({
   feedbacks = [],
@@ -11,7 +13,8 @@ const FeedbackHistory = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("date");
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
-  const [visibleCount, setVisibleCount] = useState(3);
+  // Show 5 feedbacks by default and allow loading more
+  const [visibleCount, setVisibleCount] = useState(5);
 
   // Sort and filter feedbacks
   useEffect(() => {
@@ -95,9 +98,52 @@ const FeedbackHistory = ({
     }
   };
 
+  const handleViewAttachment = async (feedback) => {
+    // Try to open direct attachment URL if present
+    const attach = feedback.attachment || feedback.raw?.attachment || feedback.raw?.Attachment;
+    const possibleUrl =
+      attach?.FilePath || attach?.filePath || attach?.fileUrl || attach?.url || attach?.URL || attach?.path;
+
+    if (possibleUrl) {
+      // If URL looks relative, open it directly; otherwise open absolute
+      try {
+        const url = possibleUrl.startsWith("http") ? possibleUrl : possibleUrl;
+        window.open(url, "_blank");
+        return;
+      } catch (e) {
+        // fallback to preview API
+      }
+    }
+
+    // Fallback: call previewShipFeedback using jmain/jcat from feedback
+    const jmain = feedback.P_JMAIN || feedback.jmain || feedback.FEEDBACK_JMAIN || feedback.P_JMAIN || feedback.raw?.P_JMAIN;
+    const jacat = feedback.P_JOB_CATEGORY || feedback.jcat || feedback.FEEDBACK_JCAT || feedback.raw?.P_JOB_CATEGORY;
+
+    if (!jmain || !jacat) {
+      toast.error("Attachment preview not available for this feedback.");
+      return;
+    }
+
+    try {
+      const resp = await previewShipFeedback(String(jmain), String(jacat));
+      const fileRef = resp?.ResultSet ? resp.ResultSet[0] : resp;
+      const fp = fileRef?.FilePath || fileRef?.filePath || fileRef?.url || fileRef?.URL;
+      if (fp) {
+        const url = fp.startsWith("http") ? fp : fp;
+        window.open(url, "_blank");
+        return;
+      }
+
+      toast.error("No preview available for this attachment.");
+    } catch (err) {
+      console.error("Preview attachment failed:", err);
+      toast.error("Failed to load attachment preview.");
+    }
+  };
+
   const getFieldValue = (feedback, ...names) => {
     for (const name of names) {
-      const val = feedback?.[name];
+      const val = feedback?.[name] ?? feedback?.raw?.[name];
       if (val !== undefined && val !== null && String(val).trim() !== "")
         return String(val);
     }
@@ -113,15 +159,46 @@ const FeedbackHistory = ({
     return raw;
   };
 
+  const mapAnswer = (val) => {
+    if (val === undefined || val === null) return "NA";
+    const s = String(val).trim();
+    if (s === "") return "NA";
+    const m = {
+      P: "POOR",
+      A: "AVERAGE",
+      G: "GOOD",
+      E: "EXCELLENT",
+      O: "NOT_RELEVENT",
+      Y: "YES",
+      N: "NO",
+      Z: "HIDE",
+    };
+    const up = s.toUpperCase();
+    return m[up] || s;
+  };
+
   const handleDownload = (feedback) => {
     // Build printable HTML of the FEEDBACK_* fields and trigger print (user can save as PDF)
     const allRows = [
+      ["JCAT", getFieldValue(feedback, "FEEDBACK_JCAT")],
       ["JMAIN", getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN")],
-      ["Description", getFieldValue(feedback, "FEEDBACK_DESC")],
+      ["Vessel Name", getFieldValue(feedback, "FEEDBACK_VESSEL_NAME")],
+      ["Criteria Code", getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE")],
+      [
+        "Criteria Description",
+        getFieldValue(
+          feedback,
+          "FEEDBACK_CRITERIA_DESC",
+          "FEEDBACK_CRITERIA_DESCRIPTION",
+          "FEEDBACK_CRITERIA_DESCRPTION"
+        ),
+      ],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
+      ["Code Description", getFieldValue(feedback, "FEEDBACK_CODE_DESC")],
       ["Evaluation", getFieldValue(feedback, "FEEDBACK_EVAL")],
       ["Answer", getFieldValue(feedback, "FEEDBACK_ANSWER", "P_ANSWER_TYPE")],
       ["Remarks", getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS")],
+      ["Action Taken", getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN")],
       ["Completion Date", getFieldValue(feedback, "FEEDBACK_COMPLETION_DATE")],
     ];
 
@@ -262,14 +339,21 @@ const FeedbackHistory = ({
       <div className="space-y-4">
         {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
           const vesselName =
-            feedback.vesselName &&
-            String(feedback.vesselName).trim() !== "" &&
-            String(feedback.vesselName) !== "NA"
-              ? feedback.vesselName
+            getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !== "NA"
+              ? getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")
               : null;
+          const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT");
           const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
-          const descVal = getFieldValue(feedback, "FEEDBACK_DESC");
+          const criteriaCodeVal = getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE");
+          const criteriaDescVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CRITERIA_DESC",
+            "FEEDBACK_CRITERIA_DESCRIPTION",
+            "FEEDBACK_CRITERIA_DESCRPTION",
+            "FEEDBACK_DESC"
+          );
           const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
+          const codeDescVal = getFieldValue(feedback, "FEEDBACK_CODE_DESC");
           const evalVal = getFieldValue(feedback, "FEEDBACK_EVAL");
           const answerVal = getFieldValue(
             feedback,
@@ -285,7 +369,8 @@ const FeedbackHistory = ({
             String(feedback.observations).trim() !== "" &&
             String(feedback.observations) !== "NA"
               ? feedback.observations
-              : null;
+              : getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS") || null;
+          const actionTakenVal = getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN");
           const submittedByVal = getFieldValue(
             feedback,
             "submittedBy",
@@ -302,149 +387,78 @@ const FeedbackHistory = ({
               key={feedback.id || index}
               className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between">
-                {/* Left Section */}
-                <div className="mb-4 md:mb-0 md:flex-1">
-                  <div className="flex items-start">
-                    {/* Score removed per request */}
+              <div>
+                {/* Main compact layout showing requested fields only */}
+                {vesselName && (
+                  <>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Vessel
+                    </div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {vesselName}
+                    </h3>
+                  </>
+                )}
 
-                    {/* Details */}
-                    <div className="flex-1">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between">
-                        <div className="w-full">
-                          {vesselName && (
-                            <>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Vessel
-                              </div>
-                              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                {vesselName}
-                              </h3>
-                            </>
-                          )}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
+                    <div className="font-medium">{formatDate(feedback.submittedAt)}</div>
+                  </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            {jmainVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  JMAIN
-                                </div>
-                                <div className="font-medium">{jmainVal}</div>
-                              </div>
-                            )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
+                    <div className="font-medium">{jcatVal}</div>
+                  </div>
 
-                            {descVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Description
-                                </div>
-                                <div className="font-medium">{descVal}</div>
-                              </div>
-                            )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
+                    <div className="font-medium">{jmainVal}</div>
+                  </div>
 
-                            {codeVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Code
-                                </div>
-                                <div className="font-medium">{codeVal}</div>
-                              </div>
-                            )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                    <div className="font-medium">{criteriaCodeVal}</div>
+                  </div>
 
-                            {evalVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Evaluation
-                                </div>
-                                <div className="font-medium">{evalVal}</div>
-                              </div>
-                            )}
+                  <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
+                    <div className="font-medium text-sm">{criteriaDescVal}</div>
+                  </div>
 
-                            {answerVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Answer
-                                </div>
-                                <div className="font-medium">{answerVal}</div>
-                              </div>
-                            )}
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                    <div className="font-medium">{codeVal}</div>
+                  </div>
 
-                            {completionVal !== "NA" && (
-                              <div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                  Completion Date
-                                </div>
-                                <div className="font-medium">
-                                  {formatDate(completionVal)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
+                    <div className="font-medium text-sm">{codeDescVal}</div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                    <div className="font-medium">{mapAnswer(answerVal)}</div>
+                  </div>
+
+                  <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Remarks</div>
+                    <div className="font-medium">{observationsVal || "NA"}</div>
+                    </div>
+
+                    {feedback.attachment && (
+                      <div className="sm:col-span-2 mt-2 flex items-center gap-3">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Attachment</div>
+                        <div>
+                          <button
+                            onClick={() => handleViewAttachment(feedback)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm"
+                          >
+                            View Attachment
+                          </button>
                         </div>
                       </div>
-
-                      {/* Observations Preview */}
-                      {observationsVal && (
-                        <div className="mt-3">
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Remarks
-                          </div>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                            {observationsVal}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Section - Actions */}
-                <div className="flex items-center space-x-2">
-                </div>
-              </div>
-
-              {/* Categories Summary */}
-              <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* Submitted By removed per request */}
-
-                  {/* {formatTime(feedback.submittedAt) && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Submitted Time
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatTime(feedback.submittedAt)}
-                      </p>
-                    </div>
-                  )} */}
-
-                  {Object.values(feedback.ratings || {}).filter((r) => r > 0)
-                    .length > 0 && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Categories Rated
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {
-                          Object.values(feedback.ratings || {}).filter(
-                            (r) => r > 0
-                          ).length
-                        }
-                      </p>
-                    </div>
-                  )}
-
-                  {vesselIMOVal !== "NA" && (
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Vessel IMO
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        {vesselIMOVal}
-                      </p>
-                    </div>
-                  )}
+                    )}
                 </div>
               </div>
             </div>
@@ -453,12 +467,12 @@ const FeedbackHistory = ({
       </div>
 
       {/* Load more / Show less */}
-      {sortedFeedbacks.length > 3 && (
+      {sortedFeedbacks.length > 5 && (
         <div className="mt-6 text-center">
           {visibleCount < sortedFeedbacks.length ? (
             <button
               onClick={() =>
-                setVisibleCount((v) => Math.min(v + 3, sortedFeedbacks.length))
+                setVisibleCount((v) => Math.min(v + 5, sortedFeedbacks.length))
               }
               className="text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
               aria-label="Load more feedbacks"
@@ -467,7 +481,7 @@ const FeedbackHistory = ({
             </button>
           ) : (
             <button
-              onClick={() => setVisibleCount(3)}
+              onClick={() => setVisibleCount(5)}
               className="text-gray-600 hover:text-gray-800 font-medium focus:outline-none"
               aria-label="Show less feedbacks"
             >
