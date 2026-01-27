@@ -1058,6 +1058,7 @@ import {
   FiArchive,
 } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { fetchShipImage } from "../../actions/shipActions";
 import defaultShipImage from "../../assets/image/No image available.png";
@@ -1068,6 +1069,8 @@ const ShipDetailsPage = () => {
   const { currentShip, loading, shipImages } = useSelector(
     (state) => state.ships,
   );
+  const [feedbackStart, setFeedbackStart] = useState(null);
+  const [feedbackEnd, setFeedbackEnd] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -1099,6 +1102,61 @@ const ShipDetailsPage = () => {
       }
     }
   }, [currentShip, shipImages, dispatch]);
+
+  // Fetch feedback dates for this ship and set local state
+  useEffect(() => {
+    if (!currentShip) return;
+
+    const jobCategory =
+      currentShip.raw?.SHIP_JCAT ||
+      currentShip.SHIP_JCAT ||
+      currentShip.JCAT ||
+      currentShip.jcat;
+    const jmain =
+      currentShip.raw?.SHIP_JMAIN ||
+      currentShip.jmainNo ||
+      currentShip.SHIP_JMAIN ||
+      currentShip.id;
+
+    if (!jmain || !jobCategory) return;
+
+    let mounted = true;
+    dispatch(getFeedbackDates(jobCategory, jmain))
+      .then((data) => {
+        if (!mounted) return;
+        const result = data?.ResultSet?.[0] || data?.[0] || data || {};
+
+        const start =
+          result.FEEDBACK_START_DATE ||
+          result.FEEDBACK_START_DT ||
+          result.startingDate ||
+          result.START_DATE ||
+          result.startDate ||
+          result.STARTING_DATE ||
+          data.startingDate ||
+          data.START_DATE ||
+          null;
+
+        const end =
+          result.FEEDBACK_END_DATE ||
+          result.FEEDBACK_END_DT ||
+          result.endingDate ||
+          result.END_DATE ||
+          result.endDate ||
+          result.ENDING_DATE ||
+          data.endingDate ||
+          data.END_DATE ||
+          null;
+
+        setFeedbackStart(start || null);
+        setFeedbackEnd(end || null);
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [currentShip, dispatch]);
 
   // Get image URL from Redux cache
   const jmainNo =
@@ -1843,7 +1901,10 @@ const ShipDetailsPage = () => {
                         <div className="flex items-center">
                           <FiCalendar className="mr-2 text-gray-400 w-4 h-4" />
                           <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                            {formatDate(currentShip.startDate, "short")}
+                            {formatDate(
+                              feedbackStart || currentShip.startDate,
+                              "iso",
+                            )}
                           </span>
                         </div>
                       </div>
@@ -1873,7 +1934,10 @@ const ShipDetailsPage = () => {
                         <div className="flex items-center justify-end sm:justify-start">
                           <FiCalendar className="mr-2 text-gray-400 w-4 h-4" />
                           <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">
-                            {formatDate(currentShip.endDate, "short")}
+                            {formatDate(
+                              feedbackEnd || currentShip.endDate,
+                              "iso",
+                            )}
                           </span>
                         </div>
                       </div>

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FiCalendar, FiAnchor, FiFlag, FiUpload } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import toast from "react-hot-toast";
 import {
   setSelectedShipJmain,
@@ -18,6 +19,8 @@ const ShipCard = ({ ship }) => {
   const { shipImages, imageUploading } = useSelector((state) => state.ships);
   const [showDetails, setShowDetails] = useState(false);
   const fileInputRef = useRef(null);
+  const [feedbackStart, setFeedbackStart] = useState(null);
+  const [feedbackEnd, setFeedbackEnd] = useState(null);
 
   // Get or fetch the image URL from Redux
   const jmainNo = ship.jmainNo || ship.SHIP_JMAIN || ship.id;
@@ -31,6 +34,55 @@ const ShipCard = ({ ship }) => {
       }
     }
   }, [ship.image, jmainNo, shipImages, dispatch]);
+
+  // Fetch feedback dates for this ship and set local state
+  useEffect(() => {
+    const jobCategory =
+      ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
+    const jmain =
+      ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+
+    if (!jmain || !jobCategory) return;
+
+    let mounted = true;
+    dispatch(getFeedbackDates(jobCategory, jmain))
+      .then((data) => {
+        if (!mounted) return;
+        const result = data?.ResultSet?.[0] || data?.[0] || data || {};
+
+        const start =
+          result.FEEDBACK_START_DATE ||
+          result.FEEDBACK_START_DT ||
+          result.startingDate ||
+          result.START_DATE ||
+          result.startDate ||
+          result.STARTING_DATE ||
+          data.startingDate ||
+          data.START_DATE ||
+          null;
+
+        const end =
+          result.FEEDBACK_END_DATE ||
+          result.FEEDBACK_END_DT ||
+          result.endingDate ||
+          result.END_DATE ||
+          result.endDate ||
+          result.ENDING_DATE ||
+          data.endingDate ||
+          data.END_DATE ||
+          null;
+
+        setFeedbackStart(start || null);
+        setFeedbackEnd(end || null);
+      })
+      .catch(() => {
+        // ignore — keep ship dates as fallback
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [ship, jmainNo, dispatch]);
   const handleViewDetails = () => {
     // Store the ship's JMAIN in localStorage before showing details
     if (ship.jmainNo || ship.SHIP_JMAIN) {
@@ -167,7 +219,7 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">
-                    {formatDate(ship.startDate, "short")}
+                    {formatDate(feedbackStart || ship.startDate, "iso")}
                   </span>
                 </div>
               </div>
@@ -178,7 +230,7 @@ const ShipCard = ({ ship }) => {
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
                   <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">
-                    {formatDate(ship.endDate, "short")}
+                    {formatDate(feedbackEnd || ship.endDate, "iso")}
                   </span>
                 </div>
               </div>
@@ -218,7 +270,7 @@ const ShipCard = ({ ship }) => {
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="image/jpeg,image/png"
-        style={{ display: 'none' }}
+        style={{ display: "none" }}
       />
 
       {showDetails && (
