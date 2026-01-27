@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FiCalendar, FiAnchor, FiFlag, FiUpload } from "react-icons/fi";
 import { formatDate } from "../../utils/formatters";
+import toast from "react-hot-toast";
 import {
   setSelectedShipJmain,
   fetchShipImage,
@@ -60,6 +61,16 @@ const ShipCard = ({ ship }) => {
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Only JPG and PNG images are allowed");
+      // reset the input so the same file can be selected again if needed
+      event.target.value = "";
+      return;
+    }
+
     if (file && jmainNo) {
       dispatch(uploadShipImage(jmainNo, file));
     }
@@ -206,8 +217,8 @@ const ShipCard = ({ ship }) => {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept="image/*"
-        style={{ display: "none" }}
+        accept="image/jpeg,image/png"
+        style={{ display: 'none' }}
       />
 
       {showDetails && (
