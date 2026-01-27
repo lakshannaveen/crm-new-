@@ -85,17 +85,17 @@ const ShipCard = ({ ship }) => {
 
   return (
     <>
-      <div className="card hover:shadow-lg transition-shadow duration-200 relative">
+      <div className="card hover:shadow-lg transition-shadow duration-200 relative p-4 md:p-6 w-full">
         {/* Top-right upload button */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-3 right-3 z-10">
           <button
             onClick={handleUploadImage}
             disabled={imageUploading}
             title="Upload Image"
-            className="px-3 py-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:scale-105 transform transition disabled:opacity-50 flex items-center gap-2"
+            className="px-2 py-1 md:px-3 md:py-2 bg-white/90 dark:bg-gray-800/90 rounded-full shadow-md hover:scale-105 transform transition disabled:opacity-50 flex items-center gap-2"
           >
-            <FiUpload className="text-lg text-gray-700 dark:text-gray-200" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+            <FiUpload className="text-lg md:text-lg text-gray-700 dark:text-gray-200" />
+            <span className="hidden md:inline text-sm font-medium text-gray-700 dark:text-gray-200">
               {imageUploading ? "Uploading..." : "Upload Image"}
             </span>
           </button>
@@ -103,8 +103,8 @@ const ShipCard = ({ ship }) => {
 
         <div className="flex flex-col md:flex-row md:items-start md:space-x-4">
           {/* Ship Image */}
-          <div className="mb-4 md:mb-0 md:w-1/3">
-            <div className="relative h-48 md:h-full rounded-lg overflow-hidden">
+          <div className="mb-4 md:mb-0 md:w-1/3 w-full">
+            <div className="relative h-56 md:h-full rounded-lg overflow-hidden">
               <img
                 src={imageUrl || defaultShipImage}
                 alt={ship.name}
@@ -117,7 +117,7 @@ const ShipCard = ({ ship }) => {
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
               <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white mb-1">
                   {ship.name}
                 </h3>
                 <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-2">
@@ -126,7 +126,7 @@ const ShipCard = ({ ship }) => {
                   <FiFlag className="mr-2" />
                   <span>{ship.flag}</span>
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 mb-3">
+                <p className="text-gray-700 dark:text-gray-300 mb-3 text-sm md:text-base">
                   {ship.type} • {ship.dwt} DWT • Built {ship.yearBuilt}
                 </p>
               </div>
@@ -166,7 +166,7 @@ const ShipCard = ({ ship }) => {
                 </p>
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">
                     {formatDate(ship.startDate, "short")}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ const ShipCard = ({ ship }) => {
                 </p>
                 <div className="flex items-center">
                   <FiCalendar className="mr-2 text-gray-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-gray-900 dark:text-white text-sm md:text-base">
                     {formatDate(ship.endDate, "short")}
                   </span>
                 </div>
@@ -185,23 +185,23 @@ const ShipCard = ({ ship }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
               <Link
                 to={`/projects/${ship.id}`}
                 onClick={handleProjectDetailsClick}
-                className="flex-1 min-w-[120px] btn-primary text-center py-2 text-sm"
+                className="w-full sm:flex-1 min-w-[120px] btn-primary text-center py-2 text-sm"
               >
                 Project Milestones
               </Link>
               <button
-                className="flex-1 min-w-[120px] btn-secondary py-2 text-sm"
+                className="w-full sm:flex-1 min-w-[120px] btn-secondary py-2 text-sm"
                 onClick={handleViewDetails}
               >
                 Quick View
               </button>
               <Link
                 to={`/ships/${ship.id}`}
-                className="flex-1 min-w-[120px] border border-gray-300 
+                className="w-full sm:flex-1 min-w-[120px] border border-gray-300 
                          dark:border-gray-600 rounded-lg py-2 text-sm text-center
                          hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
