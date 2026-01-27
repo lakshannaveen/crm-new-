@@ -14,7 +14,6 @@ const FeedbackHistory = ({
   const [sortBy, setSortBy] = useState("date");
   const [sortedFeedbacks, setSortedFeedbacks] = useState([]);
   const [visibleCount, setVisibleCount] = useState(3);
-  const [expandedIds, setExpandedIds] = useState({});
 
   // Sort and filter feedbacks
   useEffect(() => {
@@ -258,10 +257,6 @@ const FeedbackHistory = ({
     );
   }
 
-  const toggleExpanded = (id) => {
-    setExpandedIds((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   return (
     <div className="card">
       {/* Header */}
@@ -318,9 +313,7 @@ const FeedbackHistory = ({
 
       {/* Feedback List */}
       <div className="space-y-4">
-        {/* Scrollable list for many feedbacks under one project */}
-        <div className="max-h-[60vh] overflow-y-auto pr-2">
-          {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
+        {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
           const vesselName = getFieldValue(
             feedback,
             "FEEDBACK_VESSEL_NAME",
@@ -376,11 +369,9 @@ const FeedbackHistory = ({
             "vessel_imo",
           );
 
-            const entryId = feedback.id || `${feedback.FEEDBACK_JMAIN || 'fb'}_${index}`;
-
-            return (
+          return (
             <div
-              key={entryId}
+              key={feedback.id || index}
               className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 transition-colors bg-white dark:bg-gray-800"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -610,54 +601,9 @@ const FeedbackHistory = ({
                   )}
                 </div>
               </div>
-
-              {/* Answers / Ratings expandable panel */}
-              <div className="mt-3">
-                <button
-                  onClick={() => toggleExpanded(entryId)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  aria-expanded={!!expandedIds[entryId]}
-                >
-                  {expandedIds[entryId] ? 'Hide All Answers' : 'Show All Answers'}
-                </button>
-
-                {expandedIds[entryId] && (
-                  <div className="mt-2 p-3 border border-gray-100 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 max-h-48 overflow-y-auto text-sm">
-                    {feedback.ratings && Object.keys(feedback.ratings).length > 0 ? (
-                      <div className="grid grid-cols-1 gap-2">
-                        {Object.entries(feedback.ratings).map(([k, v]) => (
-                          <div key={k} className="flex justify-between">
-                            <div className="text-gray-600 dark:text-gray-300">{k}</div>
-                            <div className="font-medium text-gray-900 dark:text-white">{v === null || v === undefined || v === '' ? 'NA' : String(v)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 gap-2">
-                        {[
-                          'FEEDBACK_ANSWER',
-                          'P_ANSWER_TYPE',
-                          'FEEDBACK_EVAL',
-                          'FEEDBACK_CODE',
-                          'FEEDBACK_CRITERIA_CODE',
-                          'FEEDBACK_CRITERIA_DESC',
-                        ].map((field) => (
-                          feedback?.[field] ? (
-                            <div key={field} className="flex justify-between">
-                              <div className="text-gray-600 dark:text-gray-300">{field}</div>
-                              <div className="font-medium text-gray-900 dark:text-white">{String(feedback[field])}</div>
-                            </div>
-                          ) : null
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
             </div>
           );
         })}
-        </div>
       </div>
 
       {/* Load more / Show less */}
