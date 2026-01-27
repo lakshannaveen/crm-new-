@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -14,6 +14,7 @@ import {
 import { formatDate } from "../../utils/formatters";
 import { getStatusColor, getStatusText } from "../../utils/helpers";
 import { getMilestonesByShip } from "../../actions/projectActions";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import { fetchShipImage } from "../../actions/shipActions";
 import defaultShipImage from "../../assets/image/No image available.png";
 
@@ -30,6 +31,9 @@ const ShipDetailsModal = ({ ship, onClose }) => {
   // Get or fetch the image URL from Redux
   const jmainNo = ship.jmainNo || ship.SHIP_JMAIN || ship.id;
   const imageUrl = shipImages[jmainNo];
+
+  const [feedbackStart, setFeedbackStart] = useState(null);
+  const [feedbackEnd, setFeedbackEnd] = useState(null);
 
   // Fetch milestones when modal opens
   useEffect(() => {
@@ -51,6 +55,53 @@ const ShipDetailsModal = ({ ship, onClose }) => {
       }
     }
   }, [ship.image, jmainNo, shipImages, dispatch]);
+
+  // Fetch feedback dates for this ship and set local state
+  useEffect(() => {
+    const jobCategory =
+      ship.raw?.SHIP_JCAT || ship.SHIP_JCAT || ship.JCAT || ship.jcat;
+    const jmain =
+      ship.raw?.SHIP_JMAIN || ship.jmainNo || ship.SHIP_JMAIN || ship.id;
+
+    if (!jmain || !jobCategory) return;
+
+    let mounted = true;
+    dispatch(getFeedbackDates(jobCategory, jmain))
+      .then((data) => {
+        if (!mounted) return;
+        const result = data?.ResultSet?.[0] || data?.[0] || data || {};
+
+        const start =
+          result.FEEDBACK_START_DATE ||
+          result.FEEDBACK_START_DT ||
+          result.startingDate ||
+          result.START_DATE ||
+          result.startDate ||
+          result.STARTING_DATE ||
+          data.startingDate ||
+          data.START_DATE ||
+          null;
+
+        const end =
+          result.FEEDBACK_END_DATE ||
+          result.FEEDBACK_END_DT ||
+          result.endingDate ||
+          result.END_DATE ||
+          result.endDate ||
+          result.ENDING_DATE ||
+          data.endingDate ||
+          data.END_DATE ||
+          null;
+
+        setFeedbackStart(start || null);
+        setFeedbackEnd(end || null);
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+    };
+  }, [dispatch, ship]);
 
   const specifications = [
     { label: "IMO Number", value: ship.imoNumber, icon: FiAnchor },
@@ -146,10 +197,11 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                   </div> */}
                   <div className="flex justify-between mt-2 text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Started: {formatDate(ship.startDate, "short")}
+                      Started:{" "}
+                      {formatDate(feedbackStart || ship.startDate, "iso")}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      Target: {formatDate(ship.endDate, "short")}
+                      Target: {formatDate(feedbackEnd || ship.endDate, "iso")}
                     </span>
                   </div>
                 </div>
