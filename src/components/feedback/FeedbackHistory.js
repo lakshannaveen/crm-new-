@@ -24,10 +24,10 @@ const FeedbackHistory = ({
       const term = searchTerm.toLowerCase();
       result = result.filter(
         (fb) =>
-          fb.vesselName.toLowerCase().includes(term) ||
-          fb.feedbackRef.toLowerCase().includes(term) ||
-          fb.submittedBy.toLowerCase().includes(term) ||
-          fb.observations?.toLowerCase().includes(term),
+          (fb.vesselName ? fb.vesselName.toLowerCase().includes(term) : false) ||
+          (fb.feedbackRef ? fb.feedbackRef.toLowerCase().includes(term) : false) ||
+          (fb.submittedBy ? fb.submittedBy.toLowerCase().includes(term) : false) ||
+          (fb.observations ? fb.observations.toLowerCase().includes(term) : false),
       );
     }
 
@@ -49,7 +49,9 @@ const FeedbackHistory = ({
       } else if (sortBy === "score") {
         return b.overallScore - a.overallScore;
       } else if (sortBy === "name") {
-        return a.vesselName.localeCompare(b.vesselName);
+        const aName = a.vesselName || "";
+        const bName = b.vesselName || "";
+        return aName.localeCompare(bName);
       }
       return 0;
     });

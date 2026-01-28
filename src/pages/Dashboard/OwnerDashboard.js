@@ -706,10 +706,10 @@ const OwnerDashboard = () => {
                       ? "You don't have any ships registered yet."
                       : `No ships match the "${activeFilter}" filter.`}
                   </p>
-                  <button className="px-6 py-3 btn-primary flex items-center mx-auto">
+                  {/* <button className="px-6 py-3 btn-primary flex items-center mx-auto">
                     <FiPlus className="mr-2" />
                     Register Your First Ship
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>

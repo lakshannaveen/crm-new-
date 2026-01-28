@@ -888,12 +888,12 @@ const FeedbackPage = () => {
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
           id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
           vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
+            String(r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`).trim(),
+          feedbackRef: String(r.FEEDBACK_CODE || "").trim(),
+          submittedBy: String(r.FEEDBACK_ANSWER || "API").trim(),
           submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
           overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
+          observations: String(r.FEEDBACK_REMARKS || "").trim(),
           raw: r,
           // Also expose API fields at top-level so consumers can easily render them
           ...r,
@@ -981,12 +981,12 @@ const FeedbackPage = () => {
         const apiFeedbacks = (Array.isArray(rows) ? rows : []).map((r, i) => ({
           id: `${r.FEEDBACK_JMAIN || "fb"}_${r.FEEDBACK_CODE || i}_${i}`,
           vesselName:
-            r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`,
-          feedbackRef: r.FEEDBACK_CODE || "",
-          submittedBy: r.FEEDBACK_ANSWER || "API",
+            String(r.FEEDBACK_JMAIN || r.FEEDBACK_DESC || `Feedback ${i + 1}`).trim(),
+          feedbackRef: String(r.FEEDBACK_CODE || "").trim(),
+          submittedBy: String(r.FEEDBACK_ANSWER || "API").trim(),
           submittedAt: r.FEEDBACK_COMPLETION_DATE || new Date().toISOString(),
           overallScore: 0,
-          observations: r.FEEDBACK_REMARKS || "",
+          observations: String(r.FEEDBACK_REMARKS || "").trim(),
           raw: r,
           // Also expose API fields at top-level so consumers can easily render them
           ...r,
