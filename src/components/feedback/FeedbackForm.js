@@ -1876,7 +1876,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                           label: "N",
                                           title: "Not Relevant",
                                           color:
-                                            "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                            "bg-gray-300 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
                                         },
                                       ].map((option) => (
                                         <button
@@ -2093,7 +2093,7 @@ const FeedbackForm = ({ vessel, onSubmit }) => {
                                               value: "N",
                                               label: "N",
                                               color:
-                                                "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+                                                "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
                                             },
                                           ].map((option) => (
                                             <button

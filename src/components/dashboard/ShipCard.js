@@ -401,7 +401,11 @@ const ShipCard = ({ ship }) => {
       </div>
 
       {showDetails && (
-        <ShipDetailsModal ship={ship} onClose={() => setShowDetails(false)} />
+        <ShipDetailsModal
+          ship={ship}
+          dates={dates}
+          onClose={() => setShowDetails(false)}
+        />
       )}
     </>
   );

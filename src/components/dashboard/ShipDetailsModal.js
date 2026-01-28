@@ -17,7 +17,7 @@ import { getMilestonesByShip } from "../../actions/projectActions";
 import { getShipImagePreview } from "../../actions/shipActions";
 import { shipService } from "../../services/shipService";
 
-const ShipDetailsModal = ({ ship, onClose }) => {
+const ShipDetailsModal = ({ ship, dates, onClose }) => {
   const dispatch = useDispatch();
   const { milestones, milestonesLoading } = useSelector(
     (state) => state.projects,
@@ -208,10 +208,12 @@ const ShipDetailsModal = ({ ship, onClose }) => {
                   </div> */}
                   <div className="flex justify-between mt-2 text-sm">
                     <span className="text-gray-600 dark:text-gray-400">
-                      Started: {formatDate(ship.startDate, "short")}
+                      Started:{" "}
+                      {formatDate(dates?.startDate || ship.startDate, "iso")}
                     </span>
                     <span className="text-gray-600 dark:text-gray-400">
-                      Target: {formatDate(ship.endDate, "short")}
+                      Target:{" "}
+                      {formatDate(dates?.endDate || ship.endDate, "iso")}
                     </span>
                   </div>
                 </div>
