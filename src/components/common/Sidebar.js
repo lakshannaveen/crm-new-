@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import {
   FiHome,
   FiUsers,
-  FiSettings,
   FiChevronLeft,
   FiChevronRight,
   FiDatabase,
@@ -141,12 +140,6 @@ const Sidebar = ({ embedded = false }) => {
       path: "/feedback",
       icon: <FiMessageSquare className="w-5 h-5" />,
       allowedRoles: ["owner"],
-    },
-    {
-      title: "Settings",
-      path: "/settings",
-      icon: <FiSettings className="w-5 h-5" />,
-      allowedRoles: ["owner", "admin"],
     },
   ];
 
