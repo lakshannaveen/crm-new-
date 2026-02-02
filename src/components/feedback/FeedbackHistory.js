@@ -28,7 +28,7 @@ const FeedbackHistory = ({
           fb.vesselName.toLowerCase().includes(term) ||
           fb.feedbackRef.toLowerCase().includes(term) ||
           fb.submittedBy.toLowerCase().includes(term) ||
-          fb.observations?.toLowerCase().includes(term)
+          fb.observations?.toLowerCase().includes(term),
       );
     }
 
@@ -37,7 +37,7 @@ const FeedbackHistory = ({
       result = result.filter((fb) => fb.overallScore >= 75);
     } else if (filter === "medium") {
       result = result.filter(
-        (fb) => fb.overallScore >= 50 && fb.overallScore < 75
+        (fb) => fb.overallScore >= 50 && fb.overallScore < 75,
       );
     } else if (filter === "low") {
       result = result.filter((fb) => fb.overallScore < 50);
@@ -100,9 +100,17 @@ const FeedbackHistory = ({
 
   const handleViewAttachment = async (feedback) => {
     // Try to open direct attachment URL if present
-    const attach = feedback.attachment || feedback.raw?.attachment || feedback.raw?.Attachment;
+    const attach =
+      feedback.attachment ||
+      feedback.raw?.attachment ||
+      feedback.raw?.Attachment;
     const possibleUrl =
-      attach?.FilePath || attach?.filePath || attach?.fileUrl || attach?.url || attach?.URL || attach?.path;
+      attach?.FilePath ||
+      attach?.filePath ||
+      attach?.fileUrl ||
+      attach?.url ||
+      attach?.URL ||
+      attach?.path;
 
     if (possibleUrl) {
       // If URL looks relative, open it directly; otherwise open absolute
@@ -116,8 +124,17 @@ const FeedbackHistory = ({
     }
 
     // Fallback: call previewShipFeedback using jmain/jcat from feedback
-    const jmain = feedback.P_JMAIN || feedback.jmain || feedback.FEEDBACK_JMAIN || feedback.P_JMAIN || feedback.raw?.P_JMAIN;
-    const jacat = feedback.P_JOB_CATEGORY || feedback.jcat || feedback.FEEDBACK_JCAT || feedback.raw?.P_JOB_CATEGORY;
+    const jmain =
+      feedback.P_JMAIN ||
+      feedback.jmain ||
+      feedback.FEEDBACK_JMAIN ||
+      feedback.P_JMAIN ||
+      feedback.raw?.P_JMAIN;
+    const jacat =
+      feedback.P_JOB_CATEGORY ||
+      feedback.jcat ||
+      feedback.FEEDBACK_JCAT ||
+      feedback.raw?.P_JOB_CATEGORY;
 
     if (!jmain || !jacat) {
       toast.error("Attachment preview not available for this feedback.");
@@ -127,7 +144,8 @@ const FeedbackHistory = ({
     try {
       const resp = await previewShipFeedback(String(jmain), String(jacat));
       const fileRef = resp?.ResultSet ? resp.ResultSet[0] : resp;
-      const fp = fileRef?.FilePath || fileRef?.filePath || fileRef?.url || fileRef?.URL;
+      const fp =
+        fileRef?.FilePath || fileRef?.filePath || fileRef?.url || fileRef?.URL;
       if (fp) {
         const url = fp.startsWith("http") ? fp : fp;
         window.open(url, "_blank");
@@ -190,7 +208,7 @@ const FeedbackHistory = ({
           feedback,
           "FEEDBACK_CRITERIA_DESC",
           "FEEDBACK_CRITERIA_DESCRIPTION",
-          "FEEDBACK_CRITERIA_DESCRPTION"
+          "FEEDBACK_CRITERIA_DESCRPTION",
         ),
       ],
       ["Code", getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE")],
@@ -203,7 +221,9 @@ const FeedbackHistory = ({
     ];
 
     // Filter out empty fields (NA or empty values)
-    const rows = allRows.filter(([label, value]) => value !== "NA" && value.trim() !== "");
+    const rows = allRows.filter(
+      ([label, value]) => value !== "NA" && value.trim() !== "",
+    );
 
     const html =
       `<!doctype html><html><head><meta charset="utf-8"><title>Feedback ${
@@ -339,18 +359,22 @@ const FeedbackHistory = ({
       <div className="space-y-4">
         {sortedFeedbacks.slice(0, visibleCount).map((feedback, index) => {
           const vesselName =
-            getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !== "NA"
+            getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName") !==
+            "NA"
               ? getFieldValue(feedback, "FEEDBACK_VESSEL_NAME", "vesselName")
               : null;
           const jcatVal = getFieldValue(feedback, "FEEDBACK_JCAT");
           const jmainVal = getFieldValue(feedback, "FEEDBACK_JMAIN", "P_JMAIN");
-          const criteriaCodeVal = getFieldValue(feedback, "FEEDBACK_CRITERIA_CODE");
+          const criteriaCodeVal = getFieldValue(
+            feedback,
+            "FEEDBACK_CRITERIA_CODE",
+          );
           const criteriaDescVal = getFieldValue(
             feedback,
             "FEEDBACK_CRITERIA_DESC",
             "FEEDBACK_CRITERIA_DESCRIPTION",
             "FEEDBACK_CRITERIA_DESCRPTION",
-            "FEEDBACK_DESC"
+            "FEEDBACK_DESC",
           );
           const codeVal = getFieldValue(feedback, "FEEDBACK_CODE", "P_CODE");
           const codeDescVal = getFieldValue(feedback, "FEEDBACK_CODE_DESC");
@@ -358,28 +382,32 @@ const FeedbackHistory = ({
           const answerVal = getFieldValue(
             feedback,
             "FEEDBACK_ANSWER",
-            "P_ANSWER_TYPE"
+            "P_ANSWER_TYPE",
           );
           const completionVal = getFieldValue(
             feedback,
-            "FEEDBACK_COMPLETION_DATE"
+            "FEEDBACK_COMPLETION_DATE",
           );
           const observationsVal =
             feedback.observations &&
             String(feedback.observations).trim() !== "" &&
             String(feedback.observations) !== "NA"
               ? feedback.observations
-              : getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS") || null;
-          const actionTakenVal = getFieldValue(feedback, "FEEDBACK_ACTION_TAKEN");
+              : getFieldValue(feedback, "FEEDBACK_REMARKS", "P_REMARKS") ||
+                null;
+          const actionTakenVal = getFieldValue(
+            feedback,
+            "FEEDBACK_ACTION_TAKEN",
+          );
           const submittedByVal = getFieldValue(
             feedback,
             "submittedBy",
-            "submitted_by"
+            "submitted_by",
           );
           const vesselIMOVal = getFieldValue(
             feedback,
             "vesselIMO",
-            "vessel_imo"
+            "vessel_imo",
           );
 
           return (
@@ -402,63 +430,85 @@ const FeedbackHistory = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Date</div>
-                    <div className="font-medium">{formatDate(feedback.submittedAt)}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Date
+                    </div>
+                    <div className="font-medium">
+                      {formatDate(feedback.submittedAt)}
+                    </div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Job Category</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Job Category
+                    </div>
                     <div className="font-medium">{jcatVal}</div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Project No</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Project No
+                    </div>
                     <div className="font-medium">{jmainVal}</div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Criteria
+                    </div>
                     <div className="font-medium">{criteriaCodeVal}</div>
                   </div>
 
                   <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Criteria Desc</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Criteria Desc
+                    </div>
                     <div className="font-medium text-sm">{criteriaDescVal}</div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Code</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Code
+                    </div>
                     <div className="font-medium">{codeVal}</div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Code Desc</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Code Desc
+                    </div>
                     <div className="font-medium text-sm">{codeDescVal}</div>
                   </div>
 
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Answer</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Answer
+                    </div>
                     <div className="font-medium">{mapAnswer(answerVal)}</div>
                   </div>
 
                   <div className="sm:col-span-2 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Remarks</div>
-                    <div className="font-medium">{observationsVal || "NA"}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Remarks
                     </div>
+                    <div className="font-medium">{observationsVal || "NA"}</div>
+                  </div>
 
-                    {feedback.attachment && (
-                      <div className="sm:col-span-2 mt-2 flex items-center gap-3">
-                        <div className="text-xs text-gray-500 dark:text-gray-400">Attachment</div>
-                        <div>
-                          <button
-                            onClick={() => handleViewAttachment(feedback)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm"
-                          >
-                            View Attachment
-                          </button>
-                        </div>
+                  {feedback.attachment && (
+                    <div className="sm:col-span-2 mt-2 flex items-center gap-3">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Attachment
                       </div>
-                    )}
+                      <div>
+                        <button
+                          onClick={() => handleViewAttachment(feedback)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm"
+                        >
+                          View Attachment
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

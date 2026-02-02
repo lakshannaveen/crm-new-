@@ -273,12 +273,12 @@ const Sidebar = ({ embedded = false }) => {
       icon: <FiMessageSquare className="w-5 h-5" />,
       allowedRoles: ['owner'],
     },
-    {
-      title: 'Settings',
-      path: '/settings',
-      icon: <FiSettings className="w-5 h-5" />,
-      allowedRoles: ['owner', 'admin'],
-    },
+    // {
+    //   title: 'Settings',
+    //   path: '/settings',
+    //   icon: <FiSettings className="w-5 h-5" />,
+    //   allowedRoles: ['owner', 'admin'],
+    // },
   ];
 
   const filteredNavItems = navItems.filter(item =>
