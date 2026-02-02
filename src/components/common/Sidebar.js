@@ -160,7 +160,7 @@
 
 // export default Sidebar;
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
@@ -178,6 +178,8 @@ import {
   FiMaximize2,
 } from 'react-icons/fi';
 import { useSidebar } from '../../context/SidebarContext';
+import { generateAvatar } from '../../utils/helpers';
+import { userService } from '../../services/userService';
 
 // Import sidebar logo
 import sidebarLogo from '../../assets/image/logo512.png'; // Optional: different logo for sidebar
@@ -193,6 +195,47 @@ const Sidebar = ({ embedded = false }) => {
     closeMobileSidebar,
     toggleDesktopSidebar 
   } = useSidebar();
+
+  // Profile image state
+  const [profileImgUrl, setProfileImgUrl] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+
+  // Fetch profile image
+  useEffect(() => {
+    let cancelled = false;
+    let blobUrl = null;
+    const svc = user?.serviceNo || localStorage.getItem("serviceNo");
+    if (!svc) return;
+
+    (async () => {
+      setProfileLoading(true);
+      setProfileError(null);
+      try {
+        const blob = await userService.fetchProfilePic(svc);
+        if (cancelled) return;
+        if (blob && blob.size > 0) {
+          blobUrl = URL.createObjectURL(blob);
+          setProfileImgUrl(blobUrl);
+        } else {
+          setProfileImgUrl(null);
+        }
+      } catch (err) {
+        console.error('Failed to load sidebar profile pic', err);
+        setProfileError('Failed to load image');
+        setProfileImgUrl(null);
+      } finally {
+        if (!cancelled) setProfileLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+    };
+  }, [user?.serviceNo]);
+
+  const avatar = generateAvatar(user?.name || "User");
 
   // Rename this function to avoid conflict with NavLink's isActive prop
   const checkActivePath = (path) => {
@@ -316,12 +359,15 @@ const Sidebar = ({ embedded = false }) => {
           {!desktopCollapsed && user && (
             <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
-                <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                              flex items-center justify-center">
-                  <span className="text-blue-600 dark:text-blue-300 font-medium">
-                    {user.name?.charAt(0) || 'U'}
-                  </span>
-                </div>
+                {profileImgUrl ? (
+                  <img src={profileImgUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
+                    <span className="text-white font-medium text-sm">
+                      {avatar.initials}
+                    </span>
+                  </div>
+                )}
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user.name}
@@ -337,11 +383,16 @@ const Sidebar = ({ embedded = false }) => {
           {/* Minimized User Profile */}
           {desktopCollapsed && user && (
             <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-              <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                            flex items-center justify-center group relative">
-                <span className="text-blue-600 dark:text-blue-300 font-medium">
-                  {user.name?.charAt(0) || 'U'}
-                </span>
+              <div className="h-8 w-8 rounded-full group relative">
+                {profileImgUrl ? (
+                  <img src={profileImgUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <div className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
+                    <span className="text-white font-medium text-sm">
+                      {avatar.initials}
+                    </span>
+                  </div>
+                )}
                 
                 {/* Tooltip for minimized user profile */}
                 <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 
@@ -421,12 +472,15 @@ const Sidebar = ({ embedded = false }) => {
               {user && (
                 <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center">
-                    <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                                  flex items-center justify-center">
-                      <span className="text-blue-600 dark:text-blue-300 font-medium">
-                        {user.name?.charAt(0) || 'U'}
-                      </span>
-                    </div>
+                    {profileImgUrl ? (
+                      <img src={profileImgUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <div className={`h-8 w-8 rounded-full ${avatar.color} flex items-center justify-center`}>
+                        <span className="text-white font-medium text-sm">
+                          {avatar.initials}
+                        </span>
+                      </div>
+                    )}
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {user.name}
