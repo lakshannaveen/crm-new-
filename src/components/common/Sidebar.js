@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   FiHome,
-  FiCalendar,
   FiUsers,
   FiSettings,
   FiChevronLeft,
@@ -11,10 +10,9 @@ import {
   FiDatabase,
   FiMessageSquare,
   FiX,
-  FiMinimize2,
-  FiMaximize2,
 } from "react-icons/fi";
 import { useSidebar } from "../../context/SidebarContext";
+import { shipService } from "../../services/shipService";
 
 // Import sidebar logo
 import sidebarLogo from "../../assets/image/logo512.png";
@@ -22,6 +20,10 @@ import sidebarLogo from "../../assets/image/logo512.png";
 const Sidebar = ({ embedded = false }) => {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
+
+  // Profile picture state
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   // Use sidebar context
   const {
@@ -36,6 +38,60 @@ const Sidebar = ({ embedded = false }) => {
 
   // Always keep sidebar collapsed unless user explicitly opens it
   const isCollapsed = !userOpened;
+
+  // Load profile picture
+  useEffect(() => {
+    let active = true;
+    const loadServerProfile = async () => {
+      const serviceNo = user?.serviceNo || localStorage.getItem("serviceNo");
+      if (!serviceNo) return;
+      // if we already have a preview (from cache or user), skip background fetch
+      const cached = (user && user.profilePic) || localStorage.getItem('profilePicData');
+      if (cached) {
+        setProfilePreview(cached);
+        return;
+      }
+      setLoadingProfile(true);
+      const start = Date.now();
+      console.debug('[Sidebar] background loadServerProfile start', { serviceNo });
+      try {
+        const result = await shipService.getProfilePicPreviewBlob(serviceNo);
+        if (!active) return;
+        const elapsed = Date.now() - start;
+        if (result && result.blob) {
+          console.debug('[Sidebar] background loadServerProfile got blob', { serviceNo, elapsed, size: result.blob.size });
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (!active) return;
+            const dataUrl = reader.result;
+            try {
+              localStorage.setItem('profilePicData', dataUrl);
+            } catch (e) {
+              console.warn('Failed to store profilePicData in localStorage', e);
+            }
+            setProfilePreview(dataUrl);
+          };
+          reader.onerror = (e) => console.warn('FileReader error', e);
+          reader.readAsDataURL(result.blob);
+        } else {
+          console.debug('[Sidebar] background loadServerProfile no image returned', { serviceNo, elapsed });
+        }
+      } catch (err) {
+        const elapsed = Date.now() - start;
+        console.warn('[Sidebar] background loadServerProfile failed', { serviceNo, elapsed, err: err?.message || err });
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    if (user) {
+      loadServerProfile();
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   // Function to handle user opening the sidebar
   const handleOpenSidebar = () => {
@@ -228,14 +284,27 @@ const Sidebar = ({ embedded = false }) => {
           {!isCollapsed && user && (
             <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
-                <div
-                  className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                              flex items-center justify-center"
-                >
-                  <span className="text-blue-600 dark:text-blue-300 font-medium">
-                    {user.name?.charAt(0) || "U"}
-                  </span>
-                </div>
+                {profilePreview || user?.profilePic ? (
+                  <div className="relative">
+                    <img
+                      src={profilePreview || user.profilePic}
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    {loadingProfile && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full text-white text-xs">...</span>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
+                                flex items-center justify-center"
+                  >
+                    <span className="text-blue-600 dark:text-blue-300 font-medium">
+                      {user.name?.charAt(0) || "U"}
+                    </span>
+                  </div>
+                )}
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
                     {user.name}
@@ -251,13 +320,28 @@ const Sidebar = ({ embedded = false }) => {
           {/* Minimized User Profile */}
           {isCollapsed && user && (
             <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-              <div
-                className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                            flex items-center justify-center group relative"
-              >
-                <span className="text-blue-600 dark:text-blue-300 font-medium">
-                  {user.name?.charAt(0) || "U"}
-                </span>
+              <div className="group relative">
+                {profilePreview || user?.profilePic ? (
+                  <div className="relative">
+                    <img
+                      src={profilePreview || user.profilePic}
+                      alt="Profile"
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                    {loadingProfile && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full text-white text-xs">...</span>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
+                                flex items-center justify-center"
+                  >
+                    <span className="text-blue-600 dark:text-blue-300 font-medium">
+                      {user.name?.charAt(0) || "U"}
+                    </span>
+                  </div>
+                )}
 
                 {/* Tooltip for minimized user profile */}
                 <div
@@ -342,14 +426,27 @@ const Sidebar = ({ embedded = false }) => {
               {user && (
                 <div className="mt-auto p-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="flex items-center">
-                    <div
-                      className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
-                                  flex items-center justify-center"
-                    >
-                      <span className="text-blue-600 dark:text-blue-300 font-medium">
-                        {user.name?.charAt(0) || "U"}
-                      </span>
-                    </div>
+                    {profilePreview || user?.profilePic ? (
+                      <div className="relative">
+                        <img
+                          src={profilePreview || user.profilePic}
+                          alt="Profile"
+                          className="h-10 w-10 rounded-full object-cover"
+                        />
+                        {loadingProfile && (
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-full text-white text-xs">...</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900 
+                                    flex items-center justify-center"
+                      >
+                        <span className="text-blue-600 dark:text-blue-300 font-medium">
+                          {user.name?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                    )}
                     <div className="ml-3">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
                         {user.name}
