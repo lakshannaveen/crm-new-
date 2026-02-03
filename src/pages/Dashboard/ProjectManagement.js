@@ -652,7 +652,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useParams, Link } from "react-router-dom";
 import Header from "../../components/common/Header";
 import Sidebar from "../../components/common/Sidebar";
-import { getShipDetails } from "../../actions/shipActions";
+import { getShips } from "../../actions/shipActions";
+import { getFeedbackDates } from "../../actions/feedbackActions";
 import {
   FiArrowLeft,
   FiCalendar,
@@ -670,7 +671,6 @@ import {
   FiMenu,
   FiX,
   FiChevronRight,
-  FiMoreVertical,
   FiFlag,
   FiHome,
   FiDatabase,
@@ -683,23 +683,96 @@ const ProjectManagement = () => {
   const dispatch = useDispatch();
   const { currentProject, loading, milestones, milestonesLoading } =
     useSelector((state) => state.projects);
-  const { currentShip, loading: shipLoading } = useSelector(
-    (state) => state.ships
-  );
+  const { ships } = useSelector((state) => state.ships);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("milestones");
   const [isScrollUp, setIsScrollUp] = useState(false);
+  const [resolvedProjectName, setResolvedProjectName] = useState("");
+  const [milestoneSearch, setMilestoneSearch] = useState("");
+  const [milestoneLocation, setMilestoneLocation] = useState("all");
+  const [milestoneView, setMilestoneView] = useState("date");
+  const [projectDates, setProjectDates] = useState({
+    startDate: "2024-01-10",
+    deadline: "2024-03-15",
+  });
+  const [loadingDates, setLoadingDates] = useState(false);
   const lastScrollY = useRef(
-    typeof window !== "undefined" ? window.pageYOffset : 0
+    typeof window !== "undefined" ? window.pageYOffset : 0,
   );
 
-  // Fetch ship details when component mounts
+  // Fetch ships when component mounts to get ship names from API
   useEffect(() => {
-    const selectedJmain = localStorage.getItem("SELECTED_SHIP_JMAIN");
-    if (selectedJmain) {
-      dispatch(getShipDetails(selectedJmain));
-    }
+    dispatch(getShips());
   }, [dispatch]);
+
+  // Fetch project dates from API
+  useEffect(() => {
+    const fetchProjectDates = async () => {
+      if (ships && ships.length > 0 && id) {
+        const matchingShip = ships.find((ship) => {
+          const shipId = ship?.id;
+          const shipJmain =
+            ship?.jmainNo || ship?.raw?.SHIP_JMAIN || ship?.raw?.SHIP_JOB_NO;
+          return (
+            String(shipId) === String(id) || String(shipJmain) === String(id)
+          );
+        });
+
+        if (matchingShip) {
+          const jobCategory =
+            matchingShip.raw?.SHIP_JCAT ||
+            matchingShip.SHIP_JCAT ||
+            matchingShip.JCAT ||
+            matchingShip.jcat;
+          const jmain =
+            matchingShip.raw?.SHIP_JMAIN ||
+            matchingShip.jmainNo ||
+            matchingShip.SHIP_JMAIN ||
+            matchingShip.id;
+
+          if (jobCategory && jmain) {
+            setLoadingDates(true);
+            try {
+              const response = await dispatch(
+                getFeedbackDates(jobCategory, jmain),
+              );
+              if (response) {
+                const resultData =
+                  response.ResultSet?.[0] || response[0] || response;
+                const startDate =
+                  resultData.FEEDBACK_START_DATE ||
+                  resultData.FEEDBACK_START_DT ||
+                  resultData.startingDate ||
+                  resultData.START_DATE ||
+                  resultData.startDate ||
+                  response.startingDate;
+                const endDate =
+                  resultData.FEEDBACK_END_DATE ||
+                  resultData.FEEDBACK_END_DT ||
+                  resultData.endingDate ||
+                  resultData.END_DATE ||
+                  resultData.endDate ||
+                  response.endingDate;
+
+                if (startDate || endDate) {
+                  setProjectDates({
+                    startDate: startDate || projectDates.startDate,
+                    deadline: endDate || projectDates.deadline,
+                  });
+                }
+              }
+            } catch (error) {
+              console.error("Failed to fetch project dates:", error);
+            } finally {
+              setLoadingDates(false);
+            }
+          }
+        }
+      }
+    };
+
+    fetchProjectDates();
+  }, [ships, id, dispatch]);
 
   // Toggle translucent header when scrolling up
   useEffect(() => {
@@ -720,19 +793,47 @@ const ProjectManagement = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Build project name from ship name if available
-  const shipName = currentShip?.name || "Project";
-  const projectName = currentProject?.name || `${shipName} `;
+  // Get ship name from ships array by matching ID, or use project name
+  const getShipNameFromAPI = () => {
+    // Try to find matching ship from the ships array (loaded from API with SHIP_VESSEL_NAME)
+    if (ships && ships.length > 0) {
+      const matchingShip = ships.find((ship) => {
+        const shipId = ship?.id;
+        const shipJmain =
+          ship?.jmainNo || ship?.raw?.SHIP_JMAIN || ship?.raw?.SHIP_JOB_NO;
+        return (
+          String(shipId) === String(id) || String(shipJmain) === String(id)
+        );
+      });
+      if (matchingShip && matchingShip.name) {
+        return matchingShip.name;
+      }
+    }
+    // Use currentProject name if available
+    if (currentProject?.name) {
+      return currentProject.name;
+    }
+    // If no match found, return empty string and it will be populated once ships load
+    return "";
+  };
+
+  const projectName = getShipNameFromAPI();
+
+  useEffect(() => {
+    if (projectName) {
+      setResolvedProjectName(projectName);
+    }
+  }, [projectName]);
 
   const project = currentProject || {
     id: id,
-    name: projectName,
+    name: projectName || resolvedProjectName,
     // description:
     //   "Complete hull repair and engine overhaul with system upgrades",
     status: "on_track",
     progress: 75,
-    startDate: "2024-01-10",
-    deadline: "2024-03-15",
+    startDate: projectDates.startDate,
+    deadline: projectDates.deadline,
     budget: "2500000",
     spent: "1875000",
     coordinator: "Raj Patel",
@@ -755,6 +856,182 @@ const ProjectManagement = () => {
 
   // Use milestones from Redux
   const displayMilestones = milestones;
+  const normalizedMilestoneSearch = milestoneSearch.trim().toLowerCase();
+
+  const getMilestoneType = (milestone) =>
+    milestone?.raw?.MILESTONE_CODE ||
+    milestone?.raw?.P_MILESTONE_CODE ||
+    milestone?.raw?.code ||
+    milestone?.type ||
+    "Uncategorized";
+
+  const milestoneLocationOptions = Array.from(
+    new Set(
+      (displayMilestones || [])
+        .map((milestone) => milestone?.location)
+        .filter((location) => location),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+
+  const filteredMilestones = (displayMilestones || []).filter((milestone) => {
+    const matchesLocation =
+      milestoneLocation === "all" || milestone?.location === milestoneLocation;
+
+    if (!normalizedMilestoneSearch) return matchesLocation;
+
+    const typeLabel = getMilestoneType(milestone);
+    const haystack = [
+      milestone?.title,
+      milestone?.description,
+      milestone?.remarks,
+      milestone?.location,
+      typeLabel,
+      milestone?.status,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return matchesLocation && haystack.includes(normalizedMilestoneSearch);
+  });
+
+  const sortedMilestones = [...filteredMilestones].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
+    return milestoneView === "date-oldest" ? dateA - dateB : dateB - dateA;
+  });
+
+  const groupedMilestones = filteredMilestones.reduce((acc, milestone) => {
+    const typeLabel = getMilestoneType(milestone);
+    if (!acc[typeLabel]) acc[typeLabel] = [];
+    acc[typeLabel].push(milestone);
+    return acc;
+  }, {});
+
+  Object.values(groupedMilestones).forEach((group) => {
+    group.sort((a, b) => new Date(b.date) - new Date(a.date));
+  });
+
+  const renderMilestoneCard = (milestone, index, isLast) => {
+    const isCompleted = milestone.status === "completed";
+    const isInProgress = milestone.status === "in_progress";
+
+    return (
+      <div key={milestone.id || index} className="group relative">
+        {/* Timeline connector */}
+        {!isLast && (
+          <div className="absolute left-6 top-20 bottom-0 w-0.5 bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-800" />
+        )}
+
+        {/* Milestone card */}
+        <div className="relative flex gap-4 p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600">
+          {/* Status indicator */}
+          <div className="relative flex-shrink-0">
+            <div
+              className={`h-12 w-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
+                isCompleted
+                  ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
+                  : isInProgress
+                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+              }`}
+            >
+              {isCompleted ? (
+                <FiCheckCircle className="h-6 w-6" />
+              ) : isInProgress ? (
+                <FiClock className="h-6 w-6 animate-pulse" />
+              ) : (
+                <span className="text-sm">{index + 1}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+              <h4 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {milestone.title}
+              </h4>
+            </div>
+
+            {/* Info grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <FiCalendar className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
+                    Date
+                  </p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDate(milestone.date, "short")}
+                  </p>
+                </div>
+              </div>
+
+              {milestone.location && (
+                <div className="flex items-center gap-2.5">
+                  <FiFlag className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
+                      Location
+                    </p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                      {milestone.location}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            {(isInProgress || milestone.progress > 0) && (
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">
+                    Progress
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                    {milestone.progress}%
+                  </span>
+                </div>
+                <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      isCompleted
+                        ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                        : isInProgress
+                          ? "bg-gradient-to-r from-blue-500 to-cyan-500"
+                          : "bg-gradient-to-r from-gray-400 to-gray-300"
+                    }`}
+                    style={{
+                      width: `${milestone.progress}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Remarks section */}
+            {milestone.remarks && (
+              <div className="mt-3 p-3.5 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
+                <div className="flex items-start gap-2.5">
+                  <FiMessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 uppercase tracking-tight mb-1">
+                      Notes
+                    </p>
+                    <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
+                      {milestone.remarks}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const teamMembers = [
     {
@@ -806,7 +1083,7 @@ const ProjectManagement = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm">
-        <div className="relative flex items-center justify-between p-4">
+        <div className="flex items-center justify-between p-4 relative">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700"
@@ -820,7 +1097,7 @@ const ProjectManagement = () => {
           <h1 className="absolute left-1/2 transform -translate-x-1/2 text-lg font-semibold text-gray-900 dark:text-white truncate max-w-[70%] text-center">
             {project.name}
           </h1>
-          {/* More actions removed per request */}
+          {/* removed mobile 'More' button per request */}
         </div>
         <div className="px-4 pb-4">
           <span
@@ -838,7 +1115,7 @@ const ProjectManagement = () => {
             className="absolute inset-0 bg-black bg-opacity-50"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl flex flex-col h-full overflow-hidden">
+          <div className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl flex flex-col h-full overflow-hidden z-50">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -853,6 +1130,7 @@ const ProjectManagement = () => {
               </div>
             </div>
             <nav className="flex-1 overflow-y-auto px-3 py-4">
+              {/* Navigation Items for Mobile */}
               <Link
                 to="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
@@ -862,13 +1140,13 @@ const ProjectManagement = () => {
                 <span>Dashboard</span>
               </Link>
               {/* <Link 
-              to="/vessels" 
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
-            >
-              <FiDatabase className="w-5 h-5 mr-3" />
-              <span>Vessels</span>
-            </Link> */}
+                to="/vessels" 
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center px-3 py-3 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+              >
+                <FiDatabase className="w-5 h-5 mr-3" />
+                <span>Vessels</span>
+              </Link> */}
               <Link
                 to="/feedback"
                 onClick={() => setMobileMenuOpen(false)}
@@ -925,7 +1203,7 @@ const ProjectManagement = () => {
                 >
                   {statusText}
                 </span>
-               
+                
               </div> */}
             </div>
 
@@ -952,7 +1230,11 @@ const ProjectManagement = () => {
                         Start:{" "}
                       </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.startDate, "short")}
+                        {loadingDates ? (
+                          <span className="text-gray-400">Loading...</span>
+                        ) : (
+                          formatDate(project.startDate, "iso")
+                        )}
                       </span>
                     </div>
                     <div className="flex items-center text-sm">
@@ -961,7 +1243,11 @@ const ProjectManagement = () => {
                         Deadline:{" "}
                       </span>
                       <span className="ml-1 font-medium text-gray-900 dark:text-white truncate">
-                        {formatDate(project.deadline, "short")}
+                        {loadingDates ? (
+                          <span className="text-gray-400">Loading...</span>
+                        ) : (
+                          formatDate(project.deadline, "iso")
+                        )}
                       </span>
                     </div>
                     {/* <div className="flex items-center text-sm">
@@ -1065,6 +1351,76 @@ const ProjectManagement = () => {
                     </p>
                   </div>
 
+                  <div className="mb-6 flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight mb-2">
+                        Search milestones
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={milestoneSearch}
+                          onChange={(event) =>
+                            setMilestoneSearch(event.target.value)
+                          }
+                          autoComplete="off"
+                          placeholder="Search by title, notes, location, status or type"
+                          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        {milestoneSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setMilestoneSearch("")}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          >
+                            Clear
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:w-56">
+                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight mb-2">
+                        Group / Sort
+                      </label>
+                      <select
+                        value={milestoneView}
+                        onChange={(event) =>
+                          setMilestoneView(event.target.value)
+                        }
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="date">
+                          Sort by date (newest first)
+                        </option>
+                        <option value="date-oldest">
+                          Sort by date (oldest first)
+                        </option>
+                      </select>
+                    </div>
+
+                    <div className="w-full sm:w-56">
+                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight mb-2">
+                        Location
+                      </label>
+                      <select
+                        value={milestoneLocation}
+                        onChange={(event) =>
+                          setMilestoneLocation(event.target.value)
+                        }
+                        disabled={milestoneLocationOptions.length === 0}
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        <option value="all">All locations</option>
+                        {milestoneLocationOptions.map((location) => (
+                          <option key={location} value={location}>
+                            {location}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                   {milestonesLoading ? (
                     <div className="flex flex-col items-center justify-center py-16">
                       <div className="animate-spin rounded-full h-12 w-12 border-3 border-blue-200 border-t-blue-600 dark:border-gray-700 dark:border-t-blue-400 mb-4"></div>
@@ -1082,159 +1438,27 @@ const ProjectManagement = () => {
                         Milestones will appear here once added
                       </p>
                     </div>
+                  ) : filteredMilestones.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <FiCalendar className="h-14 w-14 text-gray-300 dark:text-gray-600 mb-4" />
+                      <p className="text-gray-600 dark:text-gray-400 font-medium">
+                        No matching milestones
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        Try adjusting your search or filters
+                      </p>
+                    </div>
                   ) : (
-                    <div className="space-y-3">
-                      {displayMilestones.map((milestone, index) => {
-                        const isCompleted = milestone.status === "completed";
-                        const isInProgress = milestone.status === "in_progress";
-                        const isPending = milestone.status === "pending";
-                        const isLast = index === displayMilestones.length - 1;
-
-                        return (
-                          <div
-                            key={milestone.id || index}
-                            className="group relative"
-                          >
-                            {/* Timeline connector */}
-                            {!isLast && (
-                              <div className="absolute left-6 top-20 bottom-0 w-0.5 bg-gradient-to-b from-gray-200 to-gray-100 dark:from-gray-700 dark:to-gray-800" />
-                            )}
-
-                            {/* Milestone card */}
-                            <div className="relative flex gap-4 p-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:border-gray-300 dark:hover:border-gray-600">
-                              {/* Status indicator */}
-                              <div className="relative flex-shrink-0">
-                                <div
-                                  className={`h-12 w-12 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
-                                    isCompleted
-                                      ? "bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400"
-                                      : isInProgress
-                                      ? "bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400"
-                                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                                  }`}
-                                >
-                                  {isCompleted ? (
-                                    <FiCheckCircle className="h-6 w-6" />
-                                  ) : isInProgress ? (
-                                    <FiClock className="h-6 w-6 animate-pulse" />
-                                  ) : (
-                                    <span className="text-sm">{index + 1}</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                    {milestone.title}
-                                  </h4>
-                                  {/* <div className="flex items-center gap-2">
-                                    <span
-                                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-                                        isCompleted
-                                          ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
-                                          : isInProgress
-                                          ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
-                                      }`}
-                                    >
-                                      <span
-                                        className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                                          isCompleted
-                                            ? "bg-green-600"
-                                            : isInProgress
-                                            ? "bg-blue-600 animate-pulse"
-                                            : "bg-gray-400"
-                                        }`}
-                                      />
-                                      {isCompleted
-                                        ? "Completed"
-                                        : isInProgress
-                                        ? "In Progress"
-                                        : "Pending"}
-                                    </span>
-                                  </div> */}
-                                </div>
-
-                                {/* Info grid */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                                  <div className="flex items-center gap-2.5">
-                                    <FiCalendar className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
-                                    <div className="min-w-0">
-                                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
-                                        Date
-                                      </p>
-                                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                        {formatDate(milestone.date, "short")}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {milestone.location && (
-                                    <div className="flex items-center gap-2.5">
-                                      <FiFlag className="h-4 w-4 text-blue-500 dark:text-blue-400 flex-shrink-0" />
-                                      <div className="min-w-0">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-tight font-medium">
-                                          Location
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                                          {milestone.location}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Progress bar */}
-                                {(isInProgress || milestone.progress > 0) && (
-                                  <div className="mb-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-tight">
-                                        Progress
-                                      </span>
-                                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                                        {milestone.progress}%
-                                      </span>
-                                    </div>
-                                    <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                      <div
-                                        className={`h-full rounded-full transition-all duration-500 ${
-                                          isCompleted
-                                            ? "bg-gradient-to-r from-green-500 to-emerald-500"
-                                            : isInProgress
-                                            ? "bg-gradient-to-r from-blue-500 to-cyan-500"
-                                            : "bg-gradient-to-r from-gray-400 to-gray-300"
-                                        }`}
-                                        style={{
-                                          width: `${milestone.progress}%`,
-                                        }}
-                                      />
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Remarks section */}
-                                {milestone.remarks && (
-                                  <div className="mt-3 p-3.5 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800/50 rounded-lg">
-                                    <div className="flex items-start gap-2.5">
-                                      <FiMessageSquare className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                                      <div className="min-w-0">
-                                        <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 uppercase tracking-tight mb-1">
-                                          Notes
-                                        </p>
-                                        <p className="text-sm text-blue-800 dark:text-blue-200 leading-relaxed">
-                                          {milestone.remarks}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        {sortedMilestones.map((milestone, index) =>
+                          renderMilestoneCard(
+                            milestone,
+                            index,
+                            index === sortedMilestones.length - 1,
+                          ),
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
