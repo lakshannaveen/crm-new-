@@ -9,8 +9,8 @@ import store from "./store";
 import reportWebVitals from "./reportWebVitals";
 
 // Backend base URL for API calls
+//export const BACKEND_BASE_URL = "https://esystems.cdl.lk/backend-test";
 export const BACKEND_BASE_URL = "https://esystems.cdl.lk/backend-test";
-
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
